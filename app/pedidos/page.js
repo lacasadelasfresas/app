@@ -1,9 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabaseClient'
-import { Suspense } from 'react'
 import {
   Search,
   Plus,
@@ -30,7 +28,6 @@ const [metodoPagoFiltro, setMetodoPagoFiltro] = useState('Todos')
   const [toppings, setToppings] = useState([])
   const [selectedOrder, setSelectedOrder] = useState(null)
   const [editingOrder, setEditingOrder] = useState(null)
-  const searchParams = useSearchParams()
 
 function getTodayDate() {
   const today = new Date()
@@ -90,10 +87,12 @@ useEffect(() => {
 }, [])
 
 useEffect(() => {
-  if (searchParams.get('new') === '1') {
+  const params = new URLSearchParams(window.location.search)
+
+  if (params.get('new') === '1') {
     setShowModal(true)
   }
-}, [searchParams])
+}, [])
 
 async function fetchOrders() {
   setLoading(true)
