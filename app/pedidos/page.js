@@ -1522,9 +1522,5 @@ function DetailItem({ label, value }) {
 }
 }
 export default function PedidosPage() {
-  return (
-    <Suspense fallback={null}>
-      <PedidosContent />
-    </Suspense>
-  )
+  return <PedidosContent />
 }
