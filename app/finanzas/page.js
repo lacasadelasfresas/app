@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { supabase } from '@/lib/supabaseClient'
 import {
   DollarSign,
@@ -24,6 +24,7 @@ const [categoriaFiltro, setCategoriaFiltro] = useState('Todos')
 const [metodoPagoFiltro, setMetodoPagoFiltro] = useState('Todos')
 const [editingGasto, setEditingGasto] = useState(null)
 const [facturaFile, setFacturaFile] = useState(null)
+const formGastoRef = useRef(null)
 
   const [form, setForm] = useState({
     fecha: getTodayDate(),
@@ -303,6 +304,13 @@ setForm({
   monto: gasto.monto || '',
   notas: gasto.notas || '',
 })
+
+setTimeout(() => {
+  formGastoRef.current?.scrollIntoView({
+    behavior: 'smooth',
+    block: 'start',
+  })
+}, 100)
 
   window.scrollTo({
     top: 0,
@@ -841,7 +849,10 @@ ${ingresosMes.toFixed(2)}
   </div>
 </div>
 
-          <div className="bg-white border border-[#f3dede] rounded-[28px] p-6">
+<div
+  ref={formGastoRef}
+  className="bg-white border border-[#f3dede] rounded-[28px] p-6 scroll-mt-6"
+>
             <div className="flex items-center justify-between mb-5">
               <div>
                 <h2 className="text-[30px] ivy text-[#7a0000] leading-none">
