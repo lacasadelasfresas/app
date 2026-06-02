@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabaseClient'
+import { Suspense } from 'react'
 import {
   Search,
   Plus,
@@ -15,7 +16,7 @@ import {
   Trash2,
 } from 'lucide-react'
 
-export default function PedidosPage() {
+function PedidosContent() {
   const [orders, setOrders] = useState([])
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
@@ -1506,7 +1507,7 @@ Registrar Venta
 )}
     </main>
   )
-
+  
 function DetailItem({ label, value }) {
   return (
     <div className="border border-[#f3dede] rounded-2xl px-3 py-2 bg-[#fffafa]">
@@ -1520,4 +1521,11 @@ function DetailItem({ label, value }) {
     </div>
   )
 }
+}
+export default function PedidosPage() {
+  return (
+    <Suspense fallback={null}>
+      <PedidosContent />
+    </Suspense>
+  )
 }
