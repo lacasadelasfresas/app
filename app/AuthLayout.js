@@ -11,26 +11,46 @@ export default function AuthLayout({ children }) {
   const [checking, setChecking] = useState(true)
 
   const isLogin = pathname === '/login'
+useEffect(() => {
+  async function checkUser() {
+    const { data } = await supabase.auth.getSession()
+    const session = data.session
 
-  useEffect(() => {
-    async function checkUser() {
-      const { data } = await supabase.auth.getSession()
+    if (!session && !isLogin) {
+      router.push('/login')
+      return
+    }
 
-      if (!data.session && !isLogin) {
+    if (session) {
+      const email = session.user.email
+
+      const { data: usuario, error } = await supabase
+        .from('usuarios')
+        .select('*')
+        .eq('email', email)
+        .eq('activo', true)
+        .single()
+
+      if (error || !usuario) {
+        await supabase.auth.signOut()
         router.push('/login')
         return
       }
 
-      if (data.session && isLogin) {
-        router.push('/app/cuadro-de-mandos')
-        return
-      }
-
-      setChecking(false)
+      localStorage.setItem('usuarioRol', usuario.rol)
+      localStorage.setItem('usuarioNombre', usuario.nombre)
     }
 
-    checkUser()
-  }, [pathname, isLogin, router])
+    if (session && isLogin) {
+      router.push('/app/cuadro-de-mandos')
+      return
+    }
+
+    setChecking(false)
+  }
+
+  checkUser()
+}, [pathname, isLogin, router])
 
   if (checking && !isLogin) {
     return (
