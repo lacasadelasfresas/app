@@ -20,7 +20,7 @@ export default function Sidebar() {
 
 const isActive = (path) => {
   if (path === '/') return pathname === '/'
-  return pathname.startsWith(path)
+  return pathname === path || pathname.startsWith(`${path}/`)
 }
 
 const linkClass = (path) =>
@@ -48,7 +48,10 @@ const linkClass = (path) =>
   PRINCIPAL
 </p>
 
-<Link href="/" className={linkClass('/')}>
+<Link
+  href="/app/cuadro-de-mandos"
+  className={linkClass('/app/cuadro-de-mandos')}
+>
   <LayoutDashboard size={18} />
   Dashboard
 </Link>
