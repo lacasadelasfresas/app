@@ -39,6 +39,7 @@ useEffect(() => {
 
       localStorage.setItem('usuarioRol', usuario.rol)
       localStorage.setItem('usuarioNombre', usuario.nombre)
+      localStorage.setItem('usuarioEmail', usuario.email)
     }
 
     if (session && isLogin) {

@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
+
 import {
   LayoutDashboard,
   ShoppingBag,
@@ -15,8 +16,35 @@ import {
   ScrollText,
 } from 'lucide-react'
 
+import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { supabase } from '@/lib/supabaseClient'
+
 export default function Sidebar() {
   const pathname = usePathname()
+
+const router = useRouter()
+const [usuario, setUsuario] = useState({
+  nombre: '',
+  email: '',
+  rol: '',
+})
+
+useEffect(() => {
+  setUsuario({
+    nombre: localStorage.getItem('usuarioNombre') || 'Usuario',
+    email: localStorage.getItem('usuarioEmail') || '',
+    rol: localStorage.getItem('usuarioRol') || '',
+  })
+}, [])
+
+async function cerrarSesion() {
+  await supabase.auth.signOut()
+  localStorage.removeItem('usuarioRol')
+  localStorage.removeItem('usuarioNombre')
+  localStorage.removeItem('usuarioEmail')
+  router.push('/login')
+}
 
 const isActive = (path) => {
   if (path === '/') return pathname === '/'
@@ -111,6 +139,30 @@ const linkClass = (path) =>
   <ScrollText size={18} />
   Recipes
 </Link>
+
+<div className="p-4 border-t border-[#f1dede]">
+  <div className="rounded-2xl bg-[#fff8f8] border border-[#f3dede] p-4">
+    <p className="text-sm font-semibold text-[#7a0000] truncate">
+      {usuario.nombre}
+    </p>
+
+    <p className="text-[11px] text-[#b07a7a] truncate mt-1">
+      {usuario.email}
+    </p>
+
+    <p className="text-[10px] uppercase tracking-[0.18em] text-[#b9a0a0] mt-2">
+      {usuario.rol}
+    </p>
+
+    <button
+      type="button"
+      onClick={cerrarSesion}
+      className="mt-4 w-full rounded-xl border border-[#efcaca] px-3 py-2 text-xs font-semibold text-[#8c0303] hover:bg-[#fff1f1]"
+    >
+      Cerrar sesión
+    </button>
+  </div>
+</div>
 
     </div>
   </div>
