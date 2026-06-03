@@ -9,6 +9,7 @@ export default function AuthLayout({ children }) {
   const router = useRouter()
   const pathname = usePathname()
   const [checking, setChecking] = useState(true)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
 
   const isLogin = pathname === '/login'
 useEffect(() => {
@@ -65,13 +66,16 @@ useEffect(() => {
     return children
   }
 
-  return (
-    <div className="flex min-h-screen bg-[#fcf8f8]">
-      <Sidebar />
+return (
+  <div className="flex min-h-screen bg-[#fcf8f8]">
+    <Sidebar
+      collapsed={sidebarCollapsed}
+      setCollapsed={setSidebarCollapsed}
+    />
 
-      <div className="ml-[250px] w-full">
-        {children}
-      </div>
+    <div className="flex-1 w-full">
+      {children}
     </div>
-  )
+  </div>
+)
 }

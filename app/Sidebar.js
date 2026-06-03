@@ -14,13 +14,18 @@ import {
   Ticket,
   Boxes,
   ScrollText,
+  FileText,
+Calendar,
+Megaphone,
+Mail,
+BarChart3,
 } from 'lucide-react'
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabaseClient'
 
-export default function Sidebar() {
+export default function Sidebar({ collapsed, setCollapsed }) {
   const pathname = usePathname()
 
 const router = useRouter()
@@ -58,9 +63,22 @@ const linkClass = (path) =>
       : 'text-[#2e2e2e] hover:bg-[#fff1f1]'
   }`
   return (
-    <aside className="w-[250px] bg-white border-r border-[#f1dede] flex flex-col justify-between fixed left-0 top-0 h-screen">
+    <aside
+  className={`relative min-h-screen bg-white border-r border-[#f1dede] flex flex-col justify-between transition-all duration-300 ${
+    collapsed ? 'w-[82px]' : 'w-[250px]'
+  }`}
+>
       <div>
         <div className="h-[90px] px-8 flex items-center border-b border-[#f1dede]">
+
+<button
+  type="button"
+  onClick={() => setCollapsed(!collapsed)}
+  className="absolute top-5 right-[-14px] w-7 h-7 rounded-full bg-[#8c0303] text-white flex items-center justify-center text-xs shadow-md"
+>
+  {collapsed ? '›' : '‹'}
+</button>
+
 <Image
   src="/logo.png"
   alt="Logo"
@@ -81,63 +99,86 @@ const linkClass = (path) =>
   className={linkClass('/app/cuadro-de-mandos')}
 >
   <LayoutDashboard size={18} />
-  Dashboard
+{!collapsed && 'Dashboard'}
 </Link>
 
+{!collapsed && (
 <p className="text-[11px] text-[#b8a1a1] mt-8 mb-4 tracking-[0.25em] font-medium px-2">
   OPERACIÓN
 </p>
+)}
 
 <Link href="/pedidos" className={linkClass('/pedidos')}>
   <ShoppingBag size={18} />
-  Registro de Ventas
+  {!collapsed && 'Registro de Ventas'}
 </Link>
 
 <Link href="/cotizaciones" className={linkClass('/cotizaciones')}>
   <FileText size={18} />
-  Cotizaciones
+  {!collapsed && 'Cotizaciones'}
 </Link>
 
+{!collapsed && (
 <p className="text-[11px] text-[#b8a1a1] mt-8 mb-4 tracking-[0.25em] font-medium px-2">
   REPORTES
 </p>
+)}
 
 <Link href="/ventas" className={linkClass('/ventas')}>
   <DollarSign size={18} />
-  Análisis de Ventas
+  {!collapsed && 'Análisis de Ventas'}
 </Link>
 
 <Link href="/finanzas" className={linkClass('/finanzas')}>
   <Wallet size={18} />
-  Finanzas
+  {!collapsed && 'Finanzas'}
 </Link>
 
-<p className="text-[11px] text-[#b8a1a1] mt-8 mb-4 tracking-[0.25em] font-medium px-2">
-  CATÁLOGO
-</p>
+{!collapsed && (
+  <p className="text-[11px] text-[#b8a1a1] mt-8 mb-4 tracking-[0.25em] font-medium px-2">
+    CUADRO DE MANDOS
+  </p>
+)}
 
-<Link href="/productos" className={linkClass('/productos')}>
-  <Package size={18} />
-  Productos
+<Link href="/centro-contenido" className={linkClass('/centro-contenido')}>
+  <FileText size={18} />
+  {!collapsed && 'Centro de Contenido'}
 </Link>
 
-<Link href="/cupones" className={linkClass('/cupones')}>
-  <Ticket size={18} />
-  Cupones
+<Link href="/calendario-editorial" className={linkClass('/calendario-editorial')}>
+  <Calendar size={18} />
+  {!collapsed && 'Calendario Editorial'}
 </Link>
 
+<Link href="/campanas" className={linkClass('/campanas')}>
+  <Megaphone size={18} />
+  {!collapsed && 'Campañas'}
+</Link>
+
+<Link href="/embudos-email" className={linkClass('/embudos-email')}>
+  <Mail size={18} />
+  {!collapsed && 'Embudos & Email'}
+</Link>
+
+<Link href="/analitica" className={linkClass('/analitica')}>
+  <BarChart3 size={18} />
+  {!collapsed && 'Analítica'}
+</Link>
+
+{!collapsed && (
 <p className="text-[11px] text-[#b8a1a1] mt-8 mb-4 tracking-[0.25em] font-medium px-2">
   INVENTARIO
 </p>
+)}
 
 <Link href="/inventario" className={linkClass('/inventario')}>
   <Boxes size={18} />
-  Inventario
+  {!collapsed && 'Inventario'}
 </Link>
 
 <Link href="/recipes" className={linkClass('/recipes')}>
   <ScrollText size={18} />
-  Recipes
+  {!collapsed && 'Recipes'}
 </Link>
 
 <div className="p-4 border-t border-[#f1dede]">
