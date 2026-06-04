@@ -195,28 +195,33 @@ className="absolute top-6 -right-4 z-50 w-8 h-8 rounded-full bg-[#8c0303] text-w
   {!collapsed && 'Recipes'}
 </Link>
 
-<div className="p-4 border-t border-[#f1dede]">
-  <div className="rounded-2xl bg-[#fff8f8] border border-[#f3dede] p-4">
-    <p className="text-sm font-semibold text-[#7a0000] truncate">
-      {usuario.nombre}
-    </p>
+<div className="border-t border-[#2b4a39] p-4">
+  <div className={`${collapsed ? 'items-center' : ''} flex gap-3`}>
+    <div className="w-9 h-9 rounded-full bg-[#6f8f73] flex items-center justify-center text-sm font-bold">
+      {usuario.nombre?.charAt(0) || 'U'}
+    </div>
 
-    <p className="text-[11px] text-[#b07a7a] truncate mt-1">
-      {usuario.email}
-    </p>
+    {!collapsed && (
+      <div className="min-w-0">
+        <p className="text-sm font-semibold text-white truncate">
+          {usuario.nombre || 'Usuario'}
+        </p>
+        <p className="text-[11px] text-[#b8c9bd] truncate">
+          {usuario.email}
+        </p>
+      </div>
+    )}
+  </div>
 
-    <p className="text-[10px] uppercase tracking-[0.18em] text-[#b9a0a0] mt-2">
-      {usuario.rol}
-    </p>
-
+  {!collapsed && (
     <button
       type="button"
       onClick={cerrarSesion}
-      className="mt-4 w-full rounded-xl border border-[#efcaca] px-3 py-2 text-xs font-semibold text-[#8c0303] hover:bg-[#fff1f1]"
+      className="mt-4 w-full rounded-full border border-[#f7c65d] px-3 py-2 text-[11px] font-semibold text-[#f7c65d] hover:bg-[#223f2f]"
     >
       Cerrar sesión
     </button>
-  </div>
+  )}
 </div>
 
     </div>
