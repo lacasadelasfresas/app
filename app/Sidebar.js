@@ -33,14 +33,6 @@ const [usuario, setUsuario] = useState({
 })
 
 useEffect(() => {
-const [usuario, setUsuario] = useState({
-  nombre: 'Usuario',
-  email: '',
-  rol: '',
-})
-}, [])
-
-useEffect(() => {
   async function cargarUsuario() {
     const { data } = await supabase.auth.getSession()
     const email = data.session?.user?.email
