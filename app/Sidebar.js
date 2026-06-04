@@ -73,12 +73,12 @@ const isActive = (path) => {
 const linkClass = (path) =>
   `w-full flex items-center gap-3 px-3 py-2 rounded-xl text-[13px] transition ${
     isActive(path)
-      ? 'bg-[#f7c65d] text-[#173324] font-semibold'
-      : 'text-[#d7e3d9] hover:bg-[#223f2f]'
+      ? 'bg-[#8c0303] text-white font-semibold shadow-sm'
+      : 'text-[#2e2e2e] hover:bg-[#fff1f1]'
   } ${collapsed ? 'justify-center' : ''}`
   return (
 <aside
-  className={`fixed left-0 top-0 z-40 h-screen bg-[#173324] text-white border-r border-[#2b4a39] flex flex-col transition-all duration-300 ${
+  className={`fixed left-0 top-0 z-40 h-screen bg-white text-[#2e2e2e] border-r border-[#f1dede] flex flex-col transition-all duration-300 ${
     collapsed ? 'w-[82px]' : 'w-[250px]'
   }`}
 >
@@ -104,7 +104,7 @@ className="absolute top-6 -right-4 z-50 w-8 h-8 rounded-full bg-[#8c0303] text-w
         </div>
 
         <div className="p-4">
-<p className="text-[11px] text-[#b8a1a1] mt-8 mb-4 tracking-[0.25em] font-medium px-2">
+<p className="text-[11px] text-[#b8a1a1] mt-5 mb-2 tracking-[0.25em] font-medium px-2">
   PRINCIPAL
 </p>
 
@@ -117,7 +117,7 @@ className="absolute top-6 -right-4 z-50 w-8 h-8 rounded-full bg-[#8c0303] text-w
 </Link>
 
 {!collapsed && (
-<p className="text-[11px] text-[#b8a1a1] mt-8 mb-4 tracking-[0.25em] font-medium px-2">
+<p className="text-[11px] text-[#b8a1a1] mt-5 mb-2 tracking-[0.25em] font-medium px-2">
   OPERACIÓN
 </p>
 )}
@@ -133,7 +133,7 @@ className="absolute top-6 -right-4 z-50 w-8 h-8 rounded-full bg-[#8c0303] text-w
 </Link>
 
 {!collapsed && (
-<p className="text-[11px] text-[#b8a1a1] mt-8 mb-4 tracking-[0.25em] font-medium px-2">
+<p className="text-[11px] text-[#b8a1a1] mt-5 mb-2 tracking-[0.25em] font-medium px-2">
   REPORTES
 </p>
 )}
@@ -149,7 +149,7 @@ className="absolute top-6 -right-4 z-50 w-8 h-8 rounded-full bg-[#8c0303] text-w
 </Link>
 
 {!collapsed && (
-  <p className="text-[11px] text-[#b8a1a1] mt-8 mb-4 tracking-[0.25em] font-medium px-2">
+  <p className="text-[11px] text-[#b8a1a1] mt-5 mb-2 tracking-[0.25em] font-medium px-2">
     CUADRO DE MANDOS
   </p>
 )}
@@ -180,7 +180,7 @@ className="absolute top-6 -right-4 z-50 w-8 h-8 rounded-full bg-[#8c0303] text-w
 </Link>
 
 {!collapsed && (
-<p className="text-[11px] text-[#b8a1a1] mt-8 mb-4 tracking-[0.25em] font-medium px-2">
+<p className="text-[11px] text-[#b8a1a1] mt-5 mb-2 tracking-[0.25em] font-medium px-2">
   INVENTARIO
 </p>
 )}
@@ -195,18 +195,18 @@ className="absolute top-6 -right-4 z-50 w-8 h-8 rounded-full bg-[#8c0303] text-w
   {!collapsed && 'Recipes'}
 </Link>
 
-<div className="border-t border-[#2b4a39] p-4">
-  <div className={`${collapsed ? 'items-center' : ''} flex gap-3`}>
-    <div className="w-9 h-9 rounded-full bg-[#6f8f73] flex items-center justify-center text-sm font-bold">
+<div className="border-t border-[#f1dede] p-3 bg-white">
+  <div className={`${collapsed ? 'justify-center' : ''} flex gap-3 items-center`}>
+    <div className="w-8 h-8 rounded-full bg-[#8c0303] text-white flex items-center justify-center text-xs font-bold shrink-0">
       {usuario.nombre?.charAt(0) || 'U'}
     </div>
 
     {!collapsed && (
       <div className="min-w-0">
-        <p className="text-sm font-semibold text-white truncate">
+        <p className="text-xs font-semibold text-[#7a0000] truncate">
           {usuario.nombre || 'Usuario'}
         </p>
-        <p className="text-[11px] text-[#b8c9bd] truncate">
+        <p className="text-[10px] text-[#b07a7a] truncate">
           {usuario.email}
         </p>
       </div>
@@ -217,7 +217,7 @@ className="absolute top-6 -right-4 z-50 w-8 h-8 rounded-full bg-[#8c0303] text-w
     <button
       type="button"
       onClick={cerrarSesion}
-      className="mt-4 w-full rounded-full border border-[#f7c65d] px-3 py-2 text-[11px] font-semibold text-[#f7c65d] hover:bg-[#223f2f]"
+      className="mt-3 w-full rounded-xl border border-[#efcaca] px-3 py-2 text-[11px] font-semibold text-[#8c0303] hover:bg-[#fff1f1]"
     >
       Cerrar sesión
     </button>
