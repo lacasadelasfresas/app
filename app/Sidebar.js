@@ -103,7 +103,7 @@ className="absolute top-6 -right-4 z-50 w-8 h-8 rounded-full bg-[#8c0303] text-w
 />
         </div>
 
-        <div className="p-4">
+       <div className="flex-1 overflow-y-auto px-4 py-3 space-y-1">
 <p className="text-[11px] text-[#b8a1a1] mt-5 mb-2 tracking-[0.25em] font-medium px-2">
   PRINCIPAL
 </p>
@@ -195,7 +195,7 @@ className="absolute top-6 -right-4 z-50 w-8 h-8 rounded-full bg-[#8c0303] text-w
   {!collapsed && 'Recipes'}
 </Link>
 
-<div className="mt-auto border-t border-[#f1dede] p-3 bg-white">
+<div className="border-t border-[#f1dede] p-3 bg-white shrink-0">
   <div className={`${collapsed ? 'justify-center' : ''} flex gap-3 items-center`}>
     <div className="w-8 h-8 rounded-full bg-[#8c0303] text-white flex items-center justify-center text-xs font-bold shrink-0">
       {usuario.nombre?.charAt(0) || 'U'}
