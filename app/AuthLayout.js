@@ -4,9 +4,6 @@ import { useEffect, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import Sidebar from './Sidebar'
 import { supabase } from '@/lib/supabaseClient'
-localStorage.setItem('usuarioRol', usuario.rol)
-localStorage.setItem('usuarioNombre', usuario.nombre)
-localStorage.setItem('usuarioEmail', usuario.email)
 
 export default function AuthLayout({ children }) {
   const router = useRouter()

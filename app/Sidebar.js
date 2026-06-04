@@ -57,6 +57,14 @@ useEffect(() => {
   cargarUsuario()
 }, [])
 
+async function cerrarSesion() {
+  await supabase.auth.signOut()
+  localStorage.removeItem('usuarioRol')
+  localStorage.removeItem('usuarioNombre')
+  localStorage.removeItem('usuarioEmail')
+  router.push('/login')
+}
+
 const isActive = (path) => {
   if (path === '/') return pathname === '/'
   return pathname === path || pathname.startsWith(`${path}/`)
