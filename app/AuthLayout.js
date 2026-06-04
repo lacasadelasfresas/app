@@ -67,13 +67,17 @@ useEffect(() => {
   }
 
 return (
-  <div className="flex min-h-screen bg-[#fcf8f8] items-stretch">
+  <div className="min-h-screen bg-[#fcf8f8]">
     <Sidebar
       collapsed={sidebarCollapsed}
       setCollapsed={setSidebarCollapsed}
     />
 
-    <div className="flex-1 w-full min-w-0">
+    <div
+      className={`transition-all duration-300 ${
+        sidebarCollapsed ? 'ml-[82px]' : 'ml-[250px]'
+      }`}
+    >
       {children}
     </div>
   </div>

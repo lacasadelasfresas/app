@@ -71,14 +71,14 @@ const isActive = (path) => {
 }
 
 const linkClass = (path) =>
-  `w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-[15px] transition ${
+  `w-full flex items-center gap-3 px-3 py-2 rounded-xl text-[13px] transition ${
     isActive(path)
-      ? 'bg-[#8c0303] text-white'
-      : 'text-[#2e2e2e] hover:bg-[#fff1f1]'
-  }`
+      ? 'bg-[#f7c65d] text-[#173324] font-semibold'
+      : 'text-[#d7e3d9] hover:bg-[#223f2f]'
+  } ${collapsed ? 'justify-center' : ''}`
   return (
 <aside
-  className={`relative bg-white border-r border-[#f1dede] flex flex-col justify-between transition-all duration-300 self-stretch ${
+  className={`fixed left-0 top-0 z-40 h-screen bg-[#173324] text-white border-r border-[#2b4a39] flex flex-col transition-all duration-300 ${
     collapsed ? 'w-[82px]' : 'w-[250px]'
   }`}
 >
