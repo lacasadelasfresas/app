@@ -40,13 +40,30 @@ useEffect(() => {
   })
 }, [])
 
-async function cerrarSesion() {
-  await supabase.auth.signOut()
-  localStorage.removeItem('usuarioRol')
-  localStorage.removeItem('usuarioNombre')
-  localStorage.removeItem('usuarioEmail')
-  router.push('/login')
-}
+useEffect(() => {
+  async function cargarUsuario() {
+    const { data } = await supabase.auth.getSession()
+    const email = data.session?.user?.email
+
+    if (!email) return
+
+    const { data: usuario } = await supabase
+      .from('usuarios')
+      .select('nombre, email, rol')
+      .eq('email', email)
+      .single()
+
+    if (usuario) {
+      setUsuario({
+        nombre: usuario.nombre || 'Usuario',
+        email: usuario.email || '',
+        rol: usuario.rol || '',
+      })
+    }
+  }
+
+  cargarUsuario()
+}, [])
 
 const isActive = (path) => {
   if (path === '/') return pathname === '/'
@@ -60,8 +77,8 @@ const linkClass = (path) =>
       : 'text-[#2e2e2e] hover:bg-[#fff1f1]'
   }`
   return (
-    <aside
-  className={`relative min-h-screen bg-white border-r border-[#f1dede] flex flex-col justify-between transition-all duration-300 ${
+<aside
+  className={`relative bg-white border-r border-[#f1dede] flex flex-col justify-between transition-all duration-300 self-stretch ${
     collapsed ? 'w-[82px]' : 'w-[250px]'
   }`}
 >
@@ -71,7 +88,7 @@ const linkClass = (path) =>
 <button
   type="button"
   onClick={() => setCollapsed(!collapsed)}
-  className="absolute top-5 right-[-14px] w-7 h-7 rounded-full bg-[#8c0303] text-white flex items-center justify-center text-xs shadow-md"
+className="absolute top-6 -right-4 z-50 w-8 h-8 rounded-full bg-[#8c0303] text-white flex items-center justify-center text-lg shadow-lg border-2 border-white"
 >
   {collapsed ? '›' : '‹'}
 </button>

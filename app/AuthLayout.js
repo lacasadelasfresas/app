@@ -4,6 +4,9 @@ import { useEffect, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import Sidebar from './Sidebar'
 import { supabase } from '@/lib/supabaseClient'
+localStorage.setItem('usuarioRol', usuario.rol)
+localStorage.setItem('usuarioNombre', usuario.nombre)
+localStorage.setItem('usuarioEmail', usuario.email)
 
 export default function AuthLayout({ children }) {
   const router = useRouter()
@@ -67,13 +70,13 @@ useEffect(() => {
   }
 
 return (
-  <div className="flex min-h-screen bg-[#fcf8f8]">
+  <div className="flex min-h-screen bg-[#fcf8f8] items-stretch">
     <Sidebar
       collapsed={sidebarCollapsed}
       setCollapsed={setSidebarCollapsed}
     />
 
-    <div className="flex-1 w-full">
+    <div className="flex-1 w-full min-w-0">
       {children}
     </div>
   </div>
