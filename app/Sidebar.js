@@ -195,7 +195,7 @@ className="absolute top-6 -right-4 z-50 w-8 h-8 rounded-full bg-[#8c0303] text-w
   {!collapsed && 'Recipes'}
 </Link>
 
-<div className="border-t border-[#f1dede] p-3 bg-white">
+<div className="mt-auto border-t border-[#f1dede] p-3 bg-white">
   <div className={`${collapsed ? 'justify-center' : ''} flex gap-3 items-center`}>
     <div className="w-8 h-8 rounded-full bg-[#8c0303] text-white flex items-center justify-center text-xs font-bold shrink-0">
       {usuario.nombre?.charAt(0) || 'U'}
