@@ -33,11 +33,11 @@ const [usuario, setUsuario] = useState({
 })
 
 useEffect(() => {
-  setUsuario({
-    nombre: localStorage.getItem('usuarioNombre') || 'Usuario',
-    email: localStorage.getItem('usuarioEmail') || '',
-    rol: localStorage.getItem('usuarioRol') || '',
-  })
+const [usuario, setUsuario] = useState({
+  nombre: 'Usuario',
+  email: '',
+  rol: '',
+})
 }, [])
 
 useEffect(() => {
