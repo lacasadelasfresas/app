@@ -195,6 +195,17 @@ className="absolute top-6 -right-4 z-50 w-8 h-8 rounded-full bg-[#8c0303] text-w
   {!collapsed && 'Recipes'}
 </Link>
 
+{!collapsed && (
+  <p className="text-[11px] text-[#b8a1a1] mt-6 mb-3 tracking-[0.25em] font-medium px-2">
+    ADMINISTRACIÓN
+  </p>
+)}
+
+<Link href="/auditoria" className={linkClass('/auditoria')}>
+  <ShieldCheck size={18} />
+  {!collapsed && 'Auditoría'}
+</Link>
+
 <div className="border-t border-[#f1dede] p-3 bg-white shrink-0">
   <div className={`${collapsed ? 'justify-center' : ''} flex gap-3 items-center`}>
     <div className="w-8 h-8 rounded-full bg-[#8c0303] text-white flex items-center justify-center text-xs font-bold shrink-0">
