@@ -79,7 +79,7 @@ const linkClass = (path) =>
   } ${collapsed ? 'justify-center' : ''}`
   return (
 <aside
-  className={`fixed left-0 top-0 z-40 h-screen bg-white text-[#2e2e2e] border-r border-[#f1dede] flex flex-col transition-all duration-300 ${
+  className={`fixed left-0 top-0 z-40 h-screen overflow-hidden bg-white text-[#2e2e2e] border-r border-[#f1dede] flex flex-col transition-all duration-300 ${
     collapsed ? 'w-[82px]' : 'w-[250px]'
   }`}
 >
@@ -104,7 +104,7 @@ className="absolute top-6 -right-4 z-50 w-8 h-8 rounded-full bg-[#8c0303] text-w
 />
         </div>
 
-       <div className="flex-1 overflow-y-auto px-4 py-3 space-y-1">
+       <div className="flex-1 min-h-0 overflow-y-auto px-4 py-3 space-y-1">
 <p className="text-[11px] text-[#b8a1a1] mt-5 mb-2 tracking-[0.25em] font-medium px-2">
   PRINCIPAL
 </p>
