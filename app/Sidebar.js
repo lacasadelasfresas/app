@@ -118,7 +118,7 @@ export default function Sidebar({ collapsed, setCollapsed }) {
           className={linkClass('/app/cuadro-de-mandos')}
         >
           <LayoutDashboard size={18} />
-          {!collapsed && 'Dashboard'}
+          {!collapsed && 'Dashboard General'}
         </Link>
 
         {sectionTitle('Operación')}
@@ -222,4 +222,4 @@ export default function Sidebar({ collapsed, setCollapsed }) {
       </div>
     </aside>
   )
-}
+} 
