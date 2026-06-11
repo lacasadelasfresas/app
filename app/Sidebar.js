@@ -16,6 +16,7 @@ import {
   Megaphone,
   Mail,
   BarChart3,
+  ShieldCheck,
 } from 'lucide-react'
 
 import { useEffect, useState } from 'react'
