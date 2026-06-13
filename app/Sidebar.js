@@ -70,7 +70,7 @@ export default function Sidebar({ collapsed, setCollapsed }) {
   }
 
   const linkClass = (path) =>
-    `w-full flex items-center gap-3 px-3 py-2 rounded-xl text-[13px] transition ${
+    `w-full flex items-center gap-3 px-3 py-1.5 rounded-xl text-[12px] transition ${
       isActive(path)
         ? 'bg-[#8c0303] text-white font-semibold shadow-sm'
         : 'text-[#2e2e2e] hover:bg-[#fff1f1]'
@@ -78,7 +78,7 @@ export default function Sidebar({ collapsed, setCollapsed }) {
 
   const sectionTitle = (label) =>
     !collapsed && (
-      <p className="text-[10px] text-[#b8a1a1] mt-4 mb-2 tracking-[0.22em] font-medium px-2 uppercase">
+      <p className="text-[9px] text-[#b8a1a1] mt-3 mb-1.5 tracking-[0.22em] font-medium px-2 uppercase">
         {label}
       </p>
     )
@@ -110,7 +110,7 @@ export default function Sidebar({ collapsed, setCollapsed }) {
         )}
       </div>
 
-      <nav className="flex-1 min-h-0 overflow-y-auto px-4 py-3 space-y-1">
+      <nav className="flex-1 min-h-0 overflow-hidden px-3 py-2 space-y-0.5">
         {sectionTitle('Principal')}
 
         <Link
@@ -203,7 +203,7 @@ export default function Sidebar({ collapsed, setCollapsed }) {
               <p className="text-xs font-semibold text-[#7a0000] truncate">
                 {usuario.nombre || 'Usuario'}
               </p>
-              <p className="text-[10px] text-[#b07a7a] truncate">
+              <p className="text-[9px] text-[#b07a7a] truncate">
                 {usuario.email}
               </p>
             </div>
