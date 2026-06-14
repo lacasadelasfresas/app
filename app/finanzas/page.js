@@ -880,13 +880,33 @@ ${ingresosMes.toFixed(2)}
                 />
               </Field>
 
-              <Field label="Categoría">
-                <select
-                  name="categoria"
-                  value={form.categoria}
-                  onChange={handleChange}
-                  className={inputClass}
-                >
+<Field label="Categoría">
+  <select
+    name="categoria"
+    value={form.categoria}
+    onChange={(e) => {
+      const categoria = e.target.value
+
+      const tipoAutomatico = {
+        'Materia prima': 'Variable',
+        'Packaging': 'Variable',
+        'Delivery': 'Variable',
+        'Marketing': 'Fijo',
+        'Operación': 'Fijo',
+        'Equipos': 'Fijo',
+        'Servicios': 'Fijo',
+        'Comisiones plataformas': 'Variable',
+        'Otros': 'Variable',
+      }
+
+      setForm({
+        ...form,
+        categoria,
+        tipo_gasto: tipoAutomatico[categoria] || 'Variable',
+      })
+    }}
+    className={inputClass}
+  >
                   <option>Materia prima</option>
                   <option>Packaging</option>
                   <option>Delivery</option>
