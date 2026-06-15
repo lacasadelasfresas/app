@@ -171,14 +171,18 @@ const gastoPayload = {
   factura_nombre: facturaNombre,
   }
   
-  const { error } = editingGasto
-    ? await supabase
-        .from('gastos')
-        .update(gastoPayload)
-        .eq('id', editingGasto.id)
-    : await supabase
-        .from('gastos')
-        .insert([gastoPayload])
+const { data, error } = editingGasto
+  ? await supabase
+      .from('gastos')
+      .update(gastoPayload)
+      .eq('id', editingGasto.id)
+      .select()
+      .single()
+  : await supabase
+      .from('gastos')
+      .insert([gastoPayload])
+      .select()
+      .single()
 
   if (error) {
     console.error('Error guardando gasto:', error)
