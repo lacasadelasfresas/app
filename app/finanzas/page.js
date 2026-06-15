@@ -25,6 +25,7 @@ const [metodoPagoFiltro, setMetodoPagoFiltro] = useState('Todos')
 const [editingGasto, setEditingGasto] = useState(null)
 const [facturaFile, setFacturaFile] = useState(null)
 const formGastoRef = useRef(null)
+const [proveedores, setProveedores] = useState([])
 
   const [form, setForm] = useState({
     fecha: getTodayDate(),
@@ -71,6 +72,22 @@ function setFiltroMesActual() {
   useEffect(() => {
     fetchFinanzas()
   }, [])
+  fetchProveedores()
+
+  async function fetchProveedores() {
+  const { data, error } = await supabase
+    .from('proveedores')
+    .select('*')
+    .eq('activo', true)
+    .order('nombre', { ascending: true })
+
+  if (error) {
+    console.error('Error cargando proveedores:', error)
+    return
+  }
+
+  setProveedores(data || [])
+}
 
   async function fetchFinanzas() {
     setLoading(true)
@@ -108,9 +125,13 @@ function setFiltroMesActual() {
   }
 
 async function guardarGasto() {
-  if (!form.concepto || !form.monto) {
-    alert('Debes agregar un concepto y un monto.')
-    return
+if (form.proveedor && form.proveedor.trim() !== '') {
+  await supabase
+    .from('proveedores')
+    .upsert(
+      { nombre: form.proveedor.trim(), activo: true },
+      { onConflict: 'nombre' }
+    )
   }
 
   setSaving(true)
@@ -942,13 +963,20 @@ ${ingresosMes.toFixed(2)}
               </Field>
 
               <Field label="Proveedor">
-                <input
-                  name="proveedor"
-                  value={form.proveedor}
-                  onChange={handleChange}
-                  placeholder="Opcional"
-                  className={inputClass}
-                />
+<input
+  name="proveedor"
+  value={form.proveedor}
+  onChange={handleChange}
+  list="proveedores-list"
+  className={inputClass}
+  placeholder="Selecciona o escribe un proveedor"
+/>
+
+<datalist id="proveedores-list">
+  {proveedores.map((proveedor) => (
+    <option key={proveedor.id} value={proveedor.nombre} />
+  ))}
+</datalist>
               </Field>
 
               <Field label="Método de pago">
