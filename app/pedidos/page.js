@@ -1,7 +1,9 @@
+
 'use client'
 
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabaseClient'
+import { registrarAuditoria } from '@/lib/auditoria'
 import {
   Search,
   Plus,
@@ -655,9 +657,9 @@ if (!form.producto || !form.monto_pago) {
   setSaving(true)
 
   if (editingOrder) {
-  const { error: updateError } = await supabase
-    .from('ventas')
-    .update({
+const { data, error: updateError } = await supabase
+  .from('ventas')
+  .update({
       fecha: form.fecha || new Date().toISOString().split('T')[0],
       cliente: form.cliente || 'Walk-in',
       whatsapp: form.whatsapp || null,
@@ -676,6 +678,8 @@ if (!form.producto || !form.monto_pago) {
       editado_en: new Date().toISOString(),
     })
     .eq('id', editingOrder.id)
+    .select()
+.single()
 
   if (updateError) {
     console.error('Error editando venta:', updateError)
@@ -683,6 +687,12 @@ if (!form.producto || !form.monto_pago) {
     setSaving(false)
     return
   }
+  await registrarAuditoria({
+  accion: 'Editar venta',
+  modulo: 'Ventas',
+  descripcion: `Editó la venta de ${form.producto} por $${form.monto_pago}`,
+  registroId: data?.id || editingOrder?.id || null,
+})
 
   alert('Venta actualizada correctamente.')
 
