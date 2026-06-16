@@ -54,19 +54,20 @@ export default function AuditoriaPage() {
                 <th className="py-4 px-5 text-left">Acción</th>
                 <th className="py-4 px-5 text-left">Módulo</th>
                 <th className="py-4 px-5 text-left">Descripción</th>
+                <th className="py-4 px-5 text-left">Cambios</th>
               </tr>
             </thead>
 
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan="6" className="py-8 text-center text-[#b07a7a]">
+                  <td colSpan="7" className="py-8 text-center text-[#b07a7a]">
                     Cargando auditoría...
                   </td>
                 </tr>
               ) : registros.length === 0 ? (
                 <tr>
-                  <td colSpan="6" className="py-8 text-center text-[#b07a7a]">
+                  <td colSpan="7" className="py-8 text-center text-[#b07a7a]">
                     No hay movimientos registrados todavía.
                   </td>
                 </tr>
@@ -106,6 +107,39 @@ export default function AuditoriaPage() {
                     <td className="py-4 px-5">
                       {item.descripcion || 'Sin descripción'}
                     </td>
+                    <td className="py-4 px-5">
+  {(item.datos_antes || item.datos_despues) ? (
+    <details>
+      <summary className="cursor-pointer text-[#8c0303] font-semibold">
+        Ver cambios
+      </summary>
+
+      <div className="mt-3 space-y-3 text-xs">
+        <div className="rounded-xl border border-[#f3dede] bg-[#fffafa] p-3">
+          <p className="font-semibold text-[#8c0303] mb-2">
+            Antes
+          </p>
+
+          <pre className="whitespace-pre-wrap break-words">
+            {JSON.stringify(item.datos_antes, null, 2)}
+          </pre>
+        </div>
+
+        <div className="rounded-xl border border-[#f3dede] bg-[#fffafa] p-3">
+          <p className="font-semibold text-[#8c0303] mb-2">
+            Después
+          </p>
+
+          <pre className="whitespace-pre-wrap break-words">
+            {JSON.stringify(item.datos_despues, null, 2)}
+          </pre>
+        </div>
+      </div>
+    </details>
+  ) : (
+    <span className="text-[#b07a7a]">—</span>
+  )}
+</td>
                   </tr>
                 ))
               )}
