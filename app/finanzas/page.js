@@ -196,6 +196,8 @@ await registrarAuditoria({
   modulo: 'Finanzas',
   descripcion: `${editingGasto ? 'Editó' : 'Registró'} el gasto: ${form.concepto} por $${form.monto}`,
   registroId: data?.id || editingGasto?.id || null,
+  datosAntes: editingGasto || null,
+  datosDespues: data || null,
 })
 
   setForm({
