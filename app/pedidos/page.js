@@ -644,6 +644,13 @@ async function eliminarVenta(venta) {
 
   alert('Venta eliminada correctamente.')
 
+await registrarAuditoria({
+  accion: 'Eliminar venta',
+  modulo: 'Ventas',
+  descripcion: `Eliminó venta de ${venta.producto} por $${venta.monto_pago}`,
+  registroId: venta.id,
+})
+
   setSelectedOrder(null)
   fetchOrders()
 }
