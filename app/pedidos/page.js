@@ -754,6 +754,12 @@ if (error) {
 }
 
 await descontarInventarioPorVenta(form.producto, data?.id)
+await registrarAuditoria({
+  accion: 'Crear venta',
+  modulo: 'Ventas',
+  descripcion: `Registró venta de ${form.producto} por $${form.monto_pago}`,
+  registroId: data?.id || null,
+})
 
   await fetchOrders()
 
