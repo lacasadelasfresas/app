@@ -136,6 +136,11 @@ export default function Sidebar({ collapsed, setCollapsed }) {
 
         {sectionTitle('Reportes')}
 
+        <Link href="/gastos-recurrentes" className={linkClass('/gastos-recurrentes')}>
+  <Repeat size={18} />
+  {!collapsed && 'Gastos recurrentes'}
+</Link>
+
         <Link href="/ventas" className={linkClass('/ventas')}>
           <DollarSign size={18} />
           {!collapsed && 'Análisis de Ventas'}
@@ -145,11 +150,6 @@ export default function Sidebar({ collapsed, setCollapsed }) {
           <Wallet size={18} />
           {!collapsed && 'Finanzas'}
         </Link>
-        
-        <Link href="/gastos-recurrentes" className={linkClass('/gastos-recurrentes')}>
-  <Repeat size={18} />
-  {!collapsed && 'Gastos recurrentes'}
-</Link>
 
         {sectionTitle('Cuadro de Mandos')}
 
