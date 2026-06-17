@@ -77,6 +77,7 @@ const payload = {
       metodo_pago: 'Efectivo',
       monto: '',
       dia_generacion: 1,
+    requiere_revision: false,
     })
 
     await fetchItems()
