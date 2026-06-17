@@ -84,6 +84,82 @@ const payload = {
     setSaving(false)
   }
 
+async function generarGastosDelMes() {
+  const confirmar = confirm('¿Generar los gastos recurrentes activos para este mes?')
+  if (!confirmar) return
+
+  setSaving(true)
+
+  const hoy = new Date()
+  const year = hoy.getFullYear()
+  const month = String(hoy.getMonth() + 1).padStart(2, '0')
+  const periodo = `${year}-${month}`
+
+  const activos = items.filter((item) => item.activo)
+
+  if (activos.length === 0) {
+    alert('No hay gastos recurrentes activos para generar.')
+    setSaving(false)
+    return
+  }
+
+  let creados = 0
+  let omitidos = 0
+
+  for (const item of activos) {
+    const fecha = `${periodo}-${String(item.dia_generacion || 1).padStart(2, '0')}`
+
+    const { data: existente } = await supabase
+      .from('gastos')
+      .select('id')
+      .eq('concepto', item.nombre)
+      .eq('proveedor', item.proveedor || '')
+      .gte('fecha', `${periodo}-01`)
+      .lte('fecha', `${periodo}-31`)
+      .maybeSingle()
+
+    if (existente) {
+      omitidos++
+      continue
+    }
+
+    const payload = {
+      fecha,
+      categoria: item.categoria,
+      tipo_gasto: item.tipo_gasto || 'Fijo',
+      concepto: item.nombre,
+      proveedor: item.proveedor || null,
+      metodo_pago: item.metodo_pago || 'Efectivo',
+      estado_pago: 'Pendiente',
+      monto: Number(item.monto || 0),
+      notas: item.requiere_revision
+        ? 'Gasto recurrente generado para revisión mensual.'
+        : 'Gasto recurrente generado automáticamente.',
+    }
+
+    const { data, error } = await supabase
+      .from('gastos')
+      .insert([payload])
+      .select()
+      .single()
+
+    if (!error) {
+      creados++
+
+      await registrarAuditoria({
+        accion: 'Generar gasto recurrente',
+        modulo: 'Finanzas',
+        descripcion: `Generó gasto recurrente: ${item.nombre} por $${item.monto}`,
+        registroId: data?.id || null,
+        datosDespues: data || null,
+      })
+    }
+  }
+
+  alert(`Proceso terminado. Creados: ${creados}. Omitidos: ${omitidos}.`)
+  setSaving(false)
+}
+
   async function desactivar(item) {
     const confirmar = confirm('¿Desactivar este gasto recurrente?')
     if (!confirmar) return
@@ -117,16 +193,25 @@ const payload = {
 
   return (
     <main className="min-h-screen bg-[#fcf8f8]">
-      <div className="bg-white border-b border-[#f1dede] px-10 h-[86px] flex items-center justify-between">
-        <div>
-          <h1 className="text-[30px] text-[#7a0000] ivy leading-none">
-            Gastos recurrentes
-          </h1>
-          <p className="text-sm text-[#b07a7a] mt-2">
-            Configura costos fijos o repetitivos del negocio.
-          </p>
-        </div>
-      </div>
+<div className="bg-white border-b border-[#f1dede] px-10 h-[86px] flex items-center justify-between">
+  <div>
+    <h1 className="text-[30px] text-[#7a0000] ivy leading-none">
+      Gastos recurrentes
+    </h1>
+    <p className="text-sm text-[#b07a7a] mt-2">
+      Configura costos fijos o repetitivos del negocio.
+    </p>
+  </div>
+
+  <button
+    type="button"
+    onClick={generarGastosDelMes}
+    disabled={saving}
+    className="rounded-xl bg-[#8c0303] text-white px-5 py-3 text-sm font-semibold hover:bg-[#6f0202] disabled:opacity-60"
+  >
+    {saving ? 'Generando...' : 'Generar gastos del mes'}
+  </button>
+</div>
 
       <section className="p-8 grid grid-cols-1 xl:grid-cols-[420px_1fr] gap-6">
         <div className="bg-white border border-[#f3dede] rounded-[28px] p-6">
