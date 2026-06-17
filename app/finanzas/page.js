@@ -167,8 +167,8 @@ const gastoPayload = {
     metodo_pago: form.metodo_pago || null,
     monto: Number(form.monto || 0),
     notas: form.notas || null,
-      factura_path: facturaPath,
-  factura_nombre: facturaNombre,
+factura_path: facturaPath || editingGasto?.factura_path || null,
+factura_nombre: facturaNombre || editingGasto?.factura_nombre || null,
   }
   
 const { data, error } = editingGasto

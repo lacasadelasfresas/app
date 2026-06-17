@@ -117,6 +117,8 @@ export default function AuditoriaPage() {
 
       <div className="mt-3 rounded-xl border border-[#f3dede] bg-[#fffafa] p-4 text-xs space-y-2">
         {Object.keys(item.datos_despues || {}).map((campo) => {
+          const camposOcultos = ['factura_path', 'factura_nombre', 'id', 'created_at', 'updated_at']
+if (camposOcultos.includes(campo)) return null
           const antes = item.datos_antes?.[campo]
           const despues = item.datos_despues?.[campo]
 
