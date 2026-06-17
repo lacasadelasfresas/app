@@ -16,6 +16,7 @@ export default function GastosRecurrentesPage() {
     metodo_pago: 'Efectivo',
     monto: '',
     dia_generacion: 1,
+    requiere_revision: false,
   })
 
   useEffect(() => {
@@ -39,12 +40,13 @@ export default function GastosRecurrentesPage() {
 
     setSaving(true)
 
-    const payload = {
-      ...form,
-      monto: Number(form.monto || 0),
-      dia_generacion: Number(form.dia_generacion || 1),
-      activo: true,
-    }
+const payload = {
+  ...form,
+  monto: Number(form.monto || 0),
+  dia_generacion: Number(form.dia_generacion || 1),
+  requiere_revision: Boolean(form.requiere_revision),
+  activo: true,
+}
 
     const { data, error } = await supabase
       .from('gastos_recurrentes')
@@ -193,6 +195,16 @@ export default function GastosRecurrentesPage() {
                 setForm({ ...form, dia_generacion: e.target.value })
               }
             />
+            <label className="flex items-center gap-3 rounded-xl border border-[#efcaca] px-4 py-3 text-sm text-[#7a0000]">
+  <input
+    type="checkbox"
+    checked={form.requiere_revision}
+    onChange={(e) =>
+      setForm({ ...form, requiere_revision: e.target.checked })
+    }
+  />
+  Requiere revisión mensual
+</label>
 
             <button
               onClick={guardar}
@@ -216,13 +228,14 @@ export default function GastosRecurrentesPage() {
                 <th className="py-4 px-5 text-left">Día</th>
                 <th className="py-4 px-5 text-left">Estado</th>
                 <th className="py-4 px-5 text-left">Acción</th>
+             <th className="py-4 px-5 text-left">Revisión</th>
               </tr>
             </thead>
 
             <tbody>
               {items.length === 0 ? (
                 <tr>
-                  <td colSpan="7" className="py-8 text-center text-[#b07a7a]">
+                  <td colSpan="8" className="py-8 text-center text-[#b07a7a]">
                     No hay gastos recurrentes registrados.
                   </td>
                 </tr>
@@ -248,6 +261,9 @@ export default function GastosRecurrentesPage() {
                           <Trash2 size={15} />
                         </button>
                       )}
+                    </td>
+                    <td className="py-4 px-5">
+                      {item.requiere_revision ? 'Sí' : 'No'}
                     </td>
                   </tr>
                 ))
