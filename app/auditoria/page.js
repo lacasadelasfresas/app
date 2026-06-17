@@ -104,36 +104,46 @@ export default function AuditoriaPage() {
                       {item.modulo}
                     </td>
 
-                    <td className="py-4 px-5">
-                      {item.descripcion || 'Sin descripción'}
-                    </td>
-                    <td className="py-4 px-5">
-  {(item.datos_antes || item.datos_despues) ? (
+<td className="py-4 px-5">
+  {item.descripcion || 'Sin descripción'}
+</td>
+
+<td className="py-4 px-5">
+  {item.datos_antes && item.datos_despues ? (
     <details>
       <summary className="cursor-pointer text-[#8c0303] font-semibold">
         Ver cambios
       </summary>
 
-      <div className="mt-3 space-y-3 text-xs">
-        <div className="rounded-xl border border-[#f3dede] bg-[#fffafa] p-3">
-          <p className="font-semibold text-[#8c0303] mb-2">
-            Antes
-          </p>
+      <div className="mt-3 rounded-xl border border-[#f3dede] bg-[#fffafa] p-4 text-xs space-y-2">
+        {Object.keys(item.datos_despues || {}).map((campo) => {
+          const antes = item.datos_antes?.[campo]
+          const despues = item.datos_despues?.[campo]
 
-          <pre className="whitespace-pre-wrap break-words">
-            {JSON.stringify(item.datos_antes, null, 2)}
-          </pre>
-        </div>
+          if (JSON.stringify(antes) === JSON.stringify(despues))
+            return null
 
-        <div className="rounded-xl border border-[#f3dede] bg-[#fffafa] p-3">
-          <p className="font-semibold text-[#8c0303] mb-2">
-            Después
-          </p>
+          return (
+            <div
+              key={campo}
+              className="border-b border-[#f5e5e5] pb-2"
+            >
+              <p className="font-semibold text-[#8c0303] capitalize">
+                {campo.replaceAll('_', ' ')}
+              </p>
 
-          <pre className="whitespace-pre-wrap break-words">
-            {JSON.stringify(item.datos_despues, null, 2)}
-          </pre>
-        </div>
+              <p>
+                <strong>Antes:</strong>{' '}
+                {String(antes ?? '-')}
+              </p>
+
+              <p>
+                <strong>Después:</strong>{' '}
+                {String(despues ?? '-')}
+              </p>
+            </div>
+          )
+        })}
       </div>
     </details>
   ) : (
