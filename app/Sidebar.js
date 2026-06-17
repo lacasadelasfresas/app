@@ -17,6 +17,7 @@ import {
   Mail,
   BarChart3,
   ShieldCheck,
+  Repeat,
 } from 'lucide-react'
 
 import { supabase } from '@/lib/supabaseClient'
@@ -144,6 +145,11 @@ export default function Sidebar({ collapsed, setCollapsed }) {
           <Wallet size={18} />
           {!collapsed && 'Finanzas'}
         </Link>
+        
+        <Link href="/gastos-recurrentes" className={linkClass('/gastos-recurrentes')}>
+  <Repeat size={18} />
+  {!collapsed && 'Gastos recurrentes'}
+</Link>
 
         {sectionTitle('Cuadro de Mandos')}
 
