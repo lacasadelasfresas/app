@@ -102,3 +102,126 @@ body{
     max-width: 100%;
   }
 }
+
+@media (max-width: 768px) {
+  html,
+  body {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  main {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  section,
+  main > div,
+  main > section {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+
+  .grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  table {
+    min-width: 720px;
+  }
+
+  h1 {
+    font-size: 24px !important;
+    line-height: 1.1 !important;
+  }
+
+  h2 {
+    font-size: 22px !important;
+    line-height: 1.15 !important;
+  }
+
+  h3 {
+    font-size: 18px !important;
+    line-height: 1.2 !important;
+  }
+
+  p,
+  span,
+  label,
+  input,
+  select,
+  textarea,
+  button {
+    font-size: 14px !important;
+  }
+
+  input,
+  select,
+  textarea {
+    min-height: 46px !important;
+  }
+
+  button {
+    min-height: 42px !important;
+  }
+
+  /* Tarjetas generales */
+  [class*="rounded-[28px]"],
+  [class*="rounded-["] {
+    border-radius: 22px !important;
+  }
+
+  /* Valores grandes tipo $0.00 / KPIs */
+  main p,
+  main div {
+    word-break: normal;
+  }
+
+  main [class*="text-[48px]"],
+  main [class*="text-[52px]"],
+  main [class*="text-[56px]"],
+  main [class*="text-[60px]"],
+  main [class*="text-[64px]"] {
+    font-size: 38px !important;
+    line-height: 1 !important;
+  }
+
+  main [class*="text-[30px]"],
+  main [class*="text-[32px]"],
+  main [class*="text-[36px]"],
+  main [class*="text-[40px]"] {
+    font-size: 24px !important;
+    line-height: 1.15 !important;
+  }
+
+  /* Headers internos */
+  main > div:first-child {
+    height: auto !important;
+    min-height: 72px !important;
+    padding-top: 18px !important;
+    padding-bottom: 18px !important;
+    flex-wrap: wrap !important;
+    gap: 12px !important;
+  }
+
+  /* Botones superiores */
+  main > div:first-child button,
+  main > div:first-child input {
+    width: 100% !important;
+  }
+
+  /* Tablas con scroll horizontal limpio */
+  table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+
+  thead,
+  tbody,
+  tr {
+    width: 100%;
+  }
+}
