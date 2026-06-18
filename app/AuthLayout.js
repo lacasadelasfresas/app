@@ -98,11 +98,13 @@ export default function AuthLayout({ children }) {
         />
       </div>
 
-      <div
-        className={`transition-all duration-300 w-full ${
-          sidebarCollapsed ? 'md:ml-[82px]' : 'md:ml-[250px]'
-        }`}
-      >
+<div
+  className={`transition-all duration-300 min-w-0 ${
+    sidebarCollapsed
+      ? 'md:ml-[82px] md:w-[calc(100%-82px)]'
+      : 'md:ml-[250px] md:w-[calc(100%-250px)]'
+  }`}
+>
         <div className="md:hidden h-16" />
         {children}
       </div>
