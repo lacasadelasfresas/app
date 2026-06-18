@@ -67,3 +67,38 @@ body{
   border-radius: 30px;
   box-shadow: 0 10px 30px rgba(140,3,3,0.03);
 }
+
+@media (max-width: 768px) {
+  body {
+    overflow-x: hidden;
+  }
+
+  main {
+    width: 100%;
+    overflow-x: hidden;
+  }
+
+  section {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+
+  .grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  table {
+    min-width: 720px;
+  }
+
+  h1 {
+    font-size: 28px !important;
+    line-height: 1.1 !important;
+  }
+
+  input,
+  select,
+  button {
+    max-width: 100%;
+  }
+}
