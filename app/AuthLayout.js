@@ -105,7 +105,7 @@ export default function AuthLayout({ children }) {
       : 'md:ml-[250px] md:w-[calc(100%-250px)]'
   }`}
 >
-        <div className="md:hidden h-16" />
+        <div className="md:hidden h-20" />
         {children}
       </div>
     </div>
