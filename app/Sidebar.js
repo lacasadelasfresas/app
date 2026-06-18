@@ -85,16 +85,16 @@ export default function Sidebar({ collapsed, setCollapsed }) {
     )
 
   return (
-    <aside
-      className={`fixed left-0 top-0 z-40 h-screen overflow-hidden bg-white text-[#2e2e2e] border-r border-[#f1dede] flex flex-col transition-all duration-300 ${
-        collapsed ? 'w-[82px]' : 'w-[250px]'
-      }`}
-    >
+<aside
+  className={`h-screen overflow-hidden bg-white text-[#2e2e2e] border-r border-[#f1dede] flex flex-col transition-all duration-300 w-[250px] ${
+    collapsed ? 'md:w-[82px]' : 'md:w-[250px]'
+  }`}
+>
       <div className="relative h-[88px] px-6 flex items-center justify-center border-b border-[#f1dede] shrink-0">
         <button
           type="button"
           onClick={() => setCollapsed(!collapsed)}
-          className="absolute top-6 -right-4 z-50 w-8 h-8 rounded-full bg-[#8c0303] text-white flex items-center justify-center text-lg shadow-lg border-2 border-white"
+          className="hidden md:flex absolute top-6 -right-4 z-50 w-8 h-8 rounded-full bg-[#8c0303] text-white items-center justify-center text-lg shadow-lg border-2 border-white"
         >
           {collapsed ? '›' : '‹'}
         </button>

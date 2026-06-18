@@ -87,11 +87,11 @@ export default function AuthLayout({ children }) {
         />
       )}
 
-      <div
-        className={`fixed inset-y-0 left-0 z-[60] transition-transform duration-300 md:translate-x-0 ${
-          mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
-        }`}
-      >
+<div
+  className={`fixed inset-y-0 left-0 z-[60] w-[250px] transition-transform duration-300 md:w-auto md:translate-x-0 ${
+    mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
+  }`}
+>
         <Sidebar
           collapsed={sidebarCollapsed}
           setCollapsed={setSidebarCollapsed}
