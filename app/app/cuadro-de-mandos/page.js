@@ -501,21 +501,21 @@ const recentSales = [...current]
 <section className="w-full min-h-screen">
   
         {/* TOPBAR */}
-        <div className="bg-white border-b border-[#f1dede] px-10 h-[90px] flex items-center justify-between sticky top-0 z-20">
+        <div className="bg-white border-b border-[#f1dede] px-5 md:px-10 py-5 md:h-[90px] flex flex-col md:flex-row md:items-center md:justify-between gap-4 sticky top-0 z-20">
 
-<h1 className="text-[24px] font-medium text-[#151515] leading-none">
+<h1 className="text-[22px] md:text-[24px] font-medium text-[#151515] leading-tight md:leading-none pl-14 md:pl-0">
               Centro de Mandos | La Casa de las Fresas
           </h1>
 
-          <div className="flex items-center gap-4">
+<div className="w-full md:w-auto flex items-center gap-3 overflow-hidden">
 
-            <div className="flex items-center gap-2 bg-[#fff5f5] px-4 py-3 rounded-2xl">
+         <div className="flex-1 md:flex-none flex items-center gap-2 bg-[#fff5f5] px-4 py-3 rounded-2xl min-w-0">
 
               <Search size={18} className="text-gray-400" />
 
               <input
                 placeholder="Buscar..."
-                className="bg-transparent outline-none"
+                className="bg-transparent outline-none w-full min-w-0"
               />
 
             </div>
@@ -526,7 +526,7 @@ const recentSales = [...current]
 
 <Link
   href="/pedidos?new=1"
-  className="bg-[#8c0303] text-white px-5 py-3 rounded-2xl font-semibold flex items-center gap-2"
+  className="bg-[#8c0303] text-white px-4 md:px-5 py-3 rounded-2xl font-semibold flex items-center gap-2 shrink-0 text-sm"
 >
   <DollarSign size={16} />
   Registrar Venta
@@ -536,21 +536,21 @@ const recentSales = [...current]
         </div>
 
         {/* WRAPPER */}
-<div className="w-full px-8 py-7">
+<div className="w-full px-4 md:px-8 py-5 md:py-7 overflow-hidden">
 
           {/* BODY */}
 <div className="space-y-6 max-w-none">
 
             {/* TOP CARDS */}
-<div className="grid grid-cols-3 gap-6 w-full min-w-0">
+<div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 w-full min-w-0">
 
-              <div className="bg-white border border-[#f3dede] rounded-[30px] p-8 shadow-[0_4px_30px_rgba(0,0,0,0.03)]">
+              <div className="bg-white border border-[#f3dede] rounded-[26px] p-6 md:p-8 shadow-[0_4px_30px_rgba(0,0,0,0.03)]">
 
                 <p className="text-xs uppercase tracking-[0.2em] text-[#b9a0a0]">
                   Ingresos Totales
                 </p>
 
-                <h2 className="text-[44px] leading-none text-[#7a0000] ivy mt-4">
+                <h2 className="text-[28px] md:text-[36px] leading-none text-[#7a0000] ivy mt-4">
 ${totalIncome.toFixed(2)}
                 </h2>
 <p className={`mt-3 text-sm ${negativeIncomeTrendAlert || noSalesAlert ? 'text-red-500' : 'text-green-500'}`}>
@@ -561,13 +561,13 @@ ${totalIncome.toFixed(2)}
 
               </div>
 
-              <div className="bg-white border border-[#f3dede] rounded-[30px] p-8 shadow-[0_4px_30px_rgba(0,0,0,0.03)]">
+              <div className="bg-white border border-[#f3dede] rounded-[26px] p-6 md:p-8 shadow-[0_4px_30px_rgba(0,0,0,0.03)]">
 
                 <p className="text-xs uppercase tracking-[0.2em] text-[#b9a0a0]">
                   Total Transacciones
                 </p>
 
-                <h2 className="text-[58px] leading-none text-[#7a0000] ivy mt-4">
+                <h2 className="text-[28px] md:text-[36px] leading-none text-[#7a0000] ivy mt-4">
 {totalTransactions}             
                 </h2>
 
@@ -579,13 +579,13 @@ ${totalIncome.toFixed(2)}
 
               </div>
 
-              <div className="bg-white border border-[#f3dede] rounded-[30px] p-8 shadow-[0_4px_30px_rgba(0,0,0,0.03)]">
+              <div className="bg-white border border-[#f3dede] rounded-[26px] p-6 md:p-8 shadow-[0_4px_30px_rgba(0,0,0,0.03)]">
 
                 <p className="text-xs uppercase tracking-[0.2em] text-[#b9a0a0]">
                   Ticket Promedio
                 </p>
 
-                <h2 className="text-[58px] leading-none text-[#7a0000] ivy mt-4">
+                <h2 className="text-[40px] leading-none text-[#7a0000] ivy mt-4">
 ${averageTicket.toFixed(2)}
                 </h2>
 
@@ -599,9 +599,9 @@ ${averageTicket.toFixed(2)}
             </div>
 
             {/* MINI CARDS */}
-            <div className="grid grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 md:gap-6">
 
-<div className="bg-white border border-[#f3dede] rounded-[30px] p-6">
+<div className="bg-white border border-[#f3dede] rounded-[26px] p-6">
   <div className="flex items-start justify-between gap-5">
     <div>
       <p className="text-xs uppercase tracking-[0.22em] text-[#b9a0a0]">
@@ -618,14 +618,14 @@ ${averageTicket.toFixed(2)}
     </div>
   </div>
 </div>
-              <div className="bg-white border border-[#f3dede] rounded-[30px] p-7 shadow-[0_4px_30px_rgba(0,0,0,0.03)]">
+              <div className="bg-white border border-[#f3dede] rounded-[26px] p-6 md:p-7 shadow-[0_4px_30px_rgba(0,0,0,0.03)]">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-xs uppercase tracking-[0.2em] text-[#b9a0a0]">
                       Producto Estrella
                     </p>
 
-                    <h3 className="text-[36px] ivy text-[#7a0000] leading-none mt-3">
+                    <h3 className="text-[28px] md:text-[36px] ivy text-[#7a0000] leading-none mt-3">
 {starProduct}
                     </h3>
                   </div>
@@ -634,14 +634,14 @@ ${averageTicket.toFixed(2)}
                 </div>
               </div>
 
-<div className="bg-white border border-[#f3dede] rounded-[30px] p-7 shadow-[0_4px_30px_rgba(0,0,0,0.03)]">
+<div className="bg-white border border-[#f3dede] rounded-[26px] p-6 md:p-7 shadow-[0_4px_30px_rgba(0,0,0,0.03)]">
   <div className="flex items-center justify-between">
     <div>
       <p className="text-xs uppercase tracking-[0.2em] text-[#b9a0a0]">
         Ventas del Día
       </p>
 
-      <h3 className="text-[48px] ivy text-[#7a0000] leading-none mt-3">
+      <h3 className="text-[28px] md:text-[36px] ivy text-[#7a0000] leading-none mt-3">
         ${todayIncome.toFixed(2)}
       </h3>
 
@@ -654,14 +654,14 @@ ${averageTicket.toFixed(2)}
   </div>
 </div>
 
-<div className="bg-[#fff7f7] border border-[#f3dede] rounded-[30px] p-7 shadow-[0_4px_30px_rgba(0,0,0,0.03)]">
+<div className="bg-[#fff7f7] border border-[#f3dede] rounded-[26px] p-6 md:p-7 shadow-[0_4px_30px_rgba(0,0,0,0.03)]">
   <div className="flex items-center justify-between">
     <div>
       <p className="text-xs uppercase tracking-[0.2em] text-[#b9a0a0]">
         Última Venta
       </p>
 
-      <h3 className="text-[48px] ivy text-[#7a0000] leading-none mt-3">
+      <h3 className="text-[36px] md:text-[48px] ivy text-[#7a0000] leading-none mt-3">
         {lastSale ? `$${Number(lastSale.monto_pago || 0).toFixed(2)}` : '$0.00'}
       </h3>
 
@@ -682,7 +682,7 @@ ${averageTicket.toFixed(2)}
 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
   {/* Ventas Diarias */}
-  <div className="lg:col-span-2 bg-white border border-[#f3dede] rounded-[30px] p-6 shadow-[0_4px_30px_rgba(0,0,0,0.03)]">
+  <div className="lg:col-span-2 bg-white border border-[#f3dede] rounded-[26px] p-6 shadow-[0_4px_30px_rgba(0,0,0,0.03)]">
     <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-6">
       <div>
         <h2 className="text-[32px] leading-none text-[#7a0000] ivy">
@@ -707,7 +707,8 @@ ${averageTicket.toFixed(2)}
 
 <div className="w-full min-w-0 h-[320px] min-h-[320px] overflow-hidden">
 {salesData.length > 0 ? (
-<AreaChart width={880} height={320} data={salesData}>
+<ResponsiveContainer width="100%" height={320}>
+  <AreaChart data={salesData}>
           <defs>
             <linearGradient id="salesGradient" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor="#8c0303" stopOpacity={0.18} />
@@ -791,7 +792,8 @@ ${averageTicket.toFixed(2)}
               strokeWidth: 3,
             }}
           />
-    </AreaChart>
+  </AreaChart>
+</ResponsiveContainer>
   ) : (
     <div className="h-full flex items-center justify-center text-[#b07a7a] text-sm">
       No hay ventas registradas para este período.

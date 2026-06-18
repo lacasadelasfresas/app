@@ -74,7 +74,7 @@ export default function AuthLayout({ children }) {
       <button
         type="button"
         onClick={() => setMobileSidebarOpen(true)}
-        className="md:hidden fixed top-4 left-4 z-[70] w-11 h-11 rounded-full bg-[#8c0303] text-white shadow-lg flex items-center justify-center"
+        className="md:hidden fixed top-5 left-4 z-[70] w-11 h-11 rounded-full bg-[#8c0303] text-white shadow-lg flex items-center justify-center"
       >
         <Menu size={22} />
       </button>
