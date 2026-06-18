@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
+import { Menu } from 'lucide-react'
 import Sidebar from './Sidebar'
 import { supabase } from '@/lib/supabaseClient'
 
@@ -10,49 +11,51 @@ export default function AuthLayout({ children }) {
   const pathname = usePathname()
   const [checking, setChecking] = useState(true)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
 
   const isLogin = pathname === '/login'
-useEffect(() => {
-  async function checkUser() {
-    const { data } = await supabase.auth.getSession()
-    const session = data.session
 
-    if (!session && !isLogin) {
-      router.push('/login')
-      return
-    }
+  useEffect(() => {
+    async function checkUser() {
+      const { data } = await supabase.auth.getSession()
+      const session = data.session
 
-    if (session) {
-      const email = session.user.email
-
-      const { data: usuario, error } = await supabase
-        .from('usuarios')
-        .select('*')
-        .eq('email', email)
-        .eq('activo', true)
-        .single()
-
-      if (error || !usuario) {
-        await supabase.auth.signOut()
+      if (!session && !isLogin) {
         router.push('/login')
         return
       }
 
-      localStorage.setItem('usuarioRol', usuario.rol)
-      localStorage.setItem('usuarioNombre', usuario.nombre)
-      localStorage.setItem('usuarioEmail', usuario.email)
+      if (session) {
+        const email = session.user.email
+
+        const { data: usuario, error } = await supabase
+          .from('usuarios')
+          .select('*')
+          .eq('email', email)
+          .eq('activo', true)
+          .single()
+
+        if (error || !usuario) {
+          await supabase.auth.signOut()
+          router.push('/login')
+          return
+        }
+
+        localStorage.setItem('usuarioRol', usuario.rol)
+        localStorage.setItem('usuarioNombre', usuario.nombre)
+        localStorage.setItem('usuarioEmail', usuario.email)
+      }
+
+      if (session && isLogin) {
+        router.push('/app/cuadro-de-mandos')
+        return
+      }
+
+      setChecking(false)
     }
 
-    if (session && isLogin) {
-      router.push('/app/cuadro-de-mandos')
-      return
-    }
-
-    setChecking(false)
-  }
-
-  checkUser()
-}, [pathname, isLogin, router])
+    checkUser()
+  }, [pathname, isLogin, router])
 
   if (checking && !isLogin) {
     return (
@@ -66,20 +69,43 @@ useEffect(() => {
     return children
   }
 
-return (
-  <div className="min-h-screen bg-[#fcf8f8]">
-    <Sidebar
-      collapsed={sidebarCollapsed}
-      setCollapsed={setSidebarCollapsed}
-    />
+  return (
+    <div className="min-h-screen bg-[#fcf8f8]">
+      <button
+        type="button"
+        onClick={() => setMobileSidebarOpen(true)}
+        className="md:hidden fixed top-4 left-4 z-[70] w-11 h-11 rounded-full bg-[#8c0303] text-white shadow-lg flex items-center justify-center"
+      >
+        <Menu size={22} />
+      </button>
 
-    <div
-      className={`transition-all duration-300 ${
-        sidebarCollapsed ? 'ml-[82px]' : 'ml-[250px]'
-      }`}
-    >
-      {children}
+      {mobileSidebarOpen && (
+        <button
+          type="button"
+          onClick={() => setMobileSidebarOpen(false)}
+          className="md:hidden fixed inset-0 z-[50] bg-black/30"
+        />
+      )}
+
+      <div
+        className={`fixed inset-y-0 left-0 z-[60] transition-transform duration-300 md:translate-x-0 ${
+          mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
+        }`}
+      >
+        <Sidebar
+          collapsed={sidebarCollapsed}
+          setCollapsed={setSidebarCollapsed}
+        />
+      </div>
+
+      <div
+        className={`transition-all duration-300 w-full ${
+          sidebarCollapsed ? 'md:ml-[82px]' : 'md:ml-[250px]'
+        }`}
+      >
+        <div className="md:hidden h-16" />
+        {children}
+      </div>
     </div>
-  </div>
-)
+  )
 }
