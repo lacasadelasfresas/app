@@ -9,6 +9,7 @@ export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
+  const [resetLoading, setResetLoading] = useState(false)
 
   async function handleLogin(e) {
     e.preventDefault()
@@ -27,6 +28,28 @@ export default function LoginPage() {
     }
 
     router.push('/app/cuadro-de-mandos')
+  }
+
+  async function handleForgotPassword() {
+    if (!email) {
+      alert('Escribe tu correo primero.')
+      return
+    }
+
+    setResetLoading(true)
+
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: 'https://lacasadelasfresas.shop/reset-password',
+    })
+
+    setResetLoading(false)
+
+    if (error) {
+      alert('No se pudo enviar el correo de recuperación.')
+      return
+    }
+
+    alert('Te enviamos un correo para restablecer tu contraseña.')
   }
 
   return (
@@ -71,6 +94,15 @@ export default function LoginPage() {
           className="w-full bg-[#8c0303] text-white px-5 py-3 rounded-xl font-semibold disabled:opacity-60"
         >
           {loading ? 'Entrando...' : 'Entrar'}
+        </button>
+
+        <button
+          type="button"
+          onClick={handleForgotPassword}
+          disabled={resetLoading}
+          className="w-full mt-4 text-sm font-semibold text-[#8c0303] hover:underline disabled:opacity-60"
+        >
+          {resetLoading ? 'Enviando correo...' : '¿Olvidaste tu contraseña?'}
         </button>
       </form>
     </main>
