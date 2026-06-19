@@ -11,24 +11,61 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [resetLoading, setResetLoading] = useState(false)
 
-  async function handleLogin(e) {
-    e.preventDefault()
-    setLoading(true)
+async function handleLogin(e) {
+  e.preventDefault()
+  setLoading(true)
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
+  try {
+    const { data: loginData, error: loginError } =
+      await supabase.auth.signInWithPassword({
+        email: email.trim().toLowerCase(),
+        password,
+      })
 
-    setLoading(false)
-
-    if (error) {
+    if (loginError) {
       alert('Correo o contraseña incorrectos.')
       return
     }
 
-    router.push('/app/cuadro-de-mandos')
+    const userEmail = loginData?.user?.email?.trim().toLowerCase()
+
+    if (!userEmail) {
+      await supabase.auth.signOut()
+      alert('No se pudo validar la sesión del usuario.')
+      return
+    }
+
+    const { data: perfil, error: perfilError } = await supabase
+      .from('usuarios')
+      .select('id, nombre, email, rol, activo, debe_cambiar_password')
+      .eq('email', userEmail)
+      .single()
+
+    if (perfilError || !perfil) {
+      await supabase.auth.signOut()
+      alert('Tu usuario no está registrado en el cuadro de mandos.')
+      return
+    }
+
+    if (!perfil.activo) {
+      await supabase.auth.signOut()
+      alert('Tu usuario se encuentra inactivo. Contacta al administrador.')
+      return
+    }
+
+    if (perfil.debe_cambiar_password) {
+      router.replace('/reset-password')
+      return
+    }
+
+    router.replace('/app/cuadro-de-mandos')
+  } catch (error) {
+    console.error('Error al iniciar sesión:', error)
+    alert('Ocurrió un error al iniciar sesión. Intenta nuevamente.')
+  } finally {
+    setLoading(false)
   }
+}
 
   async function handleForgotPassword() {
     if (!email) {
