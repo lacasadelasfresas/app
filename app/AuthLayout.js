@@ -14,13 +14,14 @@ export default function AuthLayout({ children }) {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
 
   const isLogin = pathname === '/login'
+  const isResetPassword = pathname === '/reset-password'
 
   useEffect(() => {
     async function checkUser() {
       const { data } = await supabase.auth.getSession()
       const session = data.session
 
-      if (!session && !isLogin) {
+      if (!session && !isLogin && !isResetPassword) {
         router.push('/login')
         return
       }
@@ -51,12 +52,11 @@ export default function AuthLayout({ children }) {
       }
 
 if (session && isLogin) {
-  if (usuario.debe_cambiar_password) {
-    router.push('/reset-password')
-  } else {
-    router.push('/app/cuadro-de-mandos')
-  }
-
+  router.push(
+    usuario.debe_cambiar_password
+      ? '/reset-password'
+      : '/app/cuadro-de-mandos'
+  )
   return
 }
 
@@ -74,9 +74,9 @@ if (session && isLogin) {
     )
   }
 
-  if (isLogin) {
-    return children
-  }
+if (isLogin || isResetPassword) {
+  return children
+}
 
   return (
     <div className="min-h-screen bg-[#fcf8f8]">
