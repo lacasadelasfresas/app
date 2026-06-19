@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabaseClient'
+import { registrarAuditoria } from '@/lib/auditoria'
 
 export default function ResetPasswordPage() {
   const router = useRouter()
@@ -25,30 +26,87 @@ export default function ResetPasswordPage() {
 
     setLoading(true)
 
-    const { error } = await supabase.auth.updateUser({
-      password,
-    })
+    try {
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser()
 
-    setLoading(false)
+      if (userError || !user?.email) {
+        alert(
+          'Tu sesión de recuperación no es válida o ya venció. Solicita un nuevo enlace.'
+        )
+        return
+      }
 
-    if (error) {
-      alert('No se pudo actualizar la contraseña.')
-      return
+      const userEmail = user.email.trim().toLowerCase()
+
+      const { data: perfil, error: perfilError } = await supabase
+        .from('usuarios')
+        .select('id, nombre, email, rol, activo, debe_cambiar_password')
+        .eq('email', userEmail)
+        .single()
+
+      if (perfilError || !perfil) {
+        alert('No encontramos tu perfil dentro del Cuadro de Mandos.')
+        return
+      }
+
+      if (!perfil.activo) {
+        await supabase.auth.signOut()
+        alert('Tu usuario se encuentra inactivo. Contacta al administrador.')
+        return
+      }
+
+      const { error: passwordError } = await supabase.auth.updateUser({
+        password,
+      })
+
+      if (passwordError) {
+        alert('No se pudo actualizar la contraseña.')
+        return
+      }
+
+      const { error: perfilUpdateError } = await supabase
+        .from('usuarios')
+        .update({
+          debe_cambiar_password: false,
+        })
+        .eq('id', perfil.id)
+
+      if (perfilUpdateError) {
+        console.error(
+          'Error actualizando debe_cambiar_password:',
+          perfilUpdateError
+        )
+
+        alert(
+          'La contraseña fue actualizada, pero no se pudo completar la validación del perfil. Contacta al administrador.'
+        )
+        return
+      }
+
+      await registrarAuditoria({
+        accion: 'Cambiar contraseña',
+        modulo: 'Seguridad',
+        descripcion: 'El usuario actualizó su contraseña correctamente.',
+        registroId: perfil.id,
+        datosAntes: {
+          debe_cambiar_password: true,
+        },
+        datosDespues: {
+          debe_cambiar_password: false,
+        },
+      })
+
+      alert('Contraseña actualizada correctamente.')
+      router.replace('/app/cuadro-de-mandos')
+    } catch (error) {
+      console.error('Error al actualizar contraseña:', error)
+      alert('Ocurrió un error inesperado. Intenta nuevamente.')
+    } finally {
+      setLoading(false)
     }
-
-const { data } = await supabase.auth.getUser()
-
-if (data?.user?.email) {
-  await supabase
-    .from('usuarios')
-    .update({
-      debe_cambiar_password: false,
-    })
-    .eq('email', data.user.email)
-}
-
-    alert('Contraseña actualizada correctamente.')
-    router.push('/app/cuadro-de-mandos')
   }
 
   return (
@@ -68,6 +126,7 @@ if (data?.user?.email) {
         <label className="block text-xs uppercase tracking-[0.18em] text-[#b9a0a0] mb-2">
           Nueva contraseña
         </label>
+
         <input
           type="password"
           className="w-full border border-[#efcaca] rounded-xl px-4 py-3 mb-4 outline-none"
@@ -79,6 +138,7 @@ if (data?.user?.email) {
         <label className="block text-xs uppercase tracking-[0.18em] text-[#b9a0a0] mb-2">
           Confirmar contraseña
         </label>
+
         <input
           type="password"
           className="w-full border border-[#efcaca] rounded-xl px-4 py-3 mb-6 outline-none"

@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabaseClient'
+import { registrarAuditoria } from '@/lib/auditoria'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -53,18 +54,30 @@ async function handleLogin(e) {
       return
     }
 
-    if (perfil.debe_cambiar_password) {
-      router.replace('/reset-password')
-      return
-    }
+await registrarAuditoria({
+  accion: 'Iniciar sesión',
+  modulo: 'Seguridad',
+  descripcion: perfil.debe_cambiar_password
+    ? 'Inicio de sesión exitoso. Se requiere cambio obligatorio de contraseña.'
+    : 'Inicio de sesión exitoso en el Cuadro de Mandos.',
+  registroId: perfil.id,
+})
 
-    router.replace('/app/cuadro-de-mandos')
+if (perfil.debe_cambiar_password) {
+  router.replace('/reset-password')
+  return
+}
+
+router.replace('/app/cuadro-de-mandos')
+
   } catch (error) {
     console.error('Error al iniciar sesión:', error)
     alert('Ocurrió un error al iniciar sesión. Intenta nuevamente.')
   } finally {
     setLoading(false)
-  }
+}
+
+router.replace('/app/cuadro-de-mandos')
 }
 
   async function handleForgotPassword() {
