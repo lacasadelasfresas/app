@@ -44,12 +44,21 @@ export default function AuthLayout({ children }) {
         localStorage.setItem('usuarioRol', usuario.rol)
         localStorage.setItem('usuarioNombre', usuario.nombre)
         localStorage.setItem('usuarioEmail', usuario.email)
+        localStorage.setItem(
+  'debeCambiarPassword',
+  usuario.debe_cambiar_password ? 'true' : 'false'
+)
       }
 
-      if (session && isLogin) {
-        router.push('/app/cuadro-de-mandos')
-        return
-      }
+if (session && isLogin) {
+  if (usuario.debe_cambiar_password) {
+    router.push('/reset-password')
+  } else {
+    router.push('/app/cuadro-de-mandos')
+  }
+
+  return
+}
 
       setChecking(false)
     }

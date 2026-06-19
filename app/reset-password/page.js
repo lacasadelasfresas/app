@@ -36,6 +36,17 @@ export default function ResetPasswordPage() {
       return
     }
 
+const { data } = await supabase.auth.getUser()
+
+if (data?.user?.email) {
+  await supabase
+    .from('usuarios')
+    .update({
+      debe_cambiar_password: false,
+    })
+    .eq('email', data.user.email)
+}
+
     alert('Contraseña actualizada correctamente.')
     router.push('/app/cuadro-de-mandos')
   }
