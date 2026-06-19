@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabaseClient'
 import { registrarAuditoria } from '@/lib/auditoria'
@@ -10,6 +10,21 @@ export default function ResetPasswordPage() {
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+  async function validarSesion() {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+
+    if (!user) {
+      alert('Tu sesión no es válida. Inicia sesión nuevamente.')
+      router.replace('/login')
+    }
+  }
+
+  validarSesion()
+}, [router])
 
   async function handleReset(e) {
     e.preventDefault()
