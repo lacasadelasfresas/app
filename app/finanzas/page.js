@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { supabase } from '@/lib/supabaseClient'
-import { registrarAuditoria } from '@/lib/auditoria'
 import {
   DollarSign,
   TrendingUp,
@@ -191,15 +190,6 @@ const { data, error } = editingGasto
     return
   }
 
-await registrarAuditoria({
-  accion: editingGasto ? 'Editar gasto' : 'Crear gasto',
-  modulo: 'Finanzas',
-  descripcion: `${editingGasto ? 'Editó' : 'Registró'} el gasto: ${form.concepto} por $${form.monto}`,
-  registroId: data?.id || editingGasto?.id || null,
-  datosAntes: editingGasto || null,
-  datosDespues: data || null,
-})
-
   setForm({
     fecha: getTodayDate(),
     categoria: 'Materia prima',
@@ -368,13 +358,6 @@ setTimeout(() => {
       alert('No se pudo eliminar el gasto.')
       return
     }
-
-await registrarAuditoria({
-  accion: 'Eliminar gasto',
-  modulo: 'Finanzas',
-  descripcion: 'Eliminó un gasto registrado',
-  registroId: id,
-})
 
     await fetchFinanzas()
   }
