@@ -21,6 +21,8 @@ export default function FinanzasPage() {
   const [fechaInicio, setFechaInicio] = useState('')
 const [fechaFin, setFechaFin] = useState('')
 const [categoriaFiltro, setCategoriaFiltro] = useState('Todos')
+const [tipoGastoFiltro, setTipoGastoFiltro] = useState('Todos')
+const [estadoPagoFiltro, setEstadoPagoFiltro] = useState('Todos')
 const [metodoPagoFiltro, setMetodoPagoFiltro] = useState('Todos')
 const [editingGasto, setEditingGasto] = useState(null)
 const [facturaFile, setFacturaFile] = useState(null)
@@ -69,10 +71,10 @@ function setFiltroMesActual() {
   setFechaFin(lastDay)
 }
 
-  useEffect(() => {
-    fetchFinanzas()
-  }, [])
+useEffect(() => {
+  fetchFinanzas()
   fetchProveedores()
+}, [])
 
   async function fetchProveedores() {
   const { data, error } = await supabase
@@ -408,13 +410,21 @@ const gastosFiltrados = gastos.filter((gasto) => {
   const matchesMetodoPago =
     metodoPagoFiltro === 'Todos' || gasto.metodo_pago === metodoPagoFiltro
 
-  return (
-    matchesFechaInicio &&
-    matchesFechaFin &&
-    matchesCategoria &&
-    matchesMetodoPago
-  )
+return (
+  matchesFechaInicio &&
+  matchesFechaFin &&
+  matchesCategoria &&
+  matchesTipoGasto &&
+  matchesEstadoPago &&
+  matchesMetodoPago
+)
 })
+
+const matchesTipoGasto =
+  tipoGastoFiltro === 'Todos' || gasto.tipo_gasto === tipoGastoFiltro
+
+const matchesEstadoPago =
+  estadoPagoFiltro === 'Todos' || gasto.estado_pago === estadoPagoFiltro
 
 const ingresosMes = ventasFiltradas.reduce((acc, venta) => {
     return acc + Number(venta.monto_pago || 0)
@@ -544,18 +554,18 @@ function formatearMes(mesKey) {
   return (
     <main className="min-h-screen bg-[#fcf8f8] w-full">
       <section className="w-full min-h-screen">
-        <div className="bg-white border-b border-[#f1dede] px-10 h-[86px] flex items-center justify-between">
+        <div className="bg-white border-b border-[#f1dede] px-5 sm:px-6 md:px-10 py-5 md:py-0 min-h-[104px] md:h-[86px] flex items-center">
           <div>
-            <h1 className="text-[34px] ivy text-[#7a0000] leading-none">
+            <h1 className="text-[30px] md:text-[34px] ivy text-[#7a0000] leading-none">
               Finanzas
             </h1>
-            <p className="text-sm text-[#b07a7a] mt-2">
+            <p className="text-sm text-[#b07a7a] mt-2 max-w-[300px] md:max-w-none">
               Controla ingresos, gastos, utilidad estimada y costos operativos.
             </p>
           </div>
         </div>
 
-        <div className="p-10 space-y-6">
+        <div className="p-4 sm:p-6 lg:p-10 space-y-5 md:space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
             <KpiCard
               title="Ingresos del mes"
@@ -621,7 +631,7 @@ function formatearMes(mesKey) {
         Resumen para inversor
       </h2>
 
-      <p className="text-sm text-[#b07a7a] mt-2">
+      <p className="text-sm text-[#b07a7a] mt-2 max-w-[300px] md:max-w-none">
         Cálculo de participación sobre la utilidad neta del periodo filtrado.
       </p>
     </div>
@@ -682,7 +692,7 @@ ${ingresosMes.toFixed(2)}
       ${utilidadDespuesInversor.toFixed(2)}
     </p>
 
-    <p className="text-sm text-[#b07a7a] mt-2">
+    <p className="text-sm text-[#b07a7a] mt-2 max-w-[300px] md:max-w-none">
       Esta cifra representa la utilidad restante del negocio luego de separar el 5% del inversor.
     </p>
   </div>
@@ -695,7 +705,7 @@ ${ingresosMes.toFixed(2)}
         Punto de equilibrio
       </h2>
 
-      <p className="text-sm text-[#b07a7a] mt-2">
+      <p className="text-sm text-[#b07a7a] mt-2 max-w-[300px] md:max-w-none">
         Monto mínimo de ventas necesario para cubrir los gastos pagados del periodo.
       </p>
     </div>
@@ -803,13 +813,13 @@ ${ingresosMes.toFixed(2)}
       </select>
     </Field>
 
-    <Field label="Tipo de gasto">
+<Field label="Tipo de gasto">
   <select
-    name="tipo_gasto"
-    value={form.tipo_gasto}
-    onChange={handleChange}
+    value={tipoGastoFiltro}
+    onChange={(e) => setTipoGastoFiltro(e.target.value)}
     className={inputClass}
   >
+    <option>Todos</option>
     <option>Variable</option>
     <option>Fijo</option>
   </select>
@@ -817,11 +827,11 @@ ${ingresosMes.toFixed(2)}
 
 <Field label="Estado del pago">
   <select
-    name="estado_pago"
-    value={form.estado_pago}
-    onChange={handleChange}
+    value={estadoPagoFiltro}
+    onChange={(e) => setEstadoPagoFiltro(e.target.value)}
     className={inputClass}
   >
+    <option>Todos</option>
     <option>Pagado</option>
     <option>Pendiente</option>
     <option>Programado</option>
@@ -866,6 +876,8 @@ ${ingresosMes.toFixed(2)}
         setFechaFin('')
         setCategoriaFiltro('Todos')
         setMetodoPagoFiltro('Todos')
+        setTipoGastoFiltro('Todos')
+setEstadoPagoFiltro('Todos')
       }}
       className="px-5 py-2 rounded-full bg-[#8c0303] text-white font-semibold hover:bg-[#6f0202] text-sm"
     >
@@ -883,7 +895,7 @@ ${ingresosMes.toFixed(2)}
                 <h2 className="text-[30px] ivy text-[#7a0000] leading-none">
   {editingGasto ? 'Editar gasto' : 'Registrar gasto'}
 </h2>
-                <p className="text-sm text-[#b07a7a] mt-2">
+                <p className="text-sm text-[#b07a7a] mt-2 max-w-[300px] md:max-w-none">
                   Agrega costos operativos, materia prima, packaging o gastos generales del negocio.
                 </p>
                 {successMessage && (
@@ -1090,7 +1102,7 @@ setForm({
           Gastos registrados
         </h2>
 
-        <p className="text-sm text-[#b07a7a] mt-2">
+        <p className="text-sm text-[#b07a7a] mt-2 max-w-[300px] md:max-w-none">
           Historial de gastos operativos del negocio.
         </p>
       </div>
@@ -1212,98 +1224,89 @@ setForm({
     </table>
   </div>
 
-  <div className="bg-white border border-[#f3dede] rounded-[28px] p-6">
-    <h2 className="text-[30px] ivy text-[#7a0000] leading-none mb-2">
-      Gastos por categoría
-    </h2>
+<div className="bg-white border border-[#f3dede] rounded-[28px] p-5 md:p-6">
+  <h2 className="text-[26px] md:text-[30px] ivy text-[#7a0000] leading-none mb-2">
+    Gastos por categoría
+  </h2>
 
-    <p className="text-sm text-[#b07a7a] mb-5">
-      Distribución de costos del periodo filtrado.
+  <p className="text-sm text-[#b07a7a] mb-5">
+    Distribución de costos del periodo filtrado.
+  </p>
+
+  {resumenCategorias.length === 0 ? (
+    <p className="text-sm text-[#b07a7a]">
+      Aún no hay gastos para estos filtros.
     </p>
-
-    <div className="space-y-4">
-      {Object.keys(gastosPorCategoria).length === 0 ? (
-        <p className="text-sm text-[#b07a7a]">
-          Aún no hay gastos para estos filtros.
-        </p>
-      ) : (
-        Object.entries(gastosPorCategoria)
-          .sort((a, b) => b[1] - a[1])
-          .map(([categoria, monto]) => {
-            const porcentaje =
-              totalGastosMes > 0 ? (monto / totalGastosMes) * 100 : 0
-
-            return (
-              <div key={categoria}>
-                <div className="flex items-center justify-between mb-2">
-                  <p className="font-medium text-[#2e2e2e]">
-                    {categoria}
-                  </p>
-
-                  <p className="font-semibold text-[#8c0303]">
-                    ${monto.toFixed(2)}
-                  </p>
-                </div>
-
-
-
-{resumenCategorias.length > 0 && (
-  <div className="mt-8 pt-6 border-t border-[#f3dede]">
-    <p className="text-xs uppercase tracking-[0.18em] text-[#b9a0a0] mb-3">
-      Resumen contable
-    </p>
-
-    <div className="overflow-hidden rounded-2xl border border-[#f3dede]">
-      <table className="w-full text-sm">
-        <thead className="bg-[#f8eeee] text-[#b07a7a] uppercase text-[10px] tracking-[0.12em]">
-          <tr>
-            <th className="py-3 px-4 text-left">Categoría</th>
-            <th className="py-3 px-4 text-right">Total</th>
-            <th className="py-3 px-4 text-right">%</th>
-          </tr>
-        </thead>
-
-        <tbody>
-          {resumenCategorias.map((item) => (
-            <tr
-              key={item.categoria}
-              className="border-t border-[#f3dede]"
-            >
-              <td className="py-3 px-4 font-medium text-[#2e2e2e]">
+  ) : (
+    <>
+      <div className="space-y-4">
+        {resumenCategorias.map((item) => (
+          <div key={item.categoria}>
+            <div className="flex items-center justify-between gap-3 mb-2">
+              <p className="font-medium text-[#2e2e2e]">
                 {item.categoria}
-              </td>
+              </p>
 
-              <td className="py-3 px-4 text-right font-semibold text-[#8c0303]">
+              <p className="font-semibold text-[#8c0303] whitespace-nowrap">
                 ${item.monto.toFixed(2)}
-              </td>
+              </p>
+            </div>
 
-              <td className="py-3 px-4 text-right text-[#b07a7a]">
-                {item.porcentaje.toFixed(1)}%
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  </div>
-)}
+            <div className="h-2 bg-[#fff1f1] rounded-full overflow-hidden">
+              <div
+                className="h-full bg-[#8c0303] rounded-full"
+                style={{ width: `${item.porcentaje}%` }}
+              />
+            </div>
 
-<div className="mt-3 mb-2 h-2 bg-[#fff1f1] rounded-full overflow-hidden">
-  <div
-    className="h-full bg-[#8c0303] rounded-full"
-    style={{ width: `${porcentaje}%` }}
-  />
+            <p className="text-xs text-[#b07a7a] mt-1">
+              {item.porcentaje.toFixed(1)}% de los gastos
+            </p>
+          </div>
+        ))}
+      </div>
+
+      <div className="mt-8 pt-6 border-t border-[#f3dede]">
+        <p className="text-xs uppercase tracking-[0.18em] text-[#b9a0a0] mb-3">
+          Resumen contable
+        </p>
+
+        <div className="overflow-x-auto rounded-2xl border border-[#f3dede]">
+          <table className="min-w-[430px] w-full text-sm">
+            <thead className="bg-[#f8eeee] text-[#b07a7a] uppercase text-[10px] tracking-[0.12em]">
+              <tr>
+                <th className="py-3 px-4 text-left">Categoría</th>
+                <th className="py-3 px-4 text-right">Total</th>
+                <th className="py-3 px-4 text-right">%</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {resumenCategorias.map((item) => (
+                <tr
+                  key={item.categoria}
+                  className="border-t border-[#f3dede]"
+                >
+                  <td className="py-3 px-4 font-medium text-[#2e2e2e]">
+                    {item.categoria}
+                  </td>
+
+                  <td className="py-3 px-4 text-right font-semibold text-[#8c0303]">
+                    ${item.monto.toFixed(2)}
+                  </td>
+
+                  <td className="py-3 px-4 text-right text-[#b07a7a]">
+                    {item.porcentaje.toFixed(1)}%
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </>
+  )}
 </div>
-
-                <p className="text-xs text-[#b07a7a] mt-1">
-                  {porcentaje.toFixed(1)}% de los gastos
-                </p>
-              </div>
-            )
-          })
-      )}
-    </div>
-  </div>
 </div>
 
 <div className="bg-white border border-[#f3dede] rounded-[28px] overflow-hidden">
@@ -1312,7 +1315,7 @@ setForm({
       Ingresos vs gastos por mes
     </h2>
 
-    <p className="text-sm text-[#b07a7a] mt-2">
+    <p className="text-sm text-[#b07a7a] mt-2 max-w-[300px] md:max-w-none">
       Comparativo mensual de ingresos, gastos y utilidad estimada.
     </p>
   </div>
