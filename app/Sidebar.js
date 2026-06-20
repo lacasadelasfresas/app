@@ -86,7 +86,7 @@ const { data: usuario } = await supabase
 
   return (
 <aside
-  className={`h-screen overflow-hidden bg-white text-[#2e2e2e] border-r border-[#f1dede] flex flex-col transition-all duration-300 w-[250px] ${
+  className={`h-screen overflow-visible bg-white text-[#2e2e2e] border-r border-[#f1dede] flex flex-col transition-all duration-300 w-[250px] ${
     collapsed ? 'md:w-[82px]' : 'md:w-[250px]'
   }`}
 >
