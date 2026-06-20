@@ -83,12 +83,6 @@ const { data: usuario, error } = await supabase
         return
       }
 
-      // Una vez que la contraseña fue cambiada, no debe volver a reset-password.
-      if (isResetPassword) {
-        router.replace('/app/cuadro-de-mandos')
-        return
-      }
-
       // Usuario ya autenticado no debe permanecer en Login.
       if (isLogin) {
         router.replace('/app/cuadro-de-mandos')
