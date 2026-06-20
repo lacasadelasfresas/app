@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabaseClient'
-import { registrarAuditoria } from '@/lib/auditoria'
 import { Plus, Trash2 } from 'lucide-react'
 
 export default function GastosRecurrentesPage() {
@@ -60,14 +59,6 @@ const payload = {
       setSaving(false)
       return
     }
-
-    await registrarAuditoria({
-      accion: 'Crear gasto recurrente',
-      modulo: 'Finanzas',
-      descripcion: `Creó gasto recurrente: ${form.nombre} por $${form.monto}`,
-      registroId: data?.id || null,
-      datosDespues: data || null,
-    })
 
     setForm({
       nombre: '',
@@ -145,14 +136,6 @@ async function generarGastosDelMes() {
 
     if (!error) {
       creados++
-
-      await registrarAuditoria({
-        accion: 'Generar gasto recurrente',
-        modulo: 'Finanzas',
-        descripcion: `Generó gasto recurrente: ${item.nombre} por $${item.monto}`,
-        registroId: data?.id || null,
-        datosDespues: data || null,
-      })
     }
   }
 
@@ -175,16 +158,6 @@ async function generarGastosDelMes() {
       alert('No se pudo desactivar.')
       return
     }
-
-    await registrarAuditoria({
-      accion: 'Desactivar gasto recurrente',
-      modulo: 'Finanzas',
-      descripcion: `Desactivó gasto recurrente: ${item.nombre}`,
-      registroId: item.id,
-      datosAntes: item,
-      datosDespues: data,
-    })
-
     fetchItems()
   }
 

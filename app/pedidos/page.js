@@ -3,7 +3,6 @@
 
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabaseClient'
-import { registrarAuditoria } from '@/lib/auditoria'
 import {
   Search,
   Plus,
@@ -644,13 +643,6 @@ async function eliminarVenta(venta) {
 
   alert('Venta eliminada correctamente.')
 
-await registrarAuditoria({
-  accion: 'Eliminar venta',
-  modulo: 'Ventas',
-  descripcion: `Eliminó venta de ${venta.producto} por $${venta.monto_pago}`,
-  registroId: venta.id,
-})
-
   setSelectedOrder(null)
   fetchOrders()
 }
@@ -694,12 +686,6 @@ const { data, error: updateError } = await supabase
     setSaving(false)
     return
   }
-  await registrarAuditoria({
-  accion: 'Editar venta',
-  modulo: 'Ventas',
-  descripcion: `Editó la venta de ${form.producto} por $${form.monto_pago}`,
-  registroId: data?.id || editingOrder?.id || null,
-})
 
   alert('Venta actualizada correctamente.')
 
@@ -760,13 +746,6 @@ if (error) {
   return
 }
 
-await descontarInventarioPorVenta(form.producto, data?.id)
-await registrarAuditoria({
-  accion: 'Crear venta',
-  modulo: 'Ventas',
-  descripcion: `Registró venta de ${form.producto} por $${form.monto_pago}`,
-  registroId: data?.id || null,
-})
 
   await fetchOrders()
 
