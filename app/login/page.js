@@ -28,19 +28,19 @@ async function handleLogin(e) {
       return
     }
 
-    const userEmail = loginData?.user?.email?.trim().toLowerCase()
+const authUserId = loginData?.user?.id
 
-    if (!userEmail) {
-      await supabase.auth.signOut()
-      alert('No se pudo validar la sesión del usuario.')
-      return
-    }
+if (!authUserId) {
+  await supabase.auth.signOut()
+  alert('No se pudo validar la sesión del usuario.')
+  return
+}
 
-    const { data: perfil, error: perfilError } = await supabase
-      .from('usuarios')
-      .select('id, nombre, email, rol, activo, debe_cambiar_password')
-      .eq('email', userEmail)
-      .single()
+const { data: perfil, error: perfilError } = await supabase
+  .from('usuarios')
+  .select('id, nombre, email, rol, activo, debe_cambiar_password, auth_user_id')
+  .eq('auth_user_id', authUserId)
+  .single()
 
     if (perfilError || !perfil) {
       await supabase.auth.signOut()

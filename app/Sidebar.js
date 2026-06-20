@@ -34,16 +34,16 @@ export default function Sidebar({ collapsed, setCollapsed }) {
 
   useEffect(() => {
     async function cargarUsuario() {
-      const { data } = await supabase.auth.getSession()
-      const email = data.session?.user?.email
+const { data } = await supabase.auth.getSession()
+const authUserId = data.session?.user?.id
 
-      if (!email) return
+if (!authUserId) return
 
-      const { data: usuario } = await supabase
-        .from('usuarios')
-        .select('nombre, email, rol')
-        .eq('email', email)
-        .single()
+const { data: usuario } = await supabase
+  .from('usuarios')
+  .select('nombre, email, rol')
+  .eq('auth_user_id', authUserId)
+  .single()
 
       if (usuario) {
         setUsuario({

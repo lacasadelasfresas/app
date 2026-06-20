@@ -37,17 +37,22 @@ export default function AuthLayout({ children }) {
 
         return
       }
+const authUserId = session.user?.id
 
-      const email = session.user.email?.trim().toLowerCase()
+if (!authUserId) {
+  await supabase.auth.signOut()
+  router.replace('/login')
+  return
+}
 
-      const { data: usuario, error } = await supabase
-        .from('usuarios')
-        .select(
-          'id, nombre, email, rol, activo, debe_cambiar_password'
-        )
-        .eq('email', email)
-        .eq('activo', true)
-        .single()
+const { data: usuario, error } = await supabase
+  .from('usuarios')
+  .select(
+    'id, nombre, email, rol, activo, debe_cambiar_password, auth_user_id'
+  )
+  .eq('auth_user_id', authUserId)
+  .eq('activo', true)
+  .single()
 
       // Sesión válida, pero perfil inexistente o inactivo
       if (error || !usuario) {

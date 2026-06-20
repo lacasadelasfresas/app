@@ -54,13 +54,13 @@ export default function ResetPasswordPage() {
         return
       }
 
-      const userEmail = user.email.trim().toLowerCase()
+const authUserId = user.id
 
-      const { data: perfil, error: perfilError } = await supabase
-        .from('usuarios')
-        .select('id, nombre, email, rol, activo, debe_cambiar_password')
-        .eq('email', userEmail)
-        .single()
+const { data: perfil, error: perfilError } = await supabase
+  .from('usuarios')
+  .select('id, nombre, email, rol, activo, debe_cambiar_password, auth_user_id')
+  .eq('auth_user_id', authUserId)
+  .single()
 
       if (perfilError || !perfil) {
         alert('No encontramos tu perfil dentro del Cuadro de Mandos.')
