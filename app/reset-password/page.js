@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabaseClient'
-import { registrarAuditoria } from '@/lib/auditoria'
 
 export default function ResetPasswordPage() {
   const router = useRouter()
@@ -82,37 +81,21 @@ const { data: perfil, error: perfilError } = await supabase
         return
       }
 
-      const { error: perfilUpdateError } = await supabase
-        .from('usuarios')
-        .update({
-          debe_cambiar_password: false,
-        })
-        .eq('id', perfil.id)
+const { error: finalizarError } = await supabase.rpc(
+  'finalizar_cambio_password'
+)
 
-      if (perfilUpdateError) {
-        console.error(
-          'Error actualizando debe_cambiar_password:',
-          perfilUpdateError
-        )
+if (finalizarError) {
+  console.error(
+    'Error finalizando el cambio obligatorio de contraseña:',
+    finalizarError
+  )
 
-        alert(
-          'La contraseña fue actualizada, pero no se pudo completar la validación del perfil. Contacta al administrador.'
-        )
-        return
-      }
-
-      await registrarAuditoria({
-        accion: 'Cambiar contraseña',
-        modulo: 'Seguridad',
-        descripcion: 'El usuario actualizó su contraseña correctamente.',
-        registroId: perfil.id,
-        datosAntes: {
-          debe_cambiar_password: true,
-        },
-        datosDespues: {
-          debe_cambiar_password: false,
-        },
-      })
+  alert(
+    'La contraseña fue actualizada, pero no se pudo completar la validación del perfil. Contacta al administrador.'
+  )
+  return
+}
 
       alert('Contraseña actualizada correctamente.')
       router.replace('/app/cuadro-de-mandos')
