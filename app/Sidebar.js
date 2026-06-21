@@ -128,17 +128,13 @@ export default function Sidebar({
       
 <nav className="flex-1 min-h-0 overflow-y-auto overscroll-contain md:overflow-hidden px-4 py-2 space-y-[1px]">        {sectionTitle('Principal')}
 
-       <button
-  type="button"
-  onClick={() => {
-    handleNavigate()
-    router.push('/app/cuadro-de-mandos')
-  }}
+<Link
+  href="/app/cuadro-de-mandos"
   className={linkClass('/app/cuadro-de-mandos')}
 >
   <LayoutDashboard size={18} />
   {!collapsed && 'Dashboard General'}
-</button>
+</Link>
 
         {sectionTitle('Operación')}
 
