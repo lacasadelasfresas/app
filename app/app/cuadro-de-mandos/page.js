@@ -588,26 +588,26 @@ export default function DashboardPage() {
   return (
     <main className="min-h-screen bg-[#fcf8f8] w-full">
       <section className="w-full">
-<header className="bg-white border-b border-[#f1dede] px-5 md:px-8 py-6 md:py-7">
+<header className="bg-white border-b border-[#f1dede] px-5 md:px-8 py-4 md:py-5">
   <div className="max-w-[1500px] mx-auto">
-    <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
+    <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
       <div className="text-left">
-        <p className="text-[10px] uppercase tracking-[0.2em] text-[#b9a0a0] mb-2">
+        <p className="text-[10px] uppercase tracking-[0.16em] text-[#b9a0a0]">
           Vista general
         </p>
 
-        <h1 className="text-[38px] md:text-[34px] ivy text-[#7a0000] leading-[0.95]">
-          Cuadro de Mandos
+        <h1 className="mt-1 text-[21px] md:text-[23px] font-bold text-[#7a0000] leading-tight">
+          Dashboard
         </h1>
 
-        <p className="text-sm text-[#b07a7a] mt-3">
-          La Casa de las Fresas
+        <p className="mt-1 text-xs md:text-sm text-[#b07a7a]">
+          Resumen operativo de La Casa de las Fresas.
         </p>
       </div>
 
-      <div className="flex flex-col sm:flex-row sm:items-center gap-3 w-full md:w-auto">
-        <div className="hidden lg:flex w-[260px] items-center gap-2 bg-[#fff5f5] px-4 py-3 rounded-2xl">
-          <Search size={17} className="text-[#b07a7a]" />
+      <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full lg:w-auto">
+        <div className="hidden xl:flex w-[250px] items-center gap-2 bg-[#fff5f5] px-4 py-2.5 rounded-xl">
+          <Search size={16} className="text-[#b07a7a]" />
 
           <input
             placeholder="Buscar..."
@@ -617,16 +617,17 @@ export default function DashboardPage() {
 
         <button
           type="button"
-          className="hidden lg:flex w-11 h-11 rounded-2xl bg-[#fff5f5] items-center justify-center"
+          aria-label="Notificaciones"
+          className="hidden sm:flex w-10 h-10 rounded-xl bg-[#fff5f5] text-[#7a0000] items-center justify-center"
         >
-          <Bell size={18} />
+          <Bell size={17} />
         </button>
 
         <Link
           href="/pedidos?new=1"
-          className="w-full sm:w-auto bg-[#8c0303] text-white px-5 py-4 rounded-2xl font-semibold flex items-center justify-center gap-2 text-base whitespace-nowrap shadow-sm"
+          className="w-full sm:w-auto bg-[#8c0303] text-white px-4 py-2.5 rounded-xl font-semibold flex items-center justify-center gap-2 text-sm whitespace-nowrap shadow-sm"
         >
-          <DollarSign size={18} />
+          <DollarSign size={16} />
           Registrar venta
         </Link>
       </div>
