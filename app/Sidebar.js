@@ -109,8 +109,8 @@ export default function Sidebar({
           <Image
             src="/logo.png"
             alt="La Casa de las Fresas"
-            width={220}
-            height={84}
+            width={180}
+            height={50}
             priority
  className="object-contain w-[220px] h-auto scale-[1.55]"
           />
