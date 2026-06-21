@@ -324,48 +324,48 @@ export default function AuditoriaPage() {
 
   return (
     <main className="min-h-screen bg-[#fcf8f8] w-full">
-      <header className="bg-white border-b border-[#f1dede] px-5 md:px-8 py-6">
-        <div className="max-w-[1600px] mx-auto">
-          <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
-            <div className="text-left">
-              <p className="text-[10px] uppercase tracking-[0.2em] text-[#b9a0a0] mb-2">
-                Administración
-              </p>
+<header className="bg-white border-b border-[#f1dede] px-5 md:px-8 py-4 md:py-5">
+  <div className="max-w-[1500px] mx-auto">
+    <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+      <div className="text-left">
+        <p className="text-[10px] uppercase tracking-[0.16em] text-[#b9a0a0]">
+          Administración
+        </p>
 
-              <h1 className="text-[38px] md:text-[34px] ivy text-[#7a0000] leading-[0.95]">
-                Auditoría
-              </h1>
+        <h1 className="mt-1 text-[21px] md:text-[23px] font-bold text-[#7a0000] leading-tight">
+          Auditoría
+        </h1>
 
-              <p className="text-sm text-[#b07a7a] mt-3">
-                Registro de movimientos realizados dentro del sistema.
-              </p>
-            </div>
+        <p className="mt-1 text-xs md:text-sm text-[#b07a7a]">
+          Registro y trazabilidad de los movimientos realizados en el sistema.
+        </p>
+      </div>
 
-            <div className="flex items-center gap-3">
-              <button
-                type="button"
-                onClick={fetchAuditoria}
-                className="w-12 h-12 rounded-2xl border border-[#efcccc] bg-white text-[#8c0303] flex items-center justify-center hover:bg-[#fff5f5]"
-                aria-label="Actualizar auditoría"
-                title="Actualizar auditoría"
-              >
-                <RefreshCw size={18} />
-              </button>
+      <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full lg:w-auto">
+        <div className="hidden xl:flex w-[280px] items-center gap-2 bg-[#fff5f5] px-4 py-2.5 rounded-xl">
+          <Search size={16} className="text-[#b07a7a]" />
 
-              <div className="hidden md:flex items-center gap-2 bg-[#fff5f5] px-4 py-3 rounded-2xl w-[280px]">
-                <Search size={17} className="text-[#b07a7a]" />
-
-                <input
-                  value={search}
-                  onChange={(event) => setSearch(event.target.value)}
-                  placeholder="Buscar actividad..."
-                  className="w-full bg-transparent outline-none text-sm text-[#2e2e2e]"
-                />
-              </div>
-            </div>
-          </div>
+          <input
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder="Buscar actividad..."
+            className="w-full bg-transparent outline-none text-sm text-[#2e2e2e]"
+          />
         </div>
-      </header>
+
+        <button
+          type="button"
+          onClick={fetchAuditoria}
+          className="w-full sm:w-auto h-10 px-4 rounded-xl border border-[#efcccc] bg-white text-[#8c0303] font-semibold text-sm flex items-center justify-center gap-2 hover:bg-[#fff5f5]"
+          aria-label="Actualizar auditoría"
+        >
+          <RefreshCw size={16} />
+          Actualizar
+        </button>
+      </div>
+    </div>
+  </div>
+</header>
 
       <section className="px-4 md:px-8 py-5 md:py-7 max-w-[1600px] mx-auto">
         <div className="bg-white border border-[#f3dede] rounded-[28px] overflow-hidden">
