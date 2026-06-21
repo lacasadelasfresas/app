@@ -112,7 +112,7 @@ export default function Sidebar({
             width={180}
             height={50}
             priority
- className="object-contain w-[220px] h-auto scale-[1.55]"
+ className="object-contain w-[220px] h-auto scale-[1.20]"
           />
         )}
 
