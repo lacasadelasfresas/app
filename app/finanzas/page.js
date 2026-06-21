@@ -1095,7 +1095,7 @@ setForm({
           </div>
 
 <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-<div className="xl:col-span-2 bg-white border border-[#f3dede] rounded-[28px] overflow-hidden">
+<div className="xl:col-span-2 bg-white border border-[#f3dede] rounded-[28px] overflow-visible">
     <div className="p-6 border-b border-[#f3dede] flex items-center justify-between gap-4">
       <div>
         <h2 className="text-[30px] ivy text-[#7a0000] leading-none">
@@ -1128,7 +1128,7 @@ setForm({
       </div>
     </div>
 
-    <table className="w-full text-[12px]">
+ <table className="min-w-[940px] w-full text-[12px]">
       <thead className="bg-[#f8eeee] text-[#b07a7a] uppercase text-[11px] tracking-[0.15em]">
 <tr>
   <th className="py-4 px-3 text-left">Fecha</th>
@@ -1271,8 +1271,8 @@ setForm({
           Resumen contable
         </p>
 
-        <div className="overflow-x-auto rounded-2xl border border-[#f3dede]">
-          <table className="min-w-[430px] w-full text-sm">
+<div className="overflow-x-auto overscroll-x-contain rounded-b-[28px]">
+  <table className="min-w-[940px] w-full text-[12px]">
             <thead className="bg-[#f8eeee] text-[#b07a7a] uppercase text-[10px] tracking-[0.12em]">
               <tr>
                 <th className="py-3 px-4 text-left">Categoría</th>
@@ -1309,7 +1309,7 @@ setForm({
 </div>
 </div>
 
-<div className="bg-white border border-[#f3dede] rounded-[28px] overflow-hidden">
+<div className="bg-white border border-[#f3dede] rounded-[28px] overflow-visible">
   <div className="p-6 border-b border-[#f3dede]">
     <h2 className="text-[30px] ivy text-[#7a0000] leading-none">
       Ingresos vs gastos por mes
@@ -1320,7 +1320,7 @@ setForm({
     </p>
   </div>
 
-  <table className="w-full text-sm">
+ <table className="min-w-[720px] w-full text-sm">
     <thead className="bg-[#f8eeee] text-[#b07a7a] uppercase text-[11px] tracking-[0.15em]">
 <tr>
   <th className="py-4 px-5 text-left">Mes</th>
