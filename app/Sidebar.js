@@ -126,10 +126,7 @@ export default function Sidebar({
           {collapsed ? '›' : '‹'}
         </button>
       </div>
-
-      {/* Espacio compacto en móvil: el logo ya está arriba en AuthLayout */}
-      <div className="md:hidden h-[10px] border-b border-[#f1dede] shrink-0" />
-
+      
 <nav className="flex-1 min-h-0 overflow-y-auto overscroll-contain md:overflow-hidden px-4 py-2 space-y-[1px]">        {sectionTitle('Principal')}
 
         <Link
