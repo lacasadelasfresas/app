@@ -105,7 +105,7 @@ export default function Sidebar({
       }`}
     >
       {/* Logo: visible únicamente en desktop */}
-      <div className="hidden md:flex relative h-[86px] px-5 items-center justify-center border-b border-[#f1dede] shrink-0 bg-white">
+      <div className="hidden md:flex relative h-[82px] px-5 items-center justify-center border-b border-[#f1dede] shrink-0 bg-white">
         {!collapsed && (
           <Image
             src="/logo.png"
