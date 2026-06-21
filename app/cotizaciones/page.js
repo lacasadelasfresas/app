@@ -573,34 +573,36 @@ Quedamos atentos a cualquier consulta. 🍓`
 
   return (
     <main className="min-h-screen bg-[#fcf8f8] w-full">
-      <header className="bg-white border-b border-[#f1dede] px-5 md:px-8 py-6">
-        <div className="max-w-[1600px] mx-auto">
-          <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
-            <div className="text-left">
-              <p className="text-[10px] uppercase tracking-[0.2em] text-[#b9a0a0] mb-2">
-                Operación comercial
-              </p>
+<header className="bg-white border-b border-[#f1dede] px-5 md:px-8 py-3 md:py-3">
+  <div className="max-w-[1500px] mx-auto">
+    <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+      <div className="text-left">
+        <p className="text-[10px] uppercase tracking-[0.16em] text-[#b9a0a0]">
+          Operación comercial
+        </p>
 
-              <h1 className="text-[38px] md:text-[34px] ivy text-[#7a0000] leading-[0.95]">
-                Cotizaciones
-              </h1>
+        <h1 className="mt-1 text-[21px] md:text-[23px] font-bold text-[#7a0000] leading-tight">
+          Cotizaciones
+        </h1>
 
-              <p className="text-sm text-[#b07a7a] mt-3">
-                Crea propuestas, compártelas y gestiona su seguimiento.
-              </p>
-            </div>
+        <p className="mt-1 text-xs md:text-sm text-[#b07a7a]">
+          Crea propuestas, compártelas y gestiona su seguimiento.
+        </p>
+      </div>
 
-            <button
-              type="button"
-              onClick={openCreateForm}
-              className="w-full md:w-auto bg-[#8c0303] text-white px-5 py-3 rounded-2xl font-semibold flex items-center justify-center gap-2 text-sm"
-            >
-              <Plus size={18} />
-              Nueva cotización
-            </button>
-          </div>
-        </div>
-      </header>
+      <div className="w-full lg:w-auto">
+        <button
+          type="button"
+          onClick={openCreateForm}
+          className="w-full sm:w-auto bg-[#8c0303] text-white px-4 py-2.5 rounded-xl font-semibold flex items-center justify-center gap-2 text-sm whitespace-nowrap shadow-sm"
+        >
+          <Plus size={16} />
+          Nueva cotización
+        </button>
+      </div>
+    </div>
+  </div>
+</header>
 
       <section className="px-4 md:px-8 py-5 md:py-7 max-w-[1600px] mx-auto">
         <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
