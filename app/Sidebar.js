@@ -112,7 +112,7 @@ export default function Sidebar({
             width={180}
             height={50}
             priority
- className="object-contain w-[220px] h-auto scale-[1.20]"
+ className="object-contain w-[220px] h-auto scale-[1.10]"
           />
         )}
 
@@ -128,14 +128,19 @@ export default function Sidebar({
       
 <nav className="flex-1 min-h-0 overflow-y-auto overscroll-contain md:overflow-hidden px-4 py-2 space-y-[1px]">        {sectionTitle('Principal')}
 
-<Link
-  href="/app/cuadro-de-mandos"
-  onClick={handleNavigate}
-  className={linkClass('/app/cuadro-de-mandos')}
+<button
+  type="button"
+  onClick={() => {
+    handleNavigate()
+    router.push('/app/cuadro-de-mandos')
+  }}
+  className={`${linkClass(
+    '/app/cuadro-de-mandos'
+  )} relative z-[200] cursor-pointer`}
 >
   <LayoutDashboard size={18} />
   {!collapsed && 'Dashboard General'}
-</Link>
+</button>
 
         {sectionTitle('Operación')}
 
