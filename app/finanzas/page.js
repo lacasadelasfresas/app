@@ -410,6 +410,12 @@ const gastosFiltrados = gastos.filter((gasto) => {
   const matchesMetodoPago =
     metodoPagoFiltro === 'Todos' || gasto.metodo_pago === metodoPagoFiltro
 
+const matchesTipoGasto =
+  tipoGastoFiltro === 'Todos' || gasto.tipo_gasto === tipoGastoFiltro
+
+const matchesEstadoPago =
+  estadoPagoFiltro === 'Todos' || gasto.estado_pago === estadoPagoFiltro
+
 return (
   matchesFechaInicio &&
   matchesFechaFin &&
@@ -419,12 +425,6 @@ return (
   matchesMetodoPago
 )
 })
-
-const matchesTipoGasto =
-  tipoGastoFiltro === 'Todos' || gasto.tipo_gasto === tipoGastoFiltro
-
-const matchesEstadoPago =
-  estadoPagoFiltro === 'Todos' || gasto.estado_pago === estadoPagoFiltro
 
 const ingresosMes = ventasFiltradas.reduce((acc, venta) => {
     return acc + Number(venta.monto_pago || 0)
