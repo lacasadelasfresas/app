@@ -588,49 +588,51 @@ export default function DashboardPage() {
   return (
     <main className="min-h-screen bg-[#fcf8f8] w-full">
       <section className="w-full">
-        <header className="bg-white border-b border-[#f1dede] px-4 md:px-8 py-5 md:py-6">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-            <div className="pl-0">
-              <p className="text-[10px] uppercase tracking-[0.2em] text-[#b9a0a0] mb-2">
-                Vista general
-              </p>
+<header className="bg-white border-b border-[#f1dede] px-5 md:px-8 py-6 md:py-7">
+  <div className="max-w-[1500px] mx-auto">
+    <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
+      <div className="text-left">
+        <p className="text-[10px] uppercase tracking-[0.2em] text-[#b9a0a0] mb-2">
+          Vista general
+        </p>
 
-              <h1 className="text-[30px] md:text-[34px] ivy text-[#7a0000] leading-none text-left">
-                Cuadro de Mandos
-              </h1>
+        <h1 className="text-[38px] md:text-[34px] ivy text-[#7a0000] leading-[0.95]">
+          Cuadro de Mandos
+        </h1>
 
-              <p className="text-sm text-[#b07a7a] mt-2">
-                La Casa de las Fresas
-              </p>
-            </div>
+        <p className="text-sm text-[#b07a7a] mt-3">
+          La Casa de las Fresas
+        </p>
+      </div>
 
-            <div className="flex items-center gap-3 w-full lg:w-auto">
-              <div className="hidden md:flex flex-1 lg:w-[260px] items-center gap-2 bg-[#fff5f5] px-4 py-3 rounded-2xl">
-                <Search size={17} className="text-[#b07a7a]" />
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3 w-full md:w-auto">
+        <div className="hidden lg:flex w-[260px] items-center gap-2 bg-[#fff5f5] px-4 py-3 rounded-2xl">
+          <Search size={17} className="text-[#b07a7a]" />
 
-                <input
-                  placeholder="Buscar..."
-                  className="w-full bg-transparent outline-none text-sm"
-                />
-              </div>
+          <input
+            placeholder="Buscar..."
+            className="w-full bg-transparent outline-none text-sm text-[#2e2e2e]"
+          />
+        </div>
 
-              <button
-                type="button"
-                className="hidden md:flex w-11 h-11 rounded-2xl bg-[#fff5f5] items-center justify-center"
-              >
-                <Bell size={18} />
-              </button>
+        <button
+          type="button"
+          className="hidden lg:flex w-11 h-11 rounded-2xl bg-[#fff5f5] items-center justify-center"
+        >
+          <Bell size={18} />
+        </button>
 
-              <Link
-                href="/pedidos?new=1"
-                className="ml-auto lg:ml-0 bg-[#8c0303] text-white px-4 py-3 rounded-2xl font-semibold flex items-center gap-2 text-sm whitespace-nowrap"
-              >
-                <DollarSign size={16} />
-                Registrar venta
-              </Link>
-            </div>
-          </div>
-        </header>
+        <Link
+          href="/pedidos?new=1"
+          className="w-full sm:w-auto bg-[#8c0303] text-white px-5 py-4 rounded-2xl font-semibold flex items-center justify-center gap-2 text-base whitespace-nowrap shadow-sm"
+        >
+          <DollarSign size={18} />
+          Registrar venta
+        </Link>
+      </div>
+    </div>
+  </div>
+</header>
 
         <div className="px-4 md:px-8 py-5 md:py-7 space-y-5 md:space-y-6">
           <section className="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
