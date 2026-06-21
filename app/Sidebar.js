@@ -130,14 +130,8 @@ export default function Sidebar({
 
 <Link
   href="/app/cuadro-de-mandos"
-  onClick={(event) => {
-    event.preventDefault()
-    handleNavigate()
-    window.location.href = '/app/cuadro-de-mandos'
-  }}
-  className={`${linkClass(
-    '/app/cuadro-de-mandos'
-  )} relative z-[200] cursor-pointer pointer-events-auto`}
+  onClick={handleNavigate}
+  className={linkClass('/app/cuadro-de-mandos')}
 >
   <LayoutDashboard size={18} />
   {!collapsed && 'Dashboard General'}
