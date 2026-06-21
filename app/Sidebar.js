@@ -99,8 +99,8 @@ export default function Sidebar({
   }
 
   return (
-    <aside
-      className={`relative z-[100] h-full md:h-screen bg-white text-[#2e2e2e] border-r border-[#f1dede] flex flex-col transition-all duration-300 overflow-hidden md:overflow-visible w-[250px] ${
+ <aside
+  className={`relative z-[100] h-full md:h-screen bg-white text-[#2e2e2e] border-r border-[#f1dede] flex flex-col transition-all duration-300 overflow-hidden md:overflow-visible w-[250px] ${
         collapsed ? 'md:w-[82px]' : 'md:w-[250px]'
       }`}
     >
@@ -130,8 +130,7 @@ export default function Sidebar({
       {/* Espacio compacto en móvil: el logo ya está arriba en AuthLayout */}
       <div className="md:hidden h-[10px] border-b border-[#f1dede] shrink-0" />
 
-      <nav className="flex-1 min-h-0 overflow-hidden px-4 py-2 space-y-[1px]">
-        {sectionTitle('Principal')}
+<nav className="flex-1 min-h-0 overflow-y-auto overscroll-contain md:overflow-hidden px-4 py-2 space-y-[1px]">        {sectionTitle('Principal')}
 
         <Link
           href="/app/cuadro-de-mandos"
