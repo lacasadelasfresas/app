@@ -1,7 +1,6 @@
 'use client'
 
 import Link from 'next/link'
-import Image from 'next/image'
 import { usePathname, useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import {
@@ -111,27 +110,16 @@ export default function Sidebar({
         collapsed ? 'md:w-[82px]' : 'md:w-[250px]'
       }`}
     >
-      <div className="relative h-[72px] md:h-[88px] px-6 flex items-center justify-center border-b border-[#f1dede] shrink-0">
-        <button
-          type="button"
-          onClick={() => setCollapsed(!collapsed)}
-          className="hidden md:flex absolute top-6 -right-4 z-50 w-8 h-8 rounded-full bg-[#8c0303] text-white items-center justify-center text-lg shadow-lg border-2 border-white"
-          aria-label={collapsed ? 'Expandir menú' : 'Colapsar menú'}
-        >
-          {collapsed ? '›' : '‹'}
-        </button>
-
-        {!collapsed && (
-          <Image
-            src="/logo.png"
-            alt="La Casa de las Fresas"
-            width={120}
-            height={60}
-            priority
-            className="object-contain w-[145px] h-auto max-h-[56px]"
-          />
-        )}
-      </div>
+<div className="relative h-[24px] md:h-[32px] border-b border-[#f1dede] shrink-0">
+  <button
+    type="button"
+    onClick={() => setCollapsed(!collapsed)}
+    className="hidden md:flex absolute top-3 -right-4 z-50 w-8 h-8 rounded-full bg-[#8c0303] text-white items-center justify-center text-lg shadow-lg border-2 border-white"
+    aria-label={collapsed ? 'Expandir menú' : 'Colapsar menú'}
+  >
+    {collapsed ? '›' : '‹'}
+  </button>
+</div>
 
       <nav className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-4 py-3 space-y-1">
         {sectionTitle('Principal')}
