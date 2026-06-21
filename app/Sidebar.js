@@ -81,7 +81,7 @@ export default function Sidebar({
   }
 
   function linkClass(path) {
-    return `w-full flex items-center gap-3 px-3 py-[7px] rounded-xl text-[12px] transition ${
+    return `w-full flex items-center gap-3 px-3 py-[7px] rounded-xl text-[14px] transition ${
       isActive(path)
         ? 'bg-[#8c0303] text-white font-semibold shadow-sm'
         : 'text-[#2e2e2e] hover:bg-[#fff1f1]'
@@ -92,7 +92,7 @@ export default function Sidebar({
     if (collapsed) return null
 
     return (
-      <p className="text-[9px] text-[#c2aaaa] mt-3 mb-1 tracking-[0.2em] font-medium px-2 uppercase leading-none">
+      <p className="text-[11px] text-[#c2aaaa] mt-3 mb-1 tracking-[0.2em] font-medium px-2 uppercase leading-none">
         {label}
       </p>
     )
@@ -105,15 +105,15 @@ export default function Sidebar({
       }`}
     >
       {/* Logo: visible únicamente en desktop */}
-      <div className="hidden md:flex relative h-[82px] px-5 items-center justify-center border-b border-[#f1dede] shrink-0 bg-white">
+      <div className="hidden md:flex relative h-[96px] px-5 items-center justify-center border-b border-[#f1dede] shrink-0 bg-white">
         {!collapsed && (
           <Image
             src="/logo.png"
             alt="La Casa de las Fresas"
-            width={150}
-            height={58}
+            width={180}
+            height={68}
             priority
-            className="object-contain w-[145px] h-auto max-h-[58px]"
+            className="object-contain w-[175px] h-auto max-h-[68px]"
           />
         )}
 
@@ -138,7 +138,7 @@ export default function Sidebar({
           onClick={handleNavigate}
           className={linkClass('/app/cuadro-de-mandos')}
         >
-          <LayoutDashboard size={16} />
+          <LayoutDashboard size={18} />
           {!collapsed && 'Dashboard General'}
         </Link>
 
@@ -149,7 +149,7 @@ export default function Sidebar({
           onClick={handleNavigate}
           className={linkClass('/pedidos')}
         >
-          <ShoppingBag size={16} />
+          <ShoppingBag size={18} />
           {!collapsed && 'Registro de Ventas'}
         </Link>
 
@@ -158,7 +158,7 @@ export default function Sidebar({
           onClick={handleNavigate}
           className={linkClass('/cotizaciones')}
         >
-          <FileText size={16} />
+          <FileText size={18} />
           {!collapsed && 'Cotizaciones'}
         </Link>
 
@@ -169,7 +169,7 @@ export default function Sidebar({
           onClick={handleNavigate}
           className={linkClass('/gastos-recurrentes')}
         >
-          <Repeat size={16} />
+          <Repeat size={18} />
           {!collapsed && 'Gastos recurrentes'}
         </Link>
 
@@ -178,7 +178,7 @@ export default function Sidebar({
           onClick={handleNavigate}
           className={linkClass('/ventas')}
         >
-          <DollarSign size={16} />
+          <DollarSign size={18} />
           {!collapsed && 'Análisis de Ventas'}
         </Link>
 
@@ -187,7 +187,7 @@ export default function Sidebar({
           onClick={handleNavigate}
           className={linkClass('/finanzas')}
         >
-          <Wallet size={16} />
+          <Wallet size={18} />
           {!collapsed && 'Finanzas'}
         </Link>
 
@@ -198,7 +198,7 @@ export default function Sidebar({
           onClick={handleNavigate}
           className={linkClass('/centro-contenido')}
         >
-          <FileText size={16} />
+          <FileText size={18} />
           {!collapsed && 'Centro de Contenido'}
         </Link>
 
@@ -207,7 +207,7 @@ export default function Sidebar({
           onClick={handleNavigate}
           className={linkClass('/calendario-editorial')}
         >
-          <Calendar size={16} />
+          <Calendar size={18} />
           {!collapsed && 'Calendario Editorial'}
         </Link>
 
@@ -216,7 +216,7 @@ export default function Sidebar({
           onClick={handleNavigate}
           className={linkClass('/campanas')}
         >
-          <Megaphone size={16} />
+          <Megaphone size={18} />
           {!collapsed && 'Campañas'}
         </Link>
 
@@ -225,7 +225,7 @@ export default function Sidebar({
           onClick={handleNavigate}
           className={linkClass('/embudos-email')}
         >
-          <Mail size={16} />
+          <Mail size={18} />
           {!collapsed && 'Embudos & Email'}
         </Link>
 
@@ -234,7 +234,7 @@ export default function Sidebar({
           onClick={handleNavigate}
           className={linkClass('/analitica')}
         >
-          <BarChart3 size={16} />
+          <BarChart3 size={18} />
           {!collapsed && 'Analítica'}
         </Link>
 
@@ -245,7 +245,7 @@ export default function Sidebar({
           onClick={handleNavigate}
           className={linkClass('/inventario')}
         >
-          <Boxes size={16} />
+          <Boxes size={18} />
           {!collapsed && 'Inventario'}
         </Link>
 
@@ -254,7 +254,7 @@ export default function Sidebar({
           onClick={handleNavigate}
           className={linkClass('/recipes')}
         >
-          <ScrollText size={16} />
+          <ScrollText size={18} />
           {!collapsed && 'Recipes'}
         </Link>
 
@@ -265,7 +265,7 @@ export default function Sidebar({
           onClick={handleNavigate}
           className={linkClass('/auditoria')}
         >
-          <ShieldCheck size={16} />
+          <ShieldCheck size={18} />
           {!collapsed && 'Auditoría'}
         </Link>
       </nav>
@@ -282,15 +282,15 @@ export default function Sidebar({
 
           {!collapsed && (
             <div className="min-w-0">
-              <p className="text-[11px] font-semibold text-[#7a0000] truncate leading-tight">
+              <p className="text-[13px] font-semibold text-[#7a0000] truncate leading-tight">
                 {usuario.nombre || 'Usuario'}
               </p>
 
-              <p className="text-[9px] text-[#b07a7a] truncate leading-tight mt-0.5">
+              <p className="text-[13px] text-[#b07a7a] truncate leading-tight mt-0.5">
                 {usuario.email || 'Sin email'}
               </p>
 
-              <p className="text-[9px] text-[#8c0303] font-semibold mt-0.5">
+              <p className="text-[13px] text-[#8c0303] font-semibold mt-0.5">
                 {usuario.rol || 'Sin rol'}
               </p>
             </div>
