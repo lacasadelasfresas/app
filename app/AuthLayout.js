@@ -151,10 +151,11 @@ const { data: usuario, error } = await supabase
             : '-translate-x-full md:translate-x-0'
         }`}
       >
-        <Sidebar
-          collapsed={sidebarCollapsed}
-          setCollapsed={setSidebarCollapsed}
-        />
+<Sidebar
+  collapsed={sidebarCollapsed}
+  setCollapsed={setSidebarCollapsed}
+  onNavigate={() => setMobileSidebarOpen(false)}
+/>
       </div>
 
       {/* Contenido */}
