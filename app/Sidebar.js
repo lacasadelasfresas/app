@@ -105,15 +105,14 @@ export default function Sidebar({
       }`}
     >
       {/* Logo: visible únicamente en desktop */}
-      <div className="hidden md:flex relative h-[82px] px-5 items-center justify-center border-b border-[#f1dede] shrink-0 bg-white">
-        {!collapsed && (
+<div className="hidden md:flex relative h-[82px] px-5 items-center justify-center border-b border-[#f1dede] shrink-0 bg-white">        {!collapsed && (
           <Image
             src="/logo.png"
             alt="La Casa de las Fresas"
-            width={180}
-            height={68}
+            width={220}
+            height={84}
             priority
-            className="object-contain w-[175px] h-auto max-h-[68px]"
+ className="object-contain w-[220px] h-auto scale-[1.55]"
           />
         )}
 
