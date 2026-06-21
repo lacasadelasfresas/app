@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname, useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import {
@@ -42,16 +43,13 @@ export default function Sidebar({
 
       if (!authUserId) return
 
-      const { data: usuarioData, error } = await supabase
+      const { data: usuarioData } = await supabase
         .from('usuarios')
         .select('nombre, email, rol')
         .eq('auth_user_id', authUserId)
         .single()
 
-      if (error || !usuarioData) {
-        console.error('Error cargando usuario del sidebar:', error)
-        return
-      }
+      if (!usuarioData) return
 
       setUsuario({
         nombre: usuarioData.nombre || 'Usuario',
@@ -75,53 +73,64 @@ export default function Sidebar({
   }
 
   function isActive(path) {
-    if (path === '/') return pathname === '/'
-
     return pathname === path || pathname.startsWith(`${path}/`)
   }
 
+  function handleNavigate() {
+    if (onNavigate) onNavigate()
+  }
+
   function linkClass(path) {
-    return `w-full flex items-center gap-3 px-3 py-2 rounded-xl text-[13px] transition ${
+    return `w-full flex items-center gap-3 px-3 py-[7px] rounded-xl text-[12px] transition ${
       isActive(path)
         ? 'bg-[#8c0303] text-white font-semibold shadow-sm'
         : 'text-[#2e2e2e] hover:bg-[#fff1f1]'
-    } ${collapsed ? 'justify-center' : ''}`
+    } ${collapsed ? 'justify-center px-2' : ''}`
   }
 
   function sectionTitle(label) {
     if (collapsed) return null
 
     return (
-      <p className="text-[10px] text-[#b8a1a1] mt-4 mb-1.5 tracking-[0.22em] font-medium px-2 uppercase">
+      <p className="text-[9px] text-[#c2aaaa] mt-3 mb-1 tracking-[0.2em] font-medium px-2 uppercase leading-none">
         {label}
       </p>
     )
   }
 
-  function handleNavigate() {
-    if (onNavigate) {
-      onNavigate()
-    }
-  }
-
   return (
     <aside
-      className={`h-full md:h-screen overflow-hidden bg-white text-[#2e2e2e] border-r border-[#f1dede] flex flex-col transition-all duration-300 w-[250px] ${
+      className={`relative z-[100] h-full md:h-screen bg-white text-[#2e2e2e] border-r border-[#f1dede] flex flex-col transition-all duration-300 overflow-hidden md:overflow-visible w-[250px] ${
         collapsed ? 'md:w-[82px]' : 'md:w-[250px]'
       }`}
     >
-<div className="relative h-[24px] md:h-[32px] border-b border-[#f1dede] shrink-0">
-  <button
-    type="button"
-    onClick={() => setCollapsed(!collapsed)}
-    className="hidden md:flex absolute top-3 -right-4 z-50 w-8 h-8 rounded-full bg-[#8c0303] text-white items-center justify-center text-lg shadow-lg border-2 border-white"
-    aria-label={collapsed ? 'Expandir menú' : 'Colapsar menú'}
-  >
-    {collapsed ? '›' : '‹'}
-  </button>
-</div>
+      {/* Logo: visible únicamente en desktop */}
+      <div className="hidden md:flex relative h-[82px] px-5 items-center justify-center border-b border-[#f1dede] shrink-0 bg-white">
+        {!collapsed && (
+          <Image
+            src="/logo.png"
+            alt="La Casa de las Fresas"
+            width={150}
+            height={58}
+            priority
+            className="object-contain w-[145px] h-auto max-h-[58px]"
+          />
+        )}
 
-      <nav className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-4 py-3 space-y-1">
+        <button
+          type="button"
+          onClick={() => setCollapsed(!collapsed)}
+          className="absolute top-1/2 -translate-y-1/2 -right-4 z-[150] w-9 h-9 rounded-full bg-[#8c0303] text-white items-center justify-center text-xl shadow-lg border-2 border-white hover:scale-105 transition-transform"
+          aria-label={collapsed ? 'Expandir menú' : 'Colapsar menú'}
+        >
+          {collapsed ? '›' : '‹'}
+        </button>
+      </div>
+
+      {/* Espacio compacto en móvil: el logo ya está arriba en AuthLayout */}
+      <div className="md:hidden h-[10px] border-b border-[#f1dede] shrink-0" />
+
+      <nav className="flex-1 min-h-0 overflow-hidden px-4 py-2 space-y-[1px]">
         {sectionTitle('Principal')}
 
         <Link
@@ -129,7 +138,7 @@ export default function Sidebar({
           onClick={handleNavigate}
           className={linkClass('/app/cuadro-de-mandos')}
         >
-          <LayoutDashboard size={18} />
+          <LayoutDashboard size={16} />
           {!collapsed && 'Dashboard General'}
         </Link>
 
@@ -140,7 +149,7 @@ export default function Sidebar({
           onClick={handleNavigate}
           className={linkClass('/pedidos')}
         >
-          <ShoppingBag size={18} />
+          <ShoppingBag size={16} />
           {!collapsed && 'Registro de Ventas'}
         </Link>
 
@@ -149,7 +158,7 @@ export default function Sidebar({
           onClick={handleNavigate}
           className={linkClass('/cotizaciones')}
         >
-          <FileText size={18} />
+          <FileText size={16} />
           {!collapsed && 'Cotizaciones'}
         </Link>
 
@@ -160,7 +169,7 @@ export default function Sidebar({
           onClick={handleNavigate}
           className={linkClass('/gastos-recurrentes')}
         >
-          <Repeat size={18} />
+          <Repeat size={16} />
           {!collapsed && 'Gastos recurrentes'}
         </Link>
 
@@ -169,7 +178,7 @@ export default function Sidebar({
           onClick={handleNavigate}
           className={linkClass('/ventas')}
         >
-          <DollarSign size={18} />
+          <DollarSign size={16} />
           {!collapsed && 'Análisis de Ventas'}
         </Link>
 
@@ -178,7 +187,7 @@ export default function Sidebar({
           onClick={handleNavigate}
           className={linkClass('/finanzas')}
         >
-          <Wallet size={18} />
+          <Wallet size={16} />
           {!collapsed && 'Finanzas'}
         </Link>
 
@@ -189,7 +198,7 @@ export default function Sidebar({
           onClick={handleNavigate}
           className={linkClass('/centro-contenido')}
         >
-          <FileText size={18} />
+          <FileText size={16} />
           {!collapsed && 'Centro de Contenido'}
         </Link>
 
@@ -198,7 +207,7 @@ export default function Sidebar({
           onClick={handleNavigate}
           className={linkClass('/calendario-editorial')}
         >
-          <Calendar size={18} />
+          <Calendar size={16} />
           {!collapsed && 'Calendario Editorial'}
         </Link>
 
@@ -207,7 +216,7 @@ export default function Sidebar({
           onClick={handleNavigate}
           className={linkClass('/campanas')}
         >
-          <Megaphone size={18} />
+          <Megaphone size={16} />
           {!collapsed && 'Campañas'}
         </Link>
 
@@ -216,7 +225,7 @@ export default function Sidebar({
           onClick={handleNavigate}
           className={linkClass('/embudos-email')}
         >
-          <Mail size={18} />
+          <Mail size={16} />
           {!collapsed && 'Embudos & Email'}
         </Link>
 
@@ -225,7 +234,7 @@ export default function Sidebar({
           onClick={handleNavigate}
           className={linkClass('/analitica')}
         >
-          <BarChart3 size={18} />
+          <BarChart3 size={16} />
           {!collapsed && 'Analítica'}
         </Link>
 
@@ -236,7 +245,7 @@ export default function Sidebar({
           onClick={handleNavigate}
           className={linkClass('/inventario')}
         >
-          <Boxes size={18} />
+          <Boxes size={16} />
           {!collapsed && 'Inventario'}
         </Link>
 
@@ -245,7 +254,7 @@ export default function Sidebar({
           onClick={handleNavigate}
           className={linkClass('/recipes')}
         >
-          <ScrollText size={18} />
+          <ScrollText size={16} />
           {!collapsed && 'Recipes'}
         </Link>
 
@@ -256,30 +265,32 @@ export default function Sidebar({
           onClick={handleNavigate}
           className={linkClass('/auditoria')}
         >
-          <ShieldCheck size={18} />
+          <ShieldCheck size={16} />
           {!collapsed && 'Auditoría'}
         </Link>
       </nav>
 
-      <div className="border-t border-[#f1dede] px-3 pt-3 pb-[calc(12px+env(safe-area-inset-bottom))] bg-white shrink-0">
+      <div className="border-t border-[#f1dede] px-3 py-2 bg-white shrink-0">
         <div
-          className={`${collapsed ? 'justify-center' : ''} flex gap-3 items-center`}
+          className={`flex gap-2 items-center ${
+            collapsed ? 'justify-center' : ''
+          }`}
         >
-          <div className="w-9 h-9 rounded-full bg-[#8c0303] text-white flex items-center justify-center text-sm font-bold shrink-0">
+          <div className="w-8 h-8 rounded-full bg-[#8c0303] text-white flex items-center justify-center text-xs font-bold shrink-0">
             {usuario.nombre?.charAt(0)?.toUpperCase() || 'U'}
           </div>
 
           {!collapsed && (
             <div className="min-w-0">
-              <p className="text-xs font-semibold text-[#7a0000] truncate">
+              <p className="text-[11px] font-semibold text-[#7a0000] truncate leading-tight">
                 {usuario.nombre || 'Usuario'}
               </p>
 
-              <p className="text-[10px] text-[#b07a7a] truncate">
+              <p className="text-[9px] text-[#b07a7a] truncate leading-tight mt-0.5">
                 {usuario.email || 'Sin email'}
               </p>
 
-              <p className="text-[10px] text-[#8c0303] font-semibold mt-0.5">
+              <p className="text-[9px] text-[#8c0303] font-semibold mt-0.5">
                 {usuario.rol || 'Sin rol'}
               </p>
             </div>
@@ -290,7 +301,7 @@ export default function Sidebar({
           <button
             type="button"
             onClick={cerrarSesion}
-            className="mt-3 w-full rounded-xl border border-[#efcaca] px-3 py-2 text-[11px] font-semibold text-[#8c0303] hover:bg-[#fff1f1]"
+            className="mt-2 w-full rounded-xl border border-[#efcaca] px-3 py-1.5 text-[10px] font-semibold text-[#8c0303] hover:bg-[#fff1f1]"
           >
             Cerrar sesión
           </button>
