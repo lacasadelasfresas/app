@@ -139,14 +139,14 @@ export default function Sidebar({
 
         {sectionTitle('Operación')}
 
-        <Link
-          href="/pedidos"
-          onClick={handleNavigate}
-          className={linkClass('/pedidos')}
-        >
-          <ShoppingBag size={18} />
-          {!collapsed && 'Registro de Ventas'}
-        </Link>
+<Link
+  href="/pedidos"
+  onClick={handleNavigate}
+  className={linkClass('/pedidos')}
+>
+  <ShoppingBag size={18} />
+  {!collapsed && 'Registro de Ventas'}
+</Link>
 
         <Link
           href="/cotizaciones"
