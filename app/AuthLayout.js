@@ -130,10 +130,10 @@ const { data: usuario, error } = await supabase
 <Image
   src="/logo.png"
   alt="La Casa de las Fresas"
-  width={180}
-  height={56}
+  width={250}
+  height={80}
   priority
-  className="object-contain w-[180px] h-[56px]"
+  className="object-contain w-[250px] h-[80px]"
 />
 
         <div className="w-11" />
