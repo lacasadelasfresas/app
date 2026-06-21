@@ -128,7 +128,7 @@ export default function Sidebar({
             width={120}
             height={60}
             priority
-            className="object-contain w-auto h-auto max-h-[48px]"
+            className="object-contain w-[145px] h-auto max-h-[56px]"
           />
         )}
       </div>

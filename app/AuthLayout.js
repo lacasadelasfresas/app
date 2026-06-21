@@ -5,6 +5,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { Menu, X } from 'lucide-react'
 import Sidebar from './Sidebar'
 import { supabase } from '@/lib/supabaseClient'
+import Image from 'next/image'
 
 export default function AuthLayout({ children }) {
   const router = useRouter()
@@ -126,9 +127,14 @@ const { data: usuario, error } = await supabase
           {mobileSidebarOpen ? <X size={22} /> : <Menu size={22} />}
         </button>
 
-        <p className="ivy text-[#7a0000] text-lg text-center">
-          La Casa de las Fresas
-        </p>
+<Image
+  src="/logo.png"
+  alt="La Casa de las Fresas"
+  width={128}
+  height={48}
+  priority
+  className="object-contain w-[128px] h-[48px]"
+/>
 
         <div className="w-11" />
       </div>
