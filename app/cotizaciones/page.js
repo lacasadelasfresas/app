@@ -573,8 +573,8 @@ Quedamos atentos a cualquier consulta. 🍓`
 
   return (
     <main className="min-h-screen bg-[#fcf8f8] w-full">
-<header className="bg-white border-b border-[#f1dede] px-5 md:px-8 py-3 md:py-3">
-  <div className="max-w-[1500px] mx-auto">
+<header className="bg-white border-b border-[#f1dede] px-5 md:px-8 py-3 md:h-[82px] md:py-0 md:flex md:items-center">
+  <div className="w-full max-w-none">
     <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
       <div className="text-left">
         <p className="text-[10px] uppercase tracking-[0.16em] text-[#b9a0a0]">
