@@ -89,14 +89,6 @@ body{
     padding-right: 16px !important;
   }
 
-  .grid {
-    grid-template-columns: 1fr !important;
-  }
-
-  table {
-    min-width: 720px;
-  }
-
   h1 {
     font-size: 28px !important;
     line-height: 1.1 !important;

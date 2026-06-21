@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
-import { Menu } from 'lucide-react'
+import { Menu, X } from 'lucide-react'
 import Sidebar from './Sidebar'
 import { supabase } from '@/lib/supabaseClient'
 
@@ -115,24 +115,37 @@ const { data: usuario, error } = await supabase
 
   return (
     <div className="min-h-screen bg-[#fcf8f8]">
-      <button
-        type="button"
-        onClick={() => setMobileSidebarOpen(true)}
-        className="md:hidden fixed top-5 left-4 z-[70] w-11 h-11 rounded-full bg-[#8c0303] text-white shadow-lg flex items-center justify-center"
-      >
-        <Menu size={22} />
-      </button>
+      {/* Barra superior solo móvil */}
+      <div className="md:hidden fixed inset-x-0 top-0 z-[80] h-16 bg-white border-b border-[#f1dede] px-4 flex items-center justify-between">
+        <button
+          type="button"
+          onClick={() => setMobileSidebarOpen((open) => !open)}
+          aria-label={mobileSidebarOpen ? 'Cerrar menú' : 'Abrir menú'}
+          className="w-11 h-11 rounded-full bg-[#8c0303] text-white shadow-lg flex items-center justify-center"
+        >
+          {mobileSidebarOpen ? <X size={22} /> : <Menu size={22} />}
+        </button>
 
+        <p className="ivy text-[#7a0000] text-lg text-center">
+          La Casa de las Fresas
+        </p>
+
+        <div className="w-11" />
+      </div>
+
+      {/* Fondo para cerrar menú al tocar afuera */}
       {mobileSidebarOpen && (
         <button
           type="button"
           onClick={() => setMobileSidebarOpen(false)}
+          aria-label="Cerrar menú"
           className="md:hidden fixed inset-0 z-[50] bg-black/30"
         />
       )}
 
+      {/* Sidebar */}
       <div
-        className={`fixed inset-y-0 left-0 z-[60] w-[250px] transition-transform duration-300 md:w-auto md:translate-x-0 ${
+        className={`fixed top-16 bottom-0 left-0 z-[70] w-[250px] transition-transform duration-300 md:inset-y-0 md:top-0 md:z-[60] md:w-auto md:translate-x-0 ${
           mobileSidebarOpen
             ? 'translate-x-0'
             : '-translate-x-full md:translate-x-0'
@@ -144,14 +157,14 @@ const { data: usuario, error } = await supabase
         />
       </div>
 
+      {/* Contenido */}
       <div
-        className={`transition-all duration-300 min-w-0 ${
+        className={`min-w-0 pt-16 transition-all duration-300 md:pt-0 ${
           sidebarCollapsed
             ? 'md:ml-[82px] md:w-[calc(100%-82px)]'
             : 'md:ml-[250px] md:w-[calc(100%-250px)]'
         }`}
       >
-        <div className="md:hidden h-20" />
         {children}
       </div>
     </div>
