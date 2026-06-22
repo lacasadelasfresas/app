@@ -221,6 +221,14 @@ export default function CentroDeContenidoPage() {
               </p>
             </div>
 
+<Link
+  href="/centro-de-contenido/kanban"
+  className="w-full sm:w-auto h-10 px-4 rounded-xl border border-[#efcccc] bg-white text-[#8c0303] font-semibold text-sm flex items-center justify-center gap-2 hover:bg-[#fff5f5]"
+>
+  <FolderKanban size={16} />
+  Kanban
+</Link>
+
 <div className="flex flex-col sm:flex-row gap-2 w-full lg:w-auto">
   <Link
     href="/centro-de-contenido/biblioteca"
