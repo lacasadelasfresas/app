@@ -31,9 +31,7 @@ import { supabase } from '@/lib/supabaseClient'
 
 const ESTADOS = [
   'Idea',
-  'Planificado',
   'En producción',
-  'Pendiente de aprobación',
   'Listo para publicar',
   'Programado',
   'Publicado',
@@ -133,9 +131,7 @@ function formatDate(value) {
 function getStatusStyle(status) {
   const styles = {
     Idea: 'bg-[#fff4db] text-[#9c6500]',
-    Planificado: 'bg-[#edf5ff] text-[#2563a8]',
     'En producción': 'bg-[#fff1f1] text-[#8c0303]',
-    'Pendiente de aprobación': 'bg-[#f5edff] text-[#7442a3]',
     'Listo para publicar': 'bg-[#edf9f3] text-[#17724e]',
     Programado: 'bg-[#eef7ff] text-[#1f6ea4]',
     Publicado: 'bg-[#eaf9f0] text-[#157347]',
