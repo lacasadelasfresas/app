@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { FolderKanban } from 'lucide-react'
+import { supabase } from '@/lib/supabaseClient'
 import {
   CalendarDays,
   CheckCircle2,
@@ -21,7 +22,6 @@ import {
   Trophy,
   WandSparkles,
 } from 'lucide-react'
-import { supabase } from '@/lib/supabaseClient'
 
 function formatDate(dateValue) {
   if (!dateValue) return 'Sin fecha'
