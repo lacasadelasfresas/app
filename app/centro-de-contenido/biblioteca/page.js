@@ -12,14 +12,19 @@ import {
   FileText,
   Film,
   FolderOpen,
+  Image as ImageIcon,
   Link2,
+  LoaderCircle,
   MessageCircle,
   Pencil,
   Plus,
   RefreshCw,
   Save,
   Search,
+  Star,
   Trash2,
+  Upload,
+  Video,
   X,
 } from 'lucide-react'
 import { supabase } from '@/lib/supabaseClient'
@@ -168,6 +173,9 @@ export default function BibliotecaContenidoPage() {
   const [filterFormato, setFilterFormato] = useState('Todos')
 
   const [form, setForm] = useState(createEmptyForm())
+  const [archivos, setArchivos] = useState([])
+const [archivosPendientes, setArchivosPendientes] = useState([])
+const [uploadingMedia, setUploadingMedia] = useState(false)
 
 useEffect(() => {
   fetchContenido()
@@ -206,11 +214,19 @@ useEffect(() => {
     setLoading(false)
   }
 
-  function resetForm() {
-    setEditingId(null)
-    setForm(createEmptyForm())
-    setFormOpen(false)
-  }
+function resetForm() {
+  archivosPendientes.forEach((archivo) => {
+    if (archivo.signedUrl) {
+      URL.revokeObjectURL(archivo.signedUrl)
+    }
+  })
+
+  setEditingId(null)
+  setForm(createEmptyForm())
+  setArchivos([])
+  setArchivosPendientes([])
+  setFormOpen(false)
+}
 
   function handleChange(event) {
     const { name, value } = event.target
@@ -234,8 +250,245 @@ useEffect(() => {
     })
   }
 
-  function editarContenido(item) {
+async function cargarArchivos(contenidoId) {
+  if (!contenidoId) {
+    setArchivos([])
+    return
+  }
+
+  const { data, error } = await supabase
+    .from('contenido_archivos')
+    .select('*')
+    .eq('contenido_id', contenidoId)
+    .order('es_principal', { ascending: false })
+    .order('orden', { ascending: true })
+
+  if (error) {
+    console.error('Error cargando archivos:', error)
+    return
+  }
+
+  const archivosConUrl = await Promise.all(
+    (data || []).map(async (archivo) => {
+      const { data: signedData, error: signedError } =
+        await supabase.storage
+          .from('contenido-media')
+          .createSignedUrl(archivo.storage_path, 60 * 60)
+
+      if (signedError) {
+        console.error('Error creando URL firmada:', signedError)
+      }
+
+      return {
+        ...archivo,
+        signedUrl: signedData?.signedUrl || '',
+      }
+    })
+  )
+
+  setArchivos(archivosConUrl)
+}
+
+function handleSeleccionarArchivos(event) {
+  const selectedFiles = Array.from(event.target.files || [])
+
+  if (selectedFiles.length === 0) return
+
+  const archivosValidos = selectedFiles.filter((file) => {
+    const isImage = file.type.startsWith('image/')
+    const isVideo = file.type.startsWith('video/')
+    const isValidSize = file.size <= 50 * 1024 * 1024
+
+    if (!isImage && !isVideo) {
+      alert(`${file.name} no es una imagen o video válido.`)
+      return false
+    }
+
+    if (!isValidSize) {
+      alert(`${file.name} supera el límite de 50 MB.`)
+      return false
+    }
+
+    return true
+  })
+
+  const nuevosPendientes = archivosValidos.map((file) => ({
+    id: crypto.randomUUID(),
+    file,
+    nombre_archivo: file.name,
+    mime_type: file.type,
+    tamano_bytes: file.size,
+    tipo_archivo: file.type.startsWith('video/')
+      ? 'video'
+      : 'imagen',
+    signedUrl: URL.createObjectURL(file),
+    pendiente: true,
+  }))
+
+  setArchivosPendientes((previous) => [
+    ...previous,
+    ...nuevosPendientes,
+  ])
+
+  event.target.value = ''
+}
+
+function eliminarArchivoPendiente(id) {
+  setArchivosPendientes((previous) => {
+    const archivo = previous.find((item) => item.id === id)
+
+    if (archivo?.signedUrl) {
+      URL.revokeObjectURL(archivo.signedUrl)
+    }
+
+    return previous.filter((item) => item.id !== id)
+  })
+}
+
+async function subirArchivosPendientes(contenidoId) {
+  if (archivosPendientes.length === 0) return
+
+  setUploadingMedia(true)
+
+  try {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+
+    const tienePrincipal =
+      archivos.some((archivo) => archivo.es_principal) === true
+
+    for (let index = 0; index < archivosPendientes.length; index += 1) {
+      const archivo = archivosPendientes[index]
+      const safeName = archivo.nombre_archivo
+        .replace(/[^\w.-]+/g, '-')
+        .toLowerCase()
+
+      const storagePath = `contenido/${contenidoId}/${Date.now()}-${crypto.randomUUID()}-${safeName}`
+
+      const { error: uploadError } = await supabase.storage
+        .from('contenido-media')
+        .upload(storagePath, archivo.file, {
+          contentType: archivo.mime_type,
+          upsert: false,
+        })
+
+      if (uploadError) {
+        throw uploadError
+      }
+
+      const { error: metadataError } = await supabase
+        .from('contenido_archivos')
+        .insert([
+          {
+            contenido_id: contenidoId,
+            bucket_id: 'contenido-media',
+            storage_path: storagePath,
+            nombre_archivo: archivo.nombre_archivo,
+            tipo_archivo: archivo.tipo_archivo,
+            mime_type: archivo.mime_type,
+            tamano_bytes: archivo.tamano_bytes,
+            es_principal: !tienePrincipal && index === 0,
+            orden: archivos.length + index,
+            creado_por: user?.id || null,
+          },
+        ])
+
+      if (metadataError) {
+        await supabase.storage
+          .from('contenido-media')
+          .remove([storagePath])
+
+        throw metadataError
+      }
+    }
+
+    archivosPendientes.forEach((archivo) => {
+      if (archivo.signedUrl) {
+        URL.revokeObjectURL(archivo.signedUrl)
+      }
+    })
+
+    setArchivosPendientes([])
+    await cargarArchivos(contenidoId)
+  } catch (error) {
+    console.error('Error subiendo archivos:', error)
+    alert('No se pudieron subir todos los archivos seleccionados.')
+  } finally {
+    setUploadingMedia(false)
+  }
+}
+
+async function eliminarArchivoExistente(archivo) {
+  const confirmar = confirm(
+    `¿Deseas eliminar "${archivo.nombre_archivo}"?`
+  )
+
+  if (!confirmar) return
+
+  const { error: storageError } = await supabase.storage
+    .from('contenido-media')
+    .remove([archivo.storage_path])
+
+  if (storageError) {
+    console.error('Error eliminando archivo de Storage:', storageError)
+    alert('No se pudo eliminar el archivo.')
+    return
+  }
+
+  const { error: databaseError } = await supabase
+    .from('contenido_archivos')
+    .delete()
+    .eq('id', archivo.id)
+
+  if (databaseError) {
+    console.error('Error eliminando registro del archivo:', databaseError)
+    alert('El archivo se eliminó, pero no se pudo actualizar el registro.')
+    return
+  }
+
+  setArchivos((previous) =>
+    previous.filter((item) => item.id !== archivo.id)
+  )
+}
+
+async function marcarComoPrincipal(archivo) {
+  if (!editingId || archivo.es_principal) return
+
+  const { error: clearError } = await supabase
+    .from('contenido_archivos')
+    .update({ es_principal: false })
+    .eq('contenido_id', editingId)
+
+  if (clearError) {
+    console.error('Error limpiando archivo principal:', clearError)
+    alert('No se pudo actualizar el archivo principal.')
+    return
+  }
+
+  const { error: principalError } = await supabase
+    .from('contenido_archivos')
+    .update({ es_principal: true })
+    .eq('id', archivo.id)
+
+  if (principalError) {
+    console.error('Error marcando archivo principal:', principalError)
+    alert('No se pudo marcar el archivo principal.')
+    return
+  }
+
+  setArchivos((previous) =>
+    previous.map((item) => ({
+      ...item,
+      es_principal: item.id === archivo.id,
+    }))
+  )
+}
+
+async function editarContenido(item) {
     setEditingId(item.id)
+    setArchivosPendientes([])
+await cargarArchivos(item.id)
 
     setForm({
       titulo: item.titulo || '',
@@ -322,23 +575,44 @@ useEffect(() => {
       updated_at: new Date().toISOString(),
     }
 
-    const { error } = editingId
-      ? await supabase
-          .from('contenido')
-          .update(payload)
-          .eq('id', editingId)
-      : await supabase.from('contenido').insert([payload])
+let contenidoId = editingId
 
-    if (error) {
-      console.error('Error guardando contenido:', error)
-      alert('No se pudo guardar el contenido.')
-      setSaving(false)
-      return
-    }
+if (editingId) {
+  const { error } = await supabase
+    .from('contenido')
+    .update(payload)
+    .eq('id', editingId)
 
-    await fetchContenido()
-    resetForm()
+  if (error) {
+    console.error('Error actualizando contenido:', error)
+    alert('No se pudo actualizar el contenido.')
     setSaving(false)
+    return
+  }
+} else {
+  const { data, error } = await supabase
+    .from('contenido')
+    .insert([payload])
+    .select('id')
+    .single()
+
+  if (error || !data?.id) {
+    console.error('Error creando contenido:', error)
+    alert('No se pudo crear el contenido.')
+    setSaving(false)
+    return
+  }
+
+  contenidoId = data.id
+}
+
+if (archivosPendientes.length > 0) {
+  await subirArchivosPendientes(contenidoId)
+}
+
+await fetchContenido()
+resetForm()
+setSaving(false)
 
     alert(
       editingId
@@ -778,6 +1052,168 @@ useEffect(() => {
                 </Field>
               </div>
             </div>
+
+<div className="mt-8 pt-7 border-t border-[#f3dede]">
+  <SectionTitle
+    icon={<ImageIcon size={17} />}
+    title="Diseño, imágenes y videos"
+    description="Guarda aquí el arte final, video de reel, foto de producto o cualquier archivo que necesites publicar."
+  />
+
+  <div className="mt-5 rounded-[22px] border border-dashed border-[#efcccc] bg-[#fffafa] p-5">
+    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div>
+        <p className="text-sm font-semibold text-[#7a0000]">
+          Adjuntar diseño o video
+        </p>
+
+        <p className="mt-1 text-xs text-[#b07a7a]">
+          Puedes subir imágenes o videos de hasta 50 MB.
+        </p>
+      </div>
+
+      <label className="w-full sm:w-auto h-11 px-5 rounded-xl bg-[#8c0303] text-white font-semibold text-sm flex items-center justify-center gap-2 hover:bg-[#720000] cursor-pointer">
+        <Upload size={17} />
+        Seleccionar archivos
+
+        <input
+          type="file"
+          accept="image/*,video/*"
+          multiple
+          onChange={handleSeleccionarArchivos}
+          className="hidden"
+        />
+      </label>
+    </div>
+  </div>
+
+  {(archivos.length > 0 || archivosPendientes.length > 0) && (
+    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 mt-5">
+      {archivos.map((archivo) => (
+        <article
+          key={archivo.id}
+          className="relative overflow-hidden rounded-[22px] border border-[#f3dede] bg-white"
+        >
+          <div className="aspect-square bg-[#fffafa]">
+            {archivo.tipo_archivo === 'video' ? (
+              <video
+                src={archivo.signedUrl}
+                controls
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <img
+                src={archivo.signedUrl}
+                alt={archivo.nombre_archivo}
+                className="w-full h-full object-cover"
+              />
+            )}
+          </div>
+
+          <div className="p-4">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-[#7a0000] truncate">
+                  {archivo.nombre_archivo}
+                </p>
+
+                <p className="mt-1 text-xs text-[#b07a7a]">
+                  {archivo.tipo_archivo === 'video'
+                    ? 'Video'
+                    : 'Imagen'}
+                </p>
+              </div>
+
+              {archivo.es_principal && (
+                <span className="shrink-0 bg-[#fff1f1] text-[#8c0303] px-2 py-1 rounded-full text-[10px] font-bold">
+                  Principal
+                </span>
+              )}
+            </div>
+
+            <div className="flex gap-2 mt-4">
+              <button
+                type="button"
+                onClick={() => marcarComoPrincipal(archivo)}
+                disabled={archivo.es_principal}
+                className="flex-1 h-10 rounded-xl border border-[#efcccc] text-[#8c0303] text-xs font-semibold flex items-center justify-center gap-2 hover:bg-[#fff5f5] disabled:opacity-50"
+              >
+                <Star size={14} />
+                Principal
+              </button>
+
+              <button
+                type="button"
+                onClick={() => eliminarArchivoExistente(archivo)}
+                className="w-10 h-10 rounded-xl border border-red-200 text-red-600 flex items-center justify-center hover:bg-red-50"
+                aria-label={`Eliminar ${archivo.nombre_archivo}`}
+              >
+                <Trash2 size={16} />
+              </button>
+            </div>
+          </div>
+        </article>
+      ))}
+
+      {archivosPendientes.map((archivo) => (
+        <article
+          key={archivo.id}
+          className="relative overflow-hidden rounded-[22px] border border-dashed border-[#efcccc] bg-[#fffafa]"
+        >
+          <div className="aspect-square">
+            {archivo.tipo_archivo === 'video' ? (
+              <video
+                src={archivo.signedUrl}
+                controls
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <img
+                src={archivo.signedUrl}
+                alt={archivo.nombre_archivo}
+                className="w-full h-full object-cover"
+              />
+            )}
+          </div>
+
+          <div className="p-4">
+            <p className="text-sm font-semibold text-[#7a0000] truncate">
+              {archivo.nombre_archivo}
+            </p>
+
+            <p className="mt-1 text-xs text-[#b07a7a]">
+              Pendiente de guardar
+            </p>
+
+            <div className="flex items-center justify-between mt-4">
+              <span className="text-xs text-[#8c0303] font-semibold">
+                {archivo.tipo_archivo === 'video'
+                  ? 'Video'
+                  : 'Imagen'}
+              </span>
+
+              <button
+                type="button"
+                onClick={() => eliminarArchivoPendiente(archivo.id)}
+                className="w-10 h-10 rounded-xl border border-red-200 text-red-600 flex items-center justify-center hover:bg-red-50"
+                aria-label={`Quitar ${archivo.nombre_archivo}`}
+              >
+                <Trash2 size={16} />
+              </button>
+            </div>
+          </div>
+        </article>
+      ))}
+    </div>
+  )}
+
+  {uploadingMedia && (
+    <div className="mt-4 flex items-center gap-2 text-sm text-[#8c0303]">
+      <LoaderCircle size={17} className="animate-spin" />
+      Subiendo archivos...
+    </div>
+  )}
+</div>
 
             <div className="mt-8 pt-7 border-t border-[#f3dede]">
               <SectionTitle
