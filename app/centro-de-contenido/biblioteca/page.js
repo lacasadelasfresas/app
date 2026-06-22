@@ -169,9 +169,23 @@ export default function BibliotecaContenidoPage() {
 
   const [form, setForm] = useState(createEmptyForm())
 
-  useEffect(() => {
-    fetchContenido()
-  }, [])
+useEffect(() => {
+  fetchContenido()
+
+  const params = new URLSearchParams(window.location.search)
+
+  if (params.get('nuevo') === '1') {
+    setEditingId(null)
+    setForm(createEmptyForm())
+    setFormOpen(true)
+
+    window.history.replaceState(
+      {},
+      '',
+      '/centro-de-contenido/biblioteca'
+    )
+  }
+}, [])
 
   async function fetchContenido() {
     setLoading(true)

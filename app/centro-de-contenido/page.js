@@ -279,64 +279,67 @@ export default function CentroDeContenidoPage() {
       </header>
 
       <section className="max-w-[1500px] mx-auto px-4 md:px-8 py-5 md:py-7 space-y-5">
-        <section className="bg-white border border-[#f3dede] rounded-[26px] p-5 md:p-6 overflow-hidden relative">
-          <div className="absolute -right-12 -top-12 w-44 h-44 rounded-full border border-[#f3dede] opacity-70" />
-          <div className="absolute right-8 top-8 w-20 h-20 rounded-full border border-[#f7e5e5] opacity-70" />
+<section className="bg-white border border-[#f3dede] rounded-[26px] p-5 md:p-6 overflow-hidden relative">
+  <div className="absolute -right-12 -top-12 w-44 h-44 rounded-full border border-[#f3dede] opacity-70" />
+  <div className="absolute right-8 top-8 w-20 h-20 rounded-full border border-[#f7e5e5] opacity-70" />
 
-          <div className="relative flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
-            <div className="max-w-2xl">
-              <div className="flex items-center gap-3">
-                <div className="w-11 h-11 rounded-2xl bg-[#fff1f1] text-[#8c0303] flex items-center justify-center">
-                  <Sparkles size={20} />
-                </div>
+  <div className="relative flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+    <div className="max-w-2xl">
+      <div className="flex items-center gap-3">
+        <div className="w-11 h-11 rounded-2xl bg-[#fff1f1] text-[#8c0303] flex items-center justify-center">
+          <Sparkles size={20} />
+        </div>
 
-                <p className="text-[10px] uppercase tracking-[0.16em] text-[#b9a0a0]">
-                  Vista general
-                </p>
-              </div>
+        <p className="text-[10px] uppercase tracking-[0.16em] text-[#b9a0a0]">
+          Vista general
+        </p>
+      </div>
 
-              <h2 className="mt-4 text-[22px] md:text-[27px] font-bold text-[#7a0000]">
-                Convierte tu contenido en una herramienta de ventas.
-              </h2>
+      <h2 className="mt-4 text-[22px] md:text-[27px] font-bold text-[#7a0000]">
+        Convierte tu contenido en una herramienta de ventas.
+      </h2>
 
-              <p className="mt-2 text-sm md:text-base text-[#b07a7a]">
-                Aquí podrás ver qué está pendiente, qué requiere aprobación y
-                qué publicaciones están generando resultados para La Casa de las
-                Fresas.
-              </p>
-            </div>
+      <p className="mt-2 text-sm md:text-base text-[#b07a7a]">
+        Aquí podrás ver qué está pendiente, qué requiere aprobación y qué
+        publicaciones están generando resultados para La Casa de las Fresas.
+      </p>
+    </div>
 
-            <Link
-  href="/centro-de-contenido/biblioteca"
-  className="inline-flex mt-5 h-11 px-5 rounded-xl bg-[#8c0303] text-white font-semibold text-sm items-center justify-center gap-2 hover:bg-[#720000] transition"
->
-  <Plus size={17} />
-  Programar contenido
-</Link>
+    <div className="w-full lg:w-[370px] shrink-0">
+      <div className="grid grid-cols-2 gap-3">
+        <div className="rounded-2xl border border-[#f3dede] bg-[#fffafa] p-4">
+          <p className="text-[10px] uppercase tracking-[0.14em] text-[#b9a0a0]">
+            Total registrado
+          </p>
 
-            <div className="grid grid-cols-2 gap-3 w-full lg:w-[370px]">
-              <div className="rounded-2xl border border-[#f3dede] bg-[#fffafa] p-4">
-                <p className="text-[10px] uppercase tracking-[0.14em] text-[#b9a0a0]">
-                  Total registrado
-                </p>
+          <p className="mt-2 text-[28px] font-bold text-[#7a0000]">
+            {contenido.length}
+          </p>
+        </div>
 
-                <p className="mt-2 text-[28px] font-bold text-[#7a0000]">
-                  {contenido.length}
-                </p>
-              </div>
+        <div className="rounded-2xl border border-[#f3dede] bg-[#fffafa] p-4">
+          <p className="text-[10px] uppercase tracking-[0.14em] text-[#b9a0a0]">
+            Publicados este mes
+          </p>
 
-              <div className="rounded-2xl border border-[#f3dede] bg-[#fffafa] p-4">
-                <p className="text-[10px] uppercase tracking-[0.14em] text-[#b9a0a0]">
-                  Publicados este mes
-                </p>
+          <p className="mt-2 text-[28px] font-bold text-[#7a0000]">
+            {resumen.publicadosMes}
+          </p>
+        </div>
+      </div>
 
-                <p className="mt-2 text-[28px] font-bold text-[#7a0000]">
-                  {resumen.publicadosMes}
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
+      <div className="flex justify-center mt-3">
+        <Link
+          href="/centro-de-contenido/biblioteca?nuevo=1"
+          className="inline-flex h-11 px-5 rounded-xl bg-[#8c0303] text-white font-semibold text-sm items-center justify-center gap-2 hover:bg-[#720000] transition"
+        >
+          <Plus size={17} />
+          Programar contenido
+        </Link>
+      </div>
+    </div>
+  </div>
+</section>
 
         <section className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4">
           <KpiCard
