@@ -853,54 +853,54 @@ export default function PedidosPage() {
 
   return (
     <main className="min-h-screen bg-[#fcf8f8] w-full">
-      <header className="bg-white border-b border-[#f1dede] px-5 md:px-8 py-6">
-        <div className="max-w-[1600px] mx-auto">
-          <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
-            <div className="text-left">
-              <p className="text-[10px] uppercase tracking-[0.2em] text-[#b9a0a0] mb-2">
-                Operación
-              </p>
+<header className="bg-white border-b border-[#f1dede] px-5 md:px-8 py-3 md:h-[82px] md:py-0 md:flex md:items-center">
+  <div className="w-full max-w-none">
+    <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+      <div className="text-left">
+        <p className="text-[10px] uppercase tracking-[0.16em] text-[#b9a0a0]">
+          Operación comercial
+        </p>
 
-              <h1 className="text-[38px] md:text-[34px] ivy text-[#7a0000] leading-[0.95]">
-                Registro de Ventas
-              </h1>
+        <h1 className="mt-1 text-[21px] md:text-[23px] font-bold text-[#7a0000] leading-tight">
+          Registro de ventas
+        </h1>
 
-              <p className="text-sm text-[#b07a7a] mt-3">
-                Registra, consulta y administra las ventas del negocio.
-              </p>
-            </div>
+        <p className="mt-1 text-xs md:text-sm text-[#b07a7a]">
+          Registra, consulta y administra las ventas del negocio.
+        </p>
+      </div>
 
-            <div className="flex flex-wrap gap-3 w-full md:w-auto">
-              <button
-                type="button"
-                onClick={exportToCSV}
-                className="flex-1 sm:flex-none border border-[#efcaca] text-[#8c0303] px-4 py-3 rounded-2xl flex items-center justify-center gap-2 text-sm font-semibold hover:bg-[#fff5f5]"
-              >
-                <Download size={17} />
-                CSV
-              </button>
+      <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full lg:w-auto">
+        <button
+          type="button"
+          onClick={exportToCSV}
+          className="w-full sm:w-auto h-10 px-4 rounded-xl border border-[#efcaca] bg-white text-[#8c0303] font-semibold text-sm flex items-center justify-center gap-2 hover:bg-[#fff5f5]"
+        >
+          <Download size={16} />
+          CSV
+        </button>
 
-              <button
-                type="button"
-                onClick={exportToExcel}
-                className="flex-1 sm:flex-none border border-[#efcaca] text-[#8c0303] px-4 py-3 rounded-2xl flex items-center justify-center gap-2 text-sm font-semibold hover:bg-[#fff5f5]"
-              >
-                <Download size={17} />
-                Excel
-              </button>
+        <button
+          type="button"
+          onClick={exportToExcel}
+          className="w-full sm:w-auto h-10 px-4 rounded-xl border border-[#efcaca] bg-white text-[#8c0303] font-semibold text-sm flex items-center justify-center gap-2 hover:bg-[#fff5f5]"
+        >
+          <Download size={16} />
+          Excel
+        </button>
 
-              <button
-                type="button"
-                onClick={openCreateModal}
-                className="w-full sm:w-auto bg-[#8c0303] text-white px-5 py-3 rounded-2xl font-semibold flex items-center justify-center gap-2 text-sm"
-              >
-                <Plus size={18} />
-                Registrar venta
-              </button>
-            </div>
-          </div>
-        </div>
-      </header>
+        <button
+          type="button"
+          onClick={openCreateModal}
+          className="w-full sm:w-auto h-10 bg-[#8c0303] text-white px-4 rounded-xl font-semibold flex items-center justify-center gap-2 text-sm whitespace-nowrap shadow-sm"
+        >
+          <Plus size={16} />
+          Registrar venta
+        </button>
+      </div>
+    </div>
+  </div>
+</header>
 
       <section className="px-4 md:px-8 py-5 md:py-7 max-w-[1600px] mx-auto">
         <div className="bg-white border border-[#f3dede] rounded-[28px] overflow-hidden">
