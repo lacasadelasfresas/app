@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
-import { FolderKanban } from 'lucide-react'
 import { supabase } from '@/lib/supabaseClient'
 import {
   CalendarDays,
