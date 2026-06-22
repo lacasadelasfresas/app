@@ -191,7 +191,7 @@ export default function Sidebar({
           {!collapsed && 'Finanzas'}
         </Link>
 
-        {sectionTitle('Cuadro de Mandos')}
+        {sectionTitle('Contenido')}
 
         <Link
           href="/centro-contenido"
