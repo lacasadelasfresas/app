@@ -11,10 +11,12 @@ import {
   Eye,
   FileText,
   FolderOpen,
+  Image as ImageIcon,
   LayoutList,
   Pencil,
   RefreshCw,
   Search,
+  Video,
 } from 'lucide-react'
 import { supabase } from '@/lib/supabaseClient'
 
@@ -92,27 +94,83 @@ export default function ListaContenidoPage() {
     fetchContenido()
   }, [])
 
-  async function fetchContenido() {
-    setLoading(true)
+async function fetchContenido() {
+  setLoading(true)
 
-    const { data, error } = await supabase
-      .from('contenido')
-      .select('*')
-      .order('fecha_programada', {
-        ascending: true,
-        nullsFirst: false,
-      })
+  const { data, error } = await supabase
+    .from('contenido')
+    .select('*')
+    .order('fecha_programada', {
+      ascending: true,
+      nullsFirst: false,
+    })
 
-    if (error) {
-      console.error('Error cargando lista de contenido:', error)
-      alert('No se pudo cargar la lista de contenido.')
-      setLoading(false)
-      return
-    }
-
-    setContenido(data || [])
+  if (error) {
+    console.error('Error cargando lista de contenido:', error)
+    alert('No se pudo cargar la lista de contenido.')
     setLoading(false)
+    return
   }
+
+  const contenidoBase = data || []
+  const contenidoIds = contenidoBase.map((item) => item.id)
+
+  if (contenidoIds.length === 0) {
+    setContenido([])
+    setLoading(false)
+    return
+  }
+
+  const { data: archivosData, error: archivosError } = await supabase
+    .from('contenido_archivos')
+    .select('*')
+    .in('contenido_id', contenidoIds)
+    .eq('es_principal', true)
+
+  if (archivosError) {
+    console.error('Error cargando diseños principales:', archivosError)
+    setContenido(contenidoBase)
+    setLoading(false)
+    return
+  }
+
+  const archivosConUrl = await Promise.all(
+    (archivosData || []).map(async (archivo) => {
+      const { data: signedData, error: signedError } =
+        await supabase.storage
+          .from('contenido-media')
+          .createSignedUrl(archivo.storage_path, 60 * 60)
+
+      if (signedError) {
+        console.error(
+          `Error creando URL firmada para ${archivo.nombre_archivo}:`,
+          signedError
+        )
+      }
+
+      return {
+        ...archivo,
+        signedUrl: signedData?.signedUrl || '',
+      }
+    })
+  )
+
+  const archivoPorContenido = archivosConUrl.reduce(
+    (accumulator, archivo) => {
+      accumulator[archivo.contenido_id] = archivo
+      return accumulator
+    },
+    {}
+  )
+
+  const contenidoConDiseño = contenidoBase.map((item) => ({
+    ...item,
+    archivo_principal: archivoPorContenido[item.id] || null,
+  }))
+
+  setContenido(contenidoConDiseño)
+  setLoading(false)
+}
 
   async function cambiarEstado(id, estado) {
     setUpdatingId(id)
@@ -408,19 +466,25 @@ export default function ListaContenidoPage() {
               <EmptyState text="No se encontraron contenidos con estos filtros." />
             ) : (
               contenidoFiltrado.map((item) => (
-                <article key={item.id} className="p-5">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="text-[17px] font-bold text-[#7a0000] break-words">
-                        {item.titulo}
-                      </p>
+<article key={item.id} className="p-5">
+  <div className="flex gap-4">
+    <ContentThumbnail
+      item={item}
+      className="w-[88px] h-[88px] shrink-0"
+    />
 
-                      <p className="mt-1 text-sm text-[#b07a7a] break-words">
-                        {item.plataformas?.join(' · ') ||
-                          'Sin plataforma'}
-                        {item.formato ? ` · ${item.formato}` : ''}
-                      </p>
-                    </div>
+    <div className="min-w-0 flex-1">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-[17px] font-bold text-[#7a0000] break-words">
+            {item.titulo}
+          </p>
+
+          <p className="mt-1 text-sm text-[#b07a7a] break-words">
+            {item.plataformas?.join(' · ') || 'Sin plataforma'}
+            {item.formato ? ` · ${item.formato}` : ''}
+          </p>
+        </div>
 
                     <span
                       className={`${getStatusStyle(
@@ -430,6 +494,9 @@ export default function ListaContenidoPage() {
                       {item.estado}
                     </span>
                   </div>
+                        </div>
+    </div>
+                  
 
                   <div className="grid grid-cols-2 gap-3 mt-4">
                     <InfoCard
@@ -494,11 +561,12 @@ export default function ListaContenidoPage() {
           </div>
 
           <div className="hidden md:block overflow-x-auto">
-            <table className="min-w-[1180px] w-full text-sm">
+            <table className="min-w-[1300px] w-full text-sm">
               <thead className="bg-[#f8eeee] text-[#b07a7a] uppercase text-[11px] tracking-[0.14em]">
                 <tr>
-                  <th className="py-4 px-5 text-left">Contenido</th>
-                  <th className="py-4 px-5 text-left">Plataforma</th>
+  <th className="py-4 px-5 text-left">Diseño</th>
+  <th className="py-4 px-5 text-left">Contenido</th>
+  <th className="py-4 px-5 text-left">Plataforma</th>
                   <th className="py-4 px-5 text-left">Formato</th>
                   <th className="py-4 px-5 text-left">Fecha</th>
                   <th className="py-4 px-5 text-left">Estado</th>
@@ -511,7 +579,7 @@ export default function ListaContenidoPage() {
                 {loading ? (
                   <tr>
                     <td
-                      colSpan="7"
+                      colSpan="8"
                       className="py-12 text-center text-[#b07a7a]"
                     >
                       Cargando contenido...
@@ -520,7 +588,7 @@ export default function ListaContenidoPage() {
                 ) : contenidoFiltrado.length === 0 ? (
                   <tr>
                     <td
-                      colSpan="7"
+                      colSpan="8"
                       className="py-12 text-center text-[#b07a7a]"
                     >
                       No se encontraron contenidos con estos filtros.
@@ -532,8 +600,12 @@ export default function ListaContenidoPage() {
                       key={item.id}
                       className="border-b border-[#f3dede] hover:bg-[#fffafa]"
                     >
-                      <td className="py-4 px-5">
-                        <div className="min-w-[220px]">
+<td className="py-4 px-5">
+  <ContentThumbnail item={item} className="w-14 h-14" />
+</td>
+
+<td className="py-4 px-5">
+  <div className="min-w-[220px]">
                           <p className="font-semibold text-[#2e2e2e]">
                             {item.titulo}
                           </p>
@@ -616,6 +688,46 @@ export default function ListaContenidoPage() {
         </section>
       </section>
     </main>
+  )
+}
+
+function ContentThumbnail({ item, className = '' }) {
+  const archivoPrincipal = item.archivo_principal
+  const esVideo = archivoPrincipal?.tipo_archivo === 'video'
+
+  return (
+    <div
+      className={`relative overflow-hidden rounded-2xl border border-[#f3dede] bg-[#fffafa] ${className}`}
+    >
+      {archivoPrincipal?.signedUrl ? (
+        esVideo ? (
+          <>
+            <video
+              src={archivoPrincipal.signedUrl}
+              muted
+              preload="metadata"
+              className="w-full h-full object-cover"
+            />
+
+            <div className="absolute inset-0 bg-black/10 flex items-center justify-center">
+              <div className="w-8 h-8 rounded-full bg-white/90 text-[#8c0303] flex items-center justify-center shadow-sm">
+                <Video size={14} />
+              </div>
+            </div>
+          </>
+        ) : (
+          <img
+            src={archivoPrincipal.signedUrl}
+            alt={item.titulo}
+            className="w-full h-full object-cover"
+          />
+        )
+      ) : (
+        <div className="w-full h-full flex items-center justify-center text-[#b07a7a]">
+          <ImageIcon size={18} />
+        </div>
+      )}
+    </div>
   )
 }
 
