@@ -3,11 +3,12 @@
 import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '@/lib/supabaseClient'
 import {
-  Search,
+  CalendarDays,
   DollarSign,
+  RefreshCw,
+  Search,
   ShoppingBag,
   TrendingUp,
-  CalendarDays,
 } from 'lucide-react'
 import {
   ResponsiveContainer,
@@ -19,6 +20,14 @@ import {
   Tooltip,
 } from 'recharts'
 
+function formatCurrency(value) {
+  return `$${Number(value || 0).toFixed(2)}`
+}
+
+function getTodayDate() {
+  return new Date().toISOString().split('T')[0]
+}
+
 export default function VentasPage() {
   const [ventas, setVentas] = useState([])
   const [loading, setLoading] = useState(true)
@@ -28,7 +37,7 @@ export default function VentasPage() {
   const [metodoPago, setMetodoPago] = useState('Todos')
   const [producto, setProducto] = useState('Todos')
   const [fechaInicio, setFechaInicio] = useState('')
-const [fechaFin, setFechaFin] = useState('')
+  const [fechaFin, setFechaFin] = useState('')
 
   useEffect(() => {
     fetchVentas()
@@ -46,6 +55,7 @@ const [fechaFin, setFechaFin] = useState('')
 
     if (error) {
       console.error('Error cargando ventas:', error)
+      alert('No se pudieron cargar las ventas.')
       setLoading(false)
       return
     }
@@ -57,547 +67,837 @@ const [fechaFin, setFechaFin] = useState('')
   const sucursales = useMemo(() => {
     return [
       'Todos',
-      ...new Set(ventas.map((venta) => venta.tipo_pedido || venta.sucursal).filter(Boolean)),
+      ...new Set(
+        ventas
+          .map((venta) => venta.tipo_pedido || venta.sucursal)
+          .filter(Boolean)
+      ),
     ]
   }, [ventas])
 
   const metodosPago = useMemo(() => {
     return [
       'Todos',
-      ...new Set(ventas.map((venta) => venta.metodo_pago).filter(Boolean)),
+      ...new Set(
+        ventas.map((venta) => venta.metodo_pago).filter(Boolean)
+      ),
     ]
   }, [ventas])
 
   const productos = useMemo(() => {
     return [
       'Todos',
-      ...new Set(ventas.map((venta) => venta.producto).filter(Boolean)),
+      ...new Set(
+        ventas.map((venta) => venta.producto).filter(Boolean)
+      ),
     ]
   }, [ventas])
 
-const ventasFiltradas = ventas.filter((venta) => {
-  const text = `
-    ${venta.cliente || ''}
-    ${venta.producto || ''}
-    ${venta.metodo_pago || ''}
-    ${venta.vendedor || ''}
-    ${venta.tipo_pedido || ''}
-    ${venta.sucursal || ''}
-  `.toLowerCase()
+  const ventasFiltradas = useMemo(() => {
+    const normalizedSearch = search.trim().toLowerCase()
 
-  const matchesSearch = text.includes(search.toLowerCase())
+    return ventas.filter((venta) => {
+      const text = `
+        ${venta.cliente || ''}
+        ${venta.producto || ''}
+        ${venta.metodo_pago || ''}
+        ${venta.vendedor || ''}
+        ${venta.tipo_pedido || ''}
+        ${venta.sucursal || ''}
+      `.toLowerCase()
 
-  const matchesSucursal =
-    sucursal === 'Todos' ||
-    venta.tipo_pedido === sucursal ||
-    venta.sucursal === sucursal
+      const matchesSearch =
+        !normalizedSearch || text.includes(normalizedSearch)
 
-  const matchesMetodoPago =
-    metodoPago === 'Todos' || venta.metodo_pago === metodoPago
+      const matchesSucursal =
+        sucursal === 'Todos' ||
+        venta.tipo_pedido === sucursal ||
+        venta.sucursal === sucursal
 
-  const matchesProducto =
-    producto === 'Todos' || venta.producto === producto
+      const matchesMetodoPago =
+        metodoPago === 'Todos' ||
+        venta.metodo_pago === metodoPago
 
-  const ventaFecha = venta.fecha || venta.created_at?.split('T')[0]
+      const matchesProducto =
+        producto === 'Todos' || venta.producto === producto
 
-  const matchesFechaInicio =
-    !fechaInicio || ventaFecha >= fechaInicio
+      const ventaFecha =
+        venta.fecha || venta.created_at?.split('T')[0] || ''
 
-  const matchesFechaFin =
-    !fechaFin || ventaFecha <= fechaFin
+      const matchesFechaInicio =
+        !fechaInicio || ventaFecha >= fechaInicio
 
-  return (
-    matchesSearch &&
-    matchesSucursal &&
-    matchesMetodoPago &&
-    matchesProducto &&
-    matchesFechaInicio &&
-    matchesFechaFin
-  )
-})
+      const matchesFechaFin =
+        !fechaFin || ventaFecha <= fechaFin
 
-  const ingresosTotales = ventasFiltradas.reduce(
-    (total, venta) => total + Number(venta.monto_pago || 0),
-    0
-  )
+      return (
+        matchesSearch &&
+        matchesSucursal &&
+        matchesMetodoPago &&
+        matchesProducto &&
+        matchesFechaInicio &&
+        matchesFechaFin
+      )
+    })
+  }, [
+    ventas,
+    search,
+    sucursal,
+    metodoPago,
+    producto,
+    fechaInicio,
+    fechaFin,
+  ])
+
+  const ingresosTotales = useMemo(() => {
+    return ventasFiltradas.reduce(
+      (total, venta) => total + Number(venta.monto_pago || 0),
+      0
+    )
+  }, [ventasFiltradas])
 
   const totalTransacciones = ventasFiltradas.length
 
   const ticketPromedio =
-    totalTransacciones > 0 ? ingresosTotales / totalTransacciones : 0
+    totalTransacciones > 0
+      ? ingresosTotales / totalTransacciones
+      : 0
 
-  const ventasPorProducto = Object.values(
-    ventasFiltradas.reduce((acc, venta) => {
-      const nombre = venta.producto || 'Sin producto'
-      const monto = Number(venta.monto_pago || 0)
+  const ventasPorProducto = useMemo(() => {
+    return Object.values(
+      ventasFiltradas.reduce((accumulator, venta) => {
+        const nombre = venta.producto || 'Sin producto'
+        const monto = Number(venta.monto_pago || 0)
 
-      if (!acc[nombre]) {
-        acc[nombre] = {
-          producto: nombre,
-          ventas: 0,
-          ingresos: 0,
+        if (!accumulator[nombre]) {
+          accumulator[nombre] = {
+            producto: nombre,
+            ventas: 0,
+            ingresos: 0,
+          }
         }
-      }
 
-      acc[nombre].ventas += 1
-      acc[nombre].ingresos += monto
+        accumulator[nombre].ventas += 1
+        accumulator[nombre].ingresos += monto
 
-      return acc
-    }, {})
-  ).sort((a, b) => b.ingresos - a.ingresos)
+        return accumulator
+      }, {})
+    ).sort((a, b) => b.ingresos - a.ingresos)
+  }, [ventasFiltradas])
+
+  const ventasPorSucursal = useMemo(() => {
+    return Object.values(
+      ventasFiltradas.reduce((accumulator, venta) => {
+        const nombre =
+          venta.tipo_pedido ||
+          venta.sucursal ||
+          'Sin sucursal'
+
+        const monto = Number(venta.monto_pago || 0)
+
+        if (!accumulator[nombre]) {
+          accumulator[nombre] = {
+            sucursal: nombre,
+            ingresos: 0,
+            ventas: 0,
+          }
+        }
+
+        accumulator[nombre].ingresos += monto
+        accumulator[nombre].ventas += 1
+
+        return accumulator
+      }, {})
+    ).sort((a, b) => b.ingresos - a.ingresos)
+  }, [ventasFiltradas])
+
+  const ventasPorMetodo = useMemo(() => {
+    return Object.values(
+      ventasFiltradas.reduce((accumulator, venta) => {
+        const nombre = venta.metodo_pago || 'Sin método'
+        const monto = Number(venta.monto_pago || 0)
+
+        if (!accumulator[nombre]) {
+          accumulator[nombre] = {
+            metodo: nombre,
+            ingresos: 0,
+            ventas: 0,
+          }
+        }
+
+        accumulator[nombre].ingresos += monto
+        accumulator[nombre].ventas += 1
+
+        return accumulator
+      }, {})
+    ).sort((a, b) => b.ingresos - a.ingresos)
+  }, [ventasFiltradas])
 
   const productoEstrella = ventasPorProducto[0]
 
-  const ventasPorSucursal = Object.values(
-    ventasFiltradas.reduce((acc, venta) => {
-      const nombre = venta.tipo_pedido || venta.sucursal || 'Sin sucursal'
-      const monto = Number(venta.monto_pago || 0)
+  function setFiltroHoy() {
+    const today = getTodayDate()
 
-      if (!acc[nombre]) {
-        acc[nombre] = {
-          sucursal: nombre,
-          ingresos: 0,
-          ventas: 0,
-        }
-      }
+    setFechaInicio(today)
+    setFechaFin(today)
+  }
 
-      acc[nombre].ingresos += monto
-      acc[nombre].ventas += 1
+  function setFiltroMesActual() {
+    const today = new Date()
+    const year = today.getFullYear()
+    const month = String(today.getMonth() + 1).padStart(2, '0')
 
-      return acc
-    }, {})
-  ).sort((a, b) => b.ingresos - a.ingresos)
+    const firstDay = `${year}-${month}-01`
 
-  const ventasPorMetodo = Object.values(
-    ventasFiltradas.reduce((acc, venta) => {
-      const nombre = venta.metodo_pago || 'Sin método'
-      const monto = Number(venta.monto_pago || 0)
+    const lastDay = new Date(
+      year,
+      today.getMonth() + 1,
+      0
+    )
+      .toISOString()
+      .split('T')[0]
 
-      if (!acc[nombre]) {
-        acc[nombre] = {
-          metodo: nombre,
-          ingresos: 0,
-          ventas: 0,
-        }
-      }
+    setFechaInicio(firstDay)
+    setFechaFin(lastDay)
+  }
 
-      acc[nombre].ingresos += monto
-      acc[nombre].ventas += 1
+  function limpiarFiltros() {
+    setSearch('')
+    setFechaInicio('')
+    setFechaFin('')
+    setSucursal('Todos')
+    setProducto('Todos')
+    setMetodoPago('Todos')
+  }
 
-      return acc
-    }, {})
-  ).sort((a, b) => b.ingresos - a.ingresos)
+  const inputClass =
+    'w-full h-[46px] px-4 rounded-xl border border-[#efcccc] bg-white outline-none text-sm text-[#2e2e2e] focus:border-[#8c0303] focus:ring-2 focus:ring-[#fff1f1]'
 
-const inputClass =
-  'w-full h-[46px] px-4 rounded-xl border border-[#efcccc] bg-white outline-none text-sm'
+  return (
+    <main className="min-h-screen bg-[#fcf8f8]">
+      <header className="bg-white border-b border-[#f1dede] px-5 md:px-8 py-3 md:h-[82px] md:py-0 md:flex md:items-center">
+        <div className="w-full max-w-none">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <p className="text-[10px] uppercase tracking-[0.16em] text-[#b9a0a0]">
+                Análisis comercial
+              </p>
 
-function getTodayDate() {
-  return new Date().toISOString().split('T')[0]
-}
+              <h1 className="mt-1 text-[21px] md:text-[23px] font-bold text-[#7a0000] leading-tight">
+                Análisis de ventas
+              </h1>
 
-function setFiltroHoy() {
-  const today = getTodayDate()
-  setFechaInicio(today)
-  setFechaFin(today)
-}
+              <p className="mt-1 text-xs md:text-sm text-[#b07a7a]">
+                Revisa ingresos, productos, puntos de venta y métodos de pago.
+              </p>
+            </div>
 
-function setFiltroMesActual() {
-  const today = new Date()
-  const year = today.getFullYear()
-  const month = String(today.getMonth() + 1).padStart(2, '0')
+            <button
+              type="button"
+              onClick={fetchVentas}
+              disabled={loading}
+              className="w-full sm:w-auto h-10 px-4 rounded-xl border border-[#efcaca] bg-white text-[#8c0303] font-semibold text-sm flex items-center justify-center gap-2 hover:bg-[#fff5f5] disabled:opacity-60"
+            >
+              <RefreshCw
+                size={16}
+                className={loading ? 'animate-spin' : ''}
+              />
+              Actualizar
+            </button>
+          </div>
+        </div>
+      </header>
 
-  const firstDay = `${year}-${month}-01`
-  const lastDay = new Date(year, today.getMonth() + 1, 0)
-    .toISOString()
-    .split('T')[0]
+      <section className="max-w-[1500px] mx-auto px-4 md:px-8 py-5 md:py-7 space-y-5">
+        <section className="bg-white border border-[#f3dede] rounded-[26px] p-5 md:p-6">
+          <div className="flex items-center gap-3 mb-5">
+            <div className="w-10 h-10 rounded-2xl bg-[#fff1f1] text-[#8c0303] flex items-center justify-center">
+              <Search size={18} />
+            </div>
 
-  setFechaInicio(firstDay)
-  setFechaFin(lastDay)
-}
+            <div>
+              <h2 className="text-[18px] font-bold text-[#7a0000]">
+                Filtros de análisis
+              </h2>
 
-function limpiarFiltros() {
-  setSearch('')
-  setFechaInicio('')
-  setFechaFin('')
-  setSucursal('Todos')
-  setProducto('Todos')
-  setMetodoPago('Todos')
-}
+              <p className="text-xs md:text-sm text-[#b07a7a] mt-1">
+                Ajusta el período y los datos que deseas revisar.
+              </p>
+            </div>
+          </div>
 
-return (
-  <main className="min-h-screen bg-[#fcf8f8]">
-<div className="bg-white border-b border-[#f1dede] px-10 h-[86px] flex items-center">
-  <div>
-    <h1 className="text-[30px] text-[#7a0000] ivy leading-none">
-      Análisis de Ventas
-    </h1>
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-xs font-medium text-[#b07a7a] mb-2">
+                Buscar
+              </label>
 
-    <p className="text-sm text-[#b07a7a] mt-2">
-      Análisis comercial por producto, sucursal, método de pago y rendimiento general.
-    </p>
-  </div>
-</div>
+              <div className="flex items-center gap-2 border border-[#efcccc] rounded-xl px-4 bg-[#fffafa] h-[46px] focus-within:border-[#8c0303] focus-within:ring-2 focus-within:ring-[#fff1f1]">
+                <Search size={17} className="text-[#b07a7a] shrink-0" />
 
-    <section className="p-8 space-y-6">
+                <input
+                  value={search}
+                  onChange={(event) => setSearch(event.target.value)}
+                  placeholder="Producto, vendedor o pago..."
+                  className="w-full bg-transparent outline-none text-sm text-[#2e2e2e]"
+                />
+              </div>
+            </div>
 
-{/* FILTROS */}
-<div className="bg-white border border-[#f3dede] rounded-[28px] p-5 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-6 gap-4 items-end">
-  <div>
-    <label className="block text-xs uppercase tracking-[0.18em] text-[#b9a0a0] mb-2">
-      Buscar
-    </label>
+            <div>
+              <label className="block text-xs font-medium text-[#b07a7a] mb-2">
+                Desde
+              </label>
 
-    <div className="flex items-center gap-2 border border-[#efcccc] rounded-xl px-4 bg-[#fff7f7] h-[46px]">
-      <Search size={17} className="text-[#b07a7a]" />
-      <input
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        placeholder="Buscar venta..."
-        className="w-full bg-transparent outline-none text-sm"
-      />
-    </div>
-  </div>
+              <input
+                type="date"
+                value={fechaInicio}
+                onChange={(event) => setFechaInicio(event.target.value)}
+                className={inputClass}
+              />
+            </div>
 
-<div>
-  <label className="block text-xs uppercase tracking-[0.18em] text-[#b9a0a0] mb-2">
-    Desde
-  </label>
+            <div>
+              <label className="block text-xs font-medium text-[#b07a7a] mb-2">
+                Hasta
+              </label>
 
-  <input
-    type="date"
-    value={fechaInicio}
-    onChange={(e) => setFechaInicio(e.target.value)}
-    className={inputClass}
-  />
-</div>
+              <input
+                type="date"
+                value={fechaFin}
+                onChange={(event) => setFechaFin(event.target.value)}
+                className={inputClass}
+              />
+            </div>
 
-<div>
-  <label className="block text-xs uppercase tracking-[0.18em] text-[#b9a0a0] mb-2">
-    Hasta
-  </label>
+            <div>
+              <label className="block text-xs font-medium text-[#b07a7a] mb-2">
+                Sucursal o canal
+              </label>
 
-  <input
-    type="date"
-    value={fechaFin}
-    onChange={(e) => setFechaFin(e.target.value)}
-    className={inputClass}
-  />
-</div>
+              <select
+                value={sucursal}
+                onChange={(event) => setSucursal(event.target.value)}
+                className={inputClass}
+              >
+                {sucursales.map((item) => (
+                  <option key={item} value={item}>
+                    {item}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-  <div>
-    <label className="block text-xs uppercase tracking-[0.18em] text-[#b9a0a0] mb-2">
-      Sucursal
-    </label>
+            <div>
+              <label className="block text-xs font-medium text-[#b07a7a] mb-2">
+                Producto
+              </label>
 
-    <select
-      value={sucursal}
-      onChange={(e) => setSucursal(e.target.value)}
-      className={inputClass}
-    >
-      {sucursales.map((item) => (
-        <option key={item} value={item}>
-          {item}
-        </option>
-      ))}
-    </select>
-  </div>
+              <select
+                value={producto}
+                onChange={(event) => setProducto(event.target.value)}
+                className={inputClass}
+              >
+                {productos.map((item) => (
+                  <option key={item} value={item}>
+                    {item}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-  <div>
-    <label className="block text-xs uppercase tracking-[0.18em] text-[#b9a0a0] mb-2">
-      Producto
-    </label>
+            <div>
+              <label className="block text-xs font-medium text-[#b07a7a] mb-2">
+                Método de pago
+              </label>
 
-    <select
-      value={producto}
-      onChange={(e) => setProducto(e.target.value)}
-      className={inputClass}
-    >
-      {productos.map((item) => (
-        <option key={item} value={item}>
-          {item}
-        </option>
-      ))}
-    </select>
-  </div>
+              <select
+                value={metodoPago}
+                onChange={(event) => setMetodoPago(event.target.value)}
+                className={inputClass}
+              >
+                {metodosPago.map((item) => (
+                  <option key={item} value={item}>
+                    {item}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
 
-  <div>
-    <label className="block text-xs uppercase tracking-[0.18em] text-[#b9a0a0] mb-2">
-      Método de pago
-    </label>
+          <div className="flex flex-wrap gap-2 mt-5">
+            <button
+              type="button"
+              onClick={setFiltroHoy}
+              className="px-4 py-2 rounded-full border border-[#efcccc] text-[#8c0303] bg-white hover:bg-[#fff5f5] text-sm font-semibold"
+            >
+              Hoy
+            </button>
 
-    <select
-      value={metodoPago}
-      onChange={(e) => setMetodoPago(e.target.value)}
-      className={inputClass}
-    >
-      {metodosPago.map((item) => (
-        <option key={item} value={item}>
-          {item}
-        </option>
-      ))}
-    </select>
-  </div>
-</div>
+            <button
+              type="button"
+              onClick={setFiltroMesActual}
+              className="px-4 py-2 rounded-full border border-[#efcccc] text-[#8c0303] bg-white hover:bg-[#fff5f5] text-sm font-semibold"
+            >
+              Este mes
+            </button>
 
-<div className="flex flex-wrap gap-3">
-  <button
-    type="button"
-    onClick={setFiltroHoy}
-    className="px-4 py-2 rounded-full border border-[#efcccc] text-[#8c0303] bg-white hover:bg-[#fff5f5] text-sm"
-  >
-    Hoy
-  </button>
+            <button
+              type="button"
+              onClick={limpiarFiltros}
+              className="px-4 py-2 rounded-full bg-[#8c0303] text-white hover:bg-[#720000] text-sm font-semibold"
+            >
+              Limpiar filtros
+            </button>
+          </div>
+        </section>
 
-  <button
-    type="button"
-    onClick={setFiltroMesActual}
-    className="px-4 py-2 rounded-full border border-[#efcccc] text-[#8c0303] bg-white hover:bg-[#fff5f5] text-sm"
-  >
-    Este mes
-  </button>
-
-  <button
-    type="button"
-    onClick={limpiarFiltros}
-    className="px-4 py-2 rounded-full bg-[#8c0303] text-white hover:bg-[#6f0202] text-sm"
-  >
-    Limpiar filtros
-  </button>
-</div>
-
-        {/* KPIS */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
+        <section className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
           <KpiCard
             label="Ingresos filtrados"
-            value={`$${ingresosTotales.toFixed(2)}`}
-            icon={<DollarSign size={22} />}
+            value={formatCurrency(ingresosTotales)}
+            icon={<DollarSign size={20} />}
           />
 
           <KpiCard
             label="Transacciones"
             value={totalTransacciones}
-            icon={<ShoppingBag size={22} />}
+            icon={<ShoppingBag size={20} />}
           />
 
           <KpiCard
             label="Ticket promedio"
-            value={`$${ticketPromedio.toFixed(2)}`}
-            icon={<TrendingUp size={22} />}
+            value={formatCurrency(ticketPromedio)}
+            icon={<TrendingUp size={20} />}
           />
 
           <KpiCard
             label="Producto estrella"
             value={productoEstrella?.producto || 'Sin datos'}
-            icon={<CalendarDays size={22} />}
-            small
+            icon={<CalendarDays size={20} />}
+            compact
           />
-        </div>
+        </section>
 
-        {/* CHARTS */}
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-          <div className="bg-white border border-[#f3dede] rounded-[30px] p-7">
-            <h2 className="text-[28px] text-[#7a0000] ivy mb-2">
+        <section className="grid grid-cols-1 xl:grid-cols-2 gap-5">
+          <article className="bg-white border border-[#f3dede] rounded-[26px] p-5 md:p-6">
+            <h2 className="text-[18px] md:text-[20px] font-bold text-[#7a0000]">
               Ventas por producto
             </h2>
 
-            <p className="text-sm text-[#b07a7a] mb-6">
-              Productos ordenados por ingresos generados.
+            <p className="text-sm text-[#b07a7a] mt-1">
+              Productos con mayores ingresos dentro de los filtros seleccionados.
             </p>
 
-<div className="w-full min-w-0 h-[300px] min-h-[300px] overflow-hidden">
-{ventasPorProducto.length > 0 ? (
-  <ResponsiveContainer width="99%" height={300}>
-                  <BarChart data={ventasPorProducto.slice(0, 8)}>
-                    <CartesianGrid stroke="#f3dede" strokeDasharray="4 4" />
-                    <XAxis dataKey="producto" tick={{ fontSize: 11 }} />
-                    <YAxis tick={{ fontSize: 11 }} />
-                    <Tooltip />
-                    <Bar dataKey="ingresos" fill="#8c0303" radius={[10, 10, 0, 0]} />
+            <div className="w-full h-[280px] mt-5">
+              {ventasPorProducto.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={ventasPorProducto.slice(0, 8)}
+                    margin={{
+                      top: 10,
+                      right: 6,
+                      left: -16,
+                      bottom: 10,
+                    }}
+                  >
+                    <CartesianGrid
+                      stroke="#f3dede"
+                      strokeDasharray="4 4"
+                    />
+
+                    <XAxis
+                      dataKey="producto"
+                      tick={{ fontSize: 10 }}
+                      interval={0}
+                      angle={-18}
+                      textAnchor="end"
+                      height={65}
+                    />
+
+                    <YAxis tick={{ fontSize: 10 }} />
+
+                    <Tooltip
+                      formatter={(value) => formatCurrency(value)}
+                    />
+
+                    <Bar
+                      dataKey="ingresos"
+                      fill="#8c0303"
+                      radius={[9, 9, 0, 0]}
+                    />
                   </BarChart>
                 </ResponsiveContainer>
               ) : (
-                <EmptyChart />
+                <EmptyState text="No hay datos suficientes para mostrar." />
               )}
             </div>
-          </div>
+          </article>
 
-          <div className="bg-white border border-[#f3dede] rounded-[30px] p-7">
-            <h2 className="text-[28px] text-[#7a0000] ivy mb-2">
+          <article className="bg-white border border-[#f3dede] rounded-[26px] p-5 md:p-6">
+            <h2 className="text-[18px] md:text-[20px] font-bold text-[#7a0000]">
               Ventas por sucursal
             </h2>
 
-            <p className="text-sm text-[#b07a7a] mb-6">
+            <p className="text-sm text-[#b07a7a] mt-1">
               Rendimiento por punto de venta o tipo de pedido.
             </p>
 
-            <div className="space-y-3">
+            <div className="space-y-3 mt-5">
               {ventasPorSucursal.length === 0 ? (
-                <p className="text-[#b07a7a] text-sm">
-                  No hay datos para mostrar.
-                </p>
+                <EmptyState text="No hay datos para mostrar." />
               ) : (
                 ventasPorSucursal.map((item) => (
                   <div
                     key={item.sucursal}
-                    className="border border-[#f3dede] rounded-2xl p-4 flex items-center justify-between"
+                    className="border border-[#f3dede] rounded-2xl p-4 flex items-center justify-between gap-4"
                   >
-                    <div>
-                      <p className="font-semibold text-[#2e2e2e]">
+                    <div className="min-w-0">
+                      <p className="font-semibold text-[#2e2e2e] break-words">
                         {item.sucursal}
                       </p>
-                      <p className="text-xs text-[#b07a7a]">
+
+                      <p className="text-xs text-[#b07a7a] mt-1">
                         {item.ventas} transacciones
                       </p>
                     </div>
 
-                    <p className="text-[#8c0303] font-semibold">
-                      ${item.ingresos.toFixed(2)}
+                    <p className="text-[#8c0303] font-bold shrink-0">
+                      {formatCurrency(item.ingresos)}
                     </p>
                   </div>
                 ))
               )}
             </div>
-          </div>
-        </div>
+          </article>
+        </section>
 
-        {/* TABLES */}
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-          <div className="bg-white border border-[#f3dede] rounded-[30px] p-7">
-            <h2 className="text-[28px] text-[#7a0000] ivy mb-6">
-              Ranking de productos
+        <section className="grid grid-cols-1 xl:grid-cols-2 gap-5">
+          <article className="bg-white border border-[#f3dede] rounded-[26px] overflow-hidden">
+            <div className="p-5 md:p-6 border-b border-[#f3dede]">
+              <h2 className="text-[18px] md:text-[20px] font-bold text-[#7a0000]">
+                Ranking de productos
+              </h2>
+            </div>
+
+            <div className="md:hidden divide-y divide-[#f3dede]">
+              {ventasPorProducto.length === 0 ? (
+                <EmptyState text="No hay productos para mostrar." />
+              ) : (
+                ventasPorProducto.map((item) => (
+                  <div
+                    key={item.producto}
+                    className="px-5 py-4 flex items-center justify-between gap-4"
+                  >
+                    <div className="min-w-0">
+                      <p className="font-semibold text-[#2e2e2e] break-words">
+                        {item.producto}
+                      </p>
+
+                      <p className="text-xs text-[#b07a7a] mt-1">
+                        {item.ventas} ventas
+                      </p>
+                    </div>
+
+                    <p className="font-bold text-[#8c0303] shrink-0">
+                      {formatCurrency(item.ingresos)}
+                    </p>
+                  </div>
+                ))
+              )}
+            </div>
+
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-[#f8eeee] text-[#b07a7a] uppercase text-[11px] tracking-[0.14em]">
+                  <tr>
+                    <th className="py-4 px-5 text-left">Producto</th>
+                    <th className="py-4 px-5 text-left">Ventas</th>
+                    <th className="py-4 px-5 text-left">Ingresos</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  {ventasPorProducto.length === 0 ? (
+                    <tr>
+                      <td
+                        colSpan="3"
+                        className="py-10 text-center text-[#b07a7a]"
+                      >
+                        No hay productos para mostrar.
+                      </td>
+                    </tr>
+                  ) : (
+                    ventasPorProducto.map((item) => (
+                      <tr
+                        key={item.producto}
+                        className="border-b border-[#f9eded]"
+                      >
+                        <td className="py-4 px-5 font-semibold text-[#2e2e2e]">
+                          {item.producto}
+                        </td>
+
+                        <td className="py-4 px-5">{item.ventas}</td>
+
+                        <td className="py-4 px-5 font-bold text-[#8c0303]">
+                          {formatCurrency(item.ingresos)}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </article>
+
+          <article className="bg-white border border-[#f3dede] rounded-[26px] overflow-hidden">
+            <div className="p-5 md:p-6 border-b border-[#f3dede]">
+              <h2 className="text-[18px] md:text-[20px] font-bold text-[#7a0000]">
+                Métodos de pago
+              </h2>
+            </div>
+
+            <div className="md:hidden divide-y divide-[#f3dede]">
+              {ventasPorMetodo.length === 0 ? (
+                <EmptyState text="No hay métodos de pago para mostrar." />
+              ) : (
+                ventasPorMetodo.map((item) => (
+                  <div
+                    key={item.metodo}
+                    className="px-5 py-4 flex items-center justify-between gap-4"
+                  >
+                    <div>
+                      <p className="font-semibold text-[#2e2e2e]">
+                        {item.metodo}
+                      </p>
+
+                      <p className="text-xs text-[#b07a7a] mt-1">
+                        {item.ventas} ventas
+                      </p>
+                    </div>
+
+                    <p className="font-bold text-[#8c0303]">
+                      {formatCurrency(item.ingresos)}
+                    </p>
+                  </div>
+                ))
+              )}
+            </div>
+
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-[#f8eeee] text-[#b07a7a] uppercase text-[11px] tracking-[0.14em]">
+                  <tr>
+                    <th className="py-4 px-5 text-left">Método</th>
+                    <th className="py-4 px-5 text-left">Ventas</th>
+                    <th className="py-4 px-5 text-left">Ingresos</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  {ventasPorMetodo.length === 0 ? (
+                    <tr>
+                      <td
+                        colSpan="3"
+                        className="py-10 text-center text-[#b07a7a]"
+                      >
+                        No hay métodos de pago para mostrar.
+                      </td>
+                    </tr>
+                  ) : (
+                    ventasPorMetodo.map((item) => (
+                      <tr
+                        key={item.metodo}
+                        className="border-b border-[#f9eded]"
+                      >
+                        <td className="py-4 px-5 font-semibold text-[#2e2e2e]">
+                          {item.metodo}
+                        </td>
+
+                        <td className="py-4 px-5">{item.ventas}</td>
+
+                        <td className="py-4 px-5 font-bold text-[#8c0303]">
+                          {formatCurrency(item.ingresos)}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </article>
+        </section>
+
+        <section className="bg-white border border-[#f3dede] rounded-[26px] overflow-hidden">
+          <div className="p-5 md:p-6 border-b border-[#f3dede]">
+            <h2 className="text-[18px] md:text-[20px] font-bold text-[#7a0000]">
+              Historial comercial
             </h2>
 
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-left text-[#b9a0a0] uppercase tracking-[0.15em] text-xs border-b border-[#f3dede]">
-                  <th className="py-3">Producto</th>
-                  <th className="py-3">Ventas</th>
-                  <th className="py-3">Ingresos</th>
+            <p className="text-sm text-[#b07a7a] mt-1">
+              {ventasFiltradas.length} venta(s) dentro de los filtros actuales.
+            </p>
+          </div>
+
+          <div className="md:hidden divide-y divide-[#f3dede]">
+            {loading ? (
+              <EmptyState text="Cargando ventas..." />
+            ) : ventasFiltradas.length === 0 ? (
+              <EmptyState text="No hay ventas con estos filtros." />
+            ) : (
+              ventasFiltradas.map((venta) => (
+                <article key={venta.id} className="p-5">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="min-w-0">
+                      <p className="font-bold text-[#7a0000] break-words">
+                        {venta.producto || 'Sin producto'}
+                      </p>
+
+                      <p className="text-sm text-[#b07a7a] mt-1">
+                        {venta.fecha || 'Sin fecha'}
+                      </p>
+                    </div>
+
+                    <p className="font-bold text-[#8c0303] shrink-0">
+                      {formatCurrency(venta.monto_pago)}
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3 mt-4">
+                    <div className="rounded-2xl border border-[#f3dede] bg-[#fffafa] p-3">
+                      <p className="text-[10px] uppercase tracking-[0.13em] text-[#b9a0a0]">
+                        Canal
+                      </p>
+
+                      <p className="mt-2 text-sm font-semibold text-[#2e2e2e] break-words">
+                        {venta.tipo_pedido || venta.sucursal || '—'}
+                      </p>
+                    </div>
+
+                    <div className="rounded-2xl border border-[#f3dede] bg-[#fffafa] p-3">
+                      <p className="text-[10px] uppercase tracking-[0.13em] text-[#b9a0a0]">
+                        Pago
+                      </p>
+
+                      <p className="mt-2 text-sm font-semibold text-[#2e2e2e] break-words">
+                        {venta.metodo_pago || '—'}
+                      </p>
+                    </div>
+                  </div>
+
+                  {venta.vendedor && (
+                    <p className="mt-4 text-xs text-[#b07a7a]">
+                      Vendedor: {venta.vendedor}
+                    </p>
+                  )}
+                </article>
+              ))
+            )}
+          </div>
+
+          <div className="hidden md:block overflow-x-auto">
+            <table className="min-w-[900px] w-full text-sm">
+              <thead className="bg-[#f8eeee] text-[#b07a7a] uppercase text-[11px] tracking-[0.14em]">
+                <tr>
+                  <th className="py-4 px-5 text-left">Fecha</th>
+                  <th className="py-4 px-5 text-left">Producto</th>
+                  <th className="py-4 px-5 text-left">Sucursal</th>
+                  <th className="py-4 px-5 text-left">Vendedor</th>
+                  <th className="py-4 px-5 text-left">Pago</th>
+                  <th className="py-4 px-5 text-right">Total</th>
                 </tr>
               </thead>
 
               <tbody>
-                {ventasPorProducto.map((item) => (
-                  <tr key={item.producto} className="border-b border-[#f9eded]">
-                    <td className="py-4 font-semibold">{item.producto}</td>
-                    <td className="py-4">{item.ventas}</td>
-                    <td className="py-4 font-semibold">
-                      ${item.ingresos.toFixed(2)}
+                {loading ? (
+                  <tr>
+                    <td
+                      colSpan="6"
+                      className="py-10 text-center text-[#b07a7a]"
+                    >
+                      Cargando ventas...
                     </td>
                   </tr>
-                ))}
+                ) : ventasFiltradas.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan="6"
+                      className="py-10 text-center text-[#b07a7a]"
+                    >
+                      No hay ventas con estos filtros.
+                    </td>
+                  </tr>
+                ) : (
+                  ventasFiltradas.map((venta) => (
+                    <tr
+                      key={venta.id}
+                      className="border-b border-[#f9eded] hover:bg-[#fffafa]"
+                    >
+                      <td className="py-4 px-5">
+                        {venta.fecha || '—'}
+                      </td>
+
+                      <td className="py-4 px-5 font-semibold text-[#2e2e2e]">
+                        {venta.producto || 'Sin producto'}
+                      </td>
+
+                      <td className="py-4 px-5">
+                        {venta.tipo_pedido || venta.sucursal || '—'}
+                      </td>
+
+                      <td className="py-4 px-5">
+                        {venta.vendedor || '—'}
+                      </td>
+
+                      <td className="py-4 px-5">
+                        {venta.metodo_pago || '—'}
+                      </td>
+
+                      <td className="py-4 px-5 text-right font-bold text-[#8c0303]">
+                        {formatCurrency(venta.monto_pago)}
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
-
-          <div className="bg-white border border-[#f3dede] rounded-[30px] p-7">
-            <h2 className="text-[28px] text-[#7a0000] ivy mb-6">
-              Métodos de pago
-            </h2>
-
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-left text-[#b9a0a0] uppercase tracking-[0.15em] text-xs border-b border-[#f3dede]">
-                  <th className="py-3">Método</th>
-                  <th className="py-3">Ventas</th>
-                  <th className="py-3">Ingresos</th>
-                </tr>
-              </thead>
-
-              <tbody>
-                {ventasPorMetodo.map((item) => (
-                  <tr key={item.metodo} className="border-b border-[#f9eded]">
-                    <td className="py-4 font-semibold">{item.metodo}</td>
-                    <td className="py-4">{item.ventas}</td>
-                    <td className="py-4 font-semibold">
-                      ${item.ingresos.toFixed(2)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        {/* DETALLE */}
-        <div className="bg-white border border-[#f3dede] rounded-[30px] p-7">
-          <h2 className="text-[28px] text-[#7a0000] ivy mb-6">
-            Historial comercial
-          </h2>
-
-          {loading ? (
-            <p className="text-[#b07a7a]">Cargando ventas...</p>
-          ) : ventasFiltradas.length === 0 ? (
-            <p className="text-[#b07a7a]">No hay ventas con estos filtros.</p>
-          ) : (
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-left text-[#b9a0a0] uppercase tracking-[0.15em] text-xs border-b border-[#f3dede]">
-                  <th className="py-3">Fecha</th>
-                  <th className="py-3">Producto</th>
-                  <th className="py-3">Sucursal</th>
-                  <th className="py-3">Vendedor</th>
-                  <th className="py-3">Pago</th>
-                  <th className="py-3">Total</th>
-                </tr>
-              </thead>
-
-              <tbody>
-                {ventasFiltradas.map((venta) => (
-                  <tr key={venta.id} className="border-b border-[#f9eded]">
-                    <td className="py-4">{venta.fecha || '—'}</td>
-                    <td className="py-4 font-semibold">
-                      {venta.producto || 'Sin producto'}
-                    </td>
-                    <td className="py-4">
-                      {venta.tipo_pedido || venta.sucursal || '—'}
-                    </td>
-                    <td className="py-4">{venta.vendedor || '—'}</td>
-                    <td className="py-4">{venta.metodo_pago || '—'}</td>
-                    <td className="py-4 font-semibold">
-                      ${Number(venta.monto_pago || 0).toFixed(2)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
-    </section>
-  </main>
-)
-}
-
-function KpiCard({ label, value, icon, small }) {
-  return (
-    <div className="bg-white border border-[#f3dede] rounded-[28px] p-6">
-      <div className="flex items-center justify-between gap-4">
-        <div>
-          <p className="text-xs uppercase tracking-[0.22em] text-[#b9a0a0]">
-            {label}
-          </p>
-
-          <h2
-            className={`text-[#8c0303] ivy mt-4 leading-none ${
-              small ? 'text-[28px]' : 'text-[44px]'
-            }`}
-          >
-            {value}
-          </h2>
-        </div>
-
-        <div className="w-12 h-12 rounded-2xl bg-[#fff1f1] text-[#8c0303] flex items-center justify-center">
-          {icon}
-        </div>
-      </div>
-    </div>
+        </section>
+      </section>
+    </main>
   )
 }
 
-function EmptyChart() {
+function KpiCard({ label, value, icon, compact = false }) {
   return (
-    <div className="w-full h-full flex items-center justify-center text-[#b07a7a] text-sm">
-      No hay datos suficientes para mostrar.
+    <article className="bg-white border border-[#f3dede] rounded-[24px] p-5">
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0">
+          <p className="text-[10px] uppercase tracking-[0.16em] text-[#b9a0a0]">
+            {label}
+          </p>
+
+          <p
+            className={`mt-3 font-bold text-[#7a0000] leading-tight break-words ${
+              compact ? 'text-[20px]' : 'text-[30px]'
+            }`}
+          >
+            {value}
+          </p>
+        </div>
+
+        <div className="w-10 h-10 rounded-2xl bg-[#fff1f1] text-[#8c0303] flex items-center justify-center shrink-0">
+          {icon}
+        </div>
+      </div>
+    </article>
+  )
+}
+
+function EmptyState({ text }) {
+  return (
+    <div className="min-h-[120px] flex items-center justify-center px-5 text-center text-sm text-[#b07a7a]">
+      {text}
     </div>
   )
 }
