@@ -13,6 +13,7 @@ import {
   FolderKanban,
   FolderOpen,
   Lightbulb,
+  LayoutList,
   MessageCircle,
   Plus,
   RefreshCw,
@@ -221,35 +222,57 @@ export default function CentroDeContenidoPage() {
               </p>
             </div>
 
-<Link
-  href="/centro-de-contenido/kanban"
-  className="w-full sm:w-auto h-10 px-4 rounded-xl border border-[#efcccc] bg-white text-[#8c0303] font-semibold text-sm flex items-center justify-center gap-2 hover:bg-[#fff5f5]"
->
-  <FolderKanban size={16} />
-  Kanban
-</Link>
+<div className="flex flex-col xl:flex-row xl:items-center xl:justify-end gap-2 w-full lg:w-auto">
+  <div className="grid grid-cols-3 gap-2 w-full sm:flex sm:w-auto">
+    <Link
+      href="/centro-de-contenido/kanban"
+      className="w-full sm:w-auto h-10 px-4 rounded-xl border border-[#efcccc] bg-white text-[#8c0303] font-semibold text-sm flex items-center justify-center gap-2 hover:bg-[#fff5f5]"
+    >
+      <FolderKanban size={16} />
+      Kanban
+    </Link>
 
-<div className="flex flex-col sm:flex-row gap-2 w-full lg:w-auto">
-  <Link
-    href="/centro-de-contenido/biblioteca"
-    className="w-full sm:w-auto h-10 px-4 rounded-xl bg-[#8c0303] text-white font-semibold text-sm flex items-center justify-center gap-2 hover:bg-[#720000]"
-  >
-    <FolderOpen size={16} />
-    Biblioteca
-  </Link>
+    <Link
+      href="/centro-de-contenido/calendario"
+      className="w-full sm:w-auto h-10 px-4 rounded-xl border border-[#efcccc] bg-white text-[#8c0303] font-semibold text-sm flex items-center justify-center gap-2 hover:bg-[#fff5f5]"
+    >
+      <CalendarDays size={16} />
+      Calendario
+    </Link>
 
-  <button
-    type="button"
-    onClick={fetchContenido}
-    disabled={loading}
-    className="w-full sm:w-auto h-10 px-4 rounded-xl border border-[#efcccc] bg-white text-[#8c0303] font-semibold text-sm flex items-center justify-center gap-2 hover:bg-[#fff5f5] disabled:opacity-60"
-  >
-    <RefreshCw
-      size={16}
-      className={loading ? 'animate-spin' : ''}
-    />
-    Actualizar
-  </button>
+    <Link
+      href="/centro-de-contenido/lista"
+      className="w-full sm:w-auto h-10 px-4 rounded-xl border border-[#efcccc] bg-white text-[#8c0303] font-semibold text-sm flex items-center justify-center gap-2 hover:bg-[#fff5f5]"
+    >
+      <LayoutList size={16} />
+      Lista
+    </Link>
+  </div>
+
+  <div className="hidden xl:block w-px h-7 bg-[#f1dede] mx-1" />
+
+  <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+    <Link
+      href="/centro-de-contenido/biblioteca"
+      className="w-full sm:w-auto h-10 px-4 rounded-xl bg-[#8c0303] text-white font-semibold text-sm flex items-center justify-center gap-2 hover:bg-[#720000]"
+    >
+      <FolderOpen size={16} />
+      Biblioteca
+    </Link>
+
+    <button
+      type="button"
+      onClick={fetchContenido}
+      disabled={loading}
+      className="w-full sm:w-auto h-10 px-4 rounded-xl border border-[#efcccc] bg-white text-[#8c0303] font-semibold text-sm flex items-center justify-center gap-2 hover:bg-[#fff5f5] disabled:opacity-60"
+    >
+      <RefreshCw
+        size={16}
+        className={loading ? 'animate-spin' : ''}
+      />
+      Actualizar
+    </button>
+  </div>
 </div>
           </div>
         </div>
