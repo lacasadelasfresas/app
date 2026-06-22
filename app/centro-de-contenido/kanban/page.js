@@ -19,9 +19,7 @@ import { supabase } from '@/lib/supabaseClient'
 
 const ESTADOS = [
   'Idea',
-  'Planificado',
   'En producción',
-  'Pendiente de aprobación',
   'Listo para publicar',
   'Programado',
   'Publicado',
@@ -35,19 +33,9 @@ const COLUMNAS = [
     description: 'Ideas por desarrollar',
   },
   {
-    estado: 'Planificado',
-    icon: ClipboardList,
-    description: 'Contenido definido',
-  },
-  {
     estado: 'En producción',
     icon: Sparkles,
     description: 'Diseño, video o copy',
-  },
-  {
-    estado: 'Pendiente de aprobación',
-    icon: Eye,
-    description: 'Pendiente de revisar',
   },
   {
     estado: 'Listo para publicar',
