@@ -618,17 +618,45 @@ export default function FinanzasPage() {
 
   return (
     <main className="min-h-screen bg-[#fcf8f8]">
-      <header className="bg-white border-b border-[#f1dede] px-5 py-6 md:px-10 md:h-[86px] md:py-0 flex items-center">
-        <div>
-          <h1 className="text-[30px] md:text-[34px] ivy text-[#7a0000] leading-none">
-            Finanzas
-          </h1>
+<header className="bg-white border-b border-[#f1dede] px-5 md:px-8 py-3 md:h-[82px] md:py-0 md:flex md:items-center">
+  <div className="w-full max-w-none">
+    <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+      <div className="text-left">
+        <p className="text-[10px] uppercase tracking-[0.16em] text-[#b9a0a0]">
+          Control financiero
+        </p>
 
-          <p className="text-sm text-[#b07a7a] mt-2 max-w-[330px] md:max-w-none">
-            Controla ingresos, gastos, utilidad estimada y costos operativos.
-          </p>
-        </div>
-      </header>
+        <h1 className="mt-1 text-[21px] md:text-[23px] font-bold text-[#7a0000] leading-tight">
+          Finanzas
+        </h1>
+
+        <p className="mt-1 text-xs md:text-sm text-[#b07a7a]">
+          Controla ingresos, gastos, utilidad estimada y costos operativos.
+        </p>
+      </div>
+
+      <div className="hidden md:flex items-center gap-2">
+        <button
+          type="button"
+          onClick={() => setShowFilters((value) => !value)}
+          className="border border-[#efcaca] text-[#8c0303] px-4 py-2.5 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 hover:bg-[#fff5f5]"
+        >
+          <Filter size={16} />
+          Filtros
+        </button>
+
+        <button
+          type="button"
+          onClick={abrirNuevoGasto}
+          className="bg-[#8c0303] text-white px-4 py-2.5 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 shadow-sm"
+        >
+          <Plus size={16} />
+          Registrar gasto
+        </button>
+      </div>
+    </div>
+  </div>
+</header>
 
       <section className="p-4 sm:p-6 lg:p-10 space-y-5 md:space-y-6">
         {successMessage && (
