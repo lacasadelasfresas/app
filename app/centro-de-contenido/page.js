@@ -306,6 +306,14 @@ export default function CentroDeContenidoPage() {
               </p>
             </div>
 
+            <Link
+  href="/centro-de-contenido/biblioteca"
+  className="inline-flex mt-5 h-11 px-5 rounded-xl bg-[#8c0303] text-white font-semibold text-sm items-center justify-center gap-2 hover:bg-[#720000] transition"
+>
+  <Plus size={17} />
+  Programar contenido
+</Link>
+
             <div className="grid grid-cols-2 gap-3 w-full lg:w-[370px]">
               <div className="rounded-2xl border border-[#f3dede] bg-[#fffafa] p-4">
                 <p className="text-[10px] uppercase tracking-[0.14em] text-[#b9a0a0]">
