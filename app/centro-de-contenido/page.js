@@ -9,6 +9,8 @@ import {
   ClipboardList,
   Eye,
   FileText,
+  FolderKanban,
+  FolderOpen,
   Lightbulb,
   MessageCircle,
   Plus,
