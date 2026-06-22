@@ -196,7 +196,7 @@ export default function Sidebar({
         <Link
           href="/centro-contenido"
           onClick={handleNavigate}
-          className={linkClass('/centro-contenido')}
+          className={linkClass('/centro-de-contenido')}
         >
           <FileText size={18} />
           {!collapsed && 'Centro de Contenido'}
