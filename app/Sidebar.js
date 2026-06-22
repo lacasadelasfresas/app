@@ -194,7 +194,7 @@ export default function Sidebar({
         {sectionTitle('Contenido')}
 
         <Link
-          href="/centro-contenido"
+          href="/centro-de-contenido"
           onClick={handleNavigate}
           className={linkClass('/centro-de-contenido')}
         >

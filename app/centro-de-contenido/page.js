@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
+import Link from 'next/link'
 import {
   CalendarDays,
   CheckCircle2,
@@ -218,18 +219,28 @@ export default function CentroDeContenidoPage() {
               </p>
             </div>
 
-            <button
-              type="button"
-              onClick={fetchContenido}
-              disabled={loading}
-              className="w-full sm:w-auto h-10 px-4 rounded-xl border border-[#efcccc] bg-white text-[#8c0303] font-semibold text-sm flex items-center justify-center gap-2 hover:bg-[#fff5f5] disabled:opacity-60"
-            >
-              <RefreshCw
-                size={16}
-                className={loading ? 'animate-spin' : ''}
-              />
-              Actualizar
-            </button>
+<div className="flex flex-col sm:flex-row gap-2 w-full lg:w-auto">
+  <Link
+    href="/centro-de-contenido/biblioteca"
+    className="w-full sm:w-auto h-10 px-4 rounded-xl bg-[#8c0303] text-white font-semibold text-sm flex items-center justify-center gap-2 hover:bg-[#720000]"
+  >
+    <FolderOpen size={16} />
+    Biblioteca
+  </Link>
+
+  <button
+    type="button"
+    onClick={fetchContenido}
+    disabled={loading}
+    className="w-full sm:w-auto h-10 px-4 rounded-xl border border-[#efcccc] bg-white text-[#8c0303] font-semibold text-sm flex items-center justify-center gap-2 hover:bg-[#fff5f5] disabled:opacity-60"
+  >
+    <RefreshCw
+      size={16}
+      className={loading ? 'animate-spin' : ''}
+    />
+    Actualizar
+  </button>
+</div>
           </div>
         </div>
       </header>
