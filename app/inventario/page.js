@@ -1,45 +1,59 @@
 'use client'
+
 import Link from 'next/link'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   AlertTriangle,
-  Search,
+  ChevronRight,
   Package,
   Plus,
-  Trash2
+  RefreshCw,
+  Search,
+  Trash2,
+  Truck,
 } from 'lucide-react'
 import { supabase } from '@/lib/supabaseClient'
 
+function getStatus(item) {
+  const stock = Number(item.stock_actual || 0)
+  const minimo = Number(item.stock_minimo || 0)
+
+  if (stock <= 0) {
+    return {
+      label: 'Agotado',
+      className: 'bg-red-50 text-red-600',
+    }
+  }
+
+  if (stock <= minimo) {
+    return {
+      label: 'Stock bajo',
+      className: 'bg-amber-50 text-amber-700',
+    }
+  }
+
+  return {
+    label: 'Disponible',
+    className: 'bg-emerald-50 text-emerald-700',
+  }
+}
+
 export default function InventarioPage() {
-const [inventario, setInventario] = useState([])
-const [loading, setLoading] = useState(true)
-const [selectedCategory, setSelectedCategory] = useState('Todos')
-const [search, setSearch] = useState('')
-const [showModal, setShowModal] = useState(false)
+  const [inventario, setInventario] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [selectedCategory, setSelectedCategory] = useState('Todos')
+  const [search, setSearch] = useState('')
+  const [deletingId, setDeletingId] = useState(null)
 
-const categories = [
-  'Todos',
-  'Materia prima',
-  'Toppings y Siropes',
-  'Empaques',
-  'Utensilios',
-  'Productos preparados',
-  'Limpieza y operación',
-]
-
-const [form, setForm] = useState({
-  sku: '',
-  nombre: '',
-  categoria: '',
-  unidad: '',
-  stock_actual: 0,
-  stock_minimo: 0,
-  costo_unitario: 0,
-  proveedor: '',
-  proveedor_url: '',
-  notas: '',
-  activo: true,
-})
+  const categories = [
+    'Todos',
+    'Materia prima',
+    'Toppings y Siropes',
+    'Empaques',
+    'Utensilios',
+    'Productos preparados',
+    'Limpieza y operación',
+  ]
 
   useEffect(() => {
     fetchInventario()
@@ -55,46 +69,23 @@ const [form, setForm] = useState({
 
     if (error) {
       console.error('Error cargando inventario:', error)
-    } else {
-setInventario(data || [])
-    }
-
-    setLoading(false)
-  }
-
-  async function guardarProducto() {
-    const { error } = await supabase
-      .from('inventario')
-      .insert([form])
-
-    if (error) {
-      alert('Error al guardar producto')
-      console.error(error)
+      alert('No se pudo cargar el inventario.')
+      setLoading(false)
       return
     }
 
-setForm({
-  sku: '',
-  nombre: '',
-  categoria: '',
-  unidad: '',
-  stock_actual: 0,
-  stock_minimo: 0,
-  costo_unitario: 0,
-  proveedor: '',
-  proveedor_url: '',
-  notas: '',
-  activo: true,
-})
-
-    setShowModal(false)
-    fetchInventario()
+    setInventario(data || [])
+    setLoading(false)
   }
 
-  async function eliminarProducto(id) {
-    const confirmar = confirm('¿Deseas eliminar este producto?')
+  async function eliminarProducto(id, nombre) {
+    const confirmar = confirm(
+      `¿Deseas eliminar "${nombre}"? Esta acción no se puede deshacer.`
+    )
 
     if (!confirmar) return
+
+    setDeletingId(id)
 
     const { error } = await supabase
       .from('inventario')
@@ -102,406 +93,427 @@ setForm({
       .eq('id', id)
 
     if (error) {
-      alert('Error al eliminar')
-      console.error(error)
-
-
-      
+      console.error('Error eliminando producto:', error)
+      alert('No se pudo eliminar el producto.')
+      setDeletingId(null)
       return
     }
 
-    fetchInventario()
-  }
-  
-const filteredItems = inventario.filter((item) => {
-    const matchesCategory =
-    selectedCategory === 'Todos' || item.categoria === selectedCategory
-
-  const text = `
-    ${item.nombre || ''}
-    ${item.sku || ''}
-    ${item.categoria || ''}
-    ${item.unidad || ''}
-    ${item.proveedor || ''}
-  `.toLowerCase()
-
-  const matchesSearch = text.includes(search.toLowerCase())
-
-  return matchesCategory && matchesSearch
-})
-
-const lowStockItems = inventario.filter(
-    (item) =>
-      Number(item.stock_actual || 0) <= Number(item.stock_minimo || 0)
-  )
-
-function getStatus(item) {
-  const stock = Number(item.stock_actual || 0)
-  const minimo = Number(item.stock_minimo || 0)
-
-  if (stock <= 0) {
-    return {
-      label: 'Agotado',
-      className: 'bg-[#fee2e2] text-[#b91c1c]',
-    }
+    await fetchInventario()
+    setDeletingId(null)
   }
 
-  if (stock <= minimo) {
-    return {
-      label: 'Bajo stock',
-      className: 'bg-[#fff3c4] text-[#9a6a00]',
-    }
-  }
+  const filteredItems = useMemo(() => {
+    const normalizedSearch = search.trim().toLowerCase()
 
-  return {
-    label: 'OK',
-    className: 'bg-[#dcfce7] text-[#15803d]',
-  }
-}
+    return inventario.filter((item) => {
+      const matchesCategory =
+        selectedCategory === 'Todos' ||
+        item.categoria === selectedCategory
 
-return (
-  <main className="min-h-screen bg-[#fcf8f8]">
-    {/* HEADER */}
-    <div className="bg-white border-b border-[#f1dede] px-10 h-[86px] flex items-center">
-      <div>
-        <h1 className="text-[30px] text-[#7a0000] ivy leading-none">
-          Inventario
-        </h1>
+      const text = `
+        ${item.nombre || ''}
+        ${item.sku || ''}
+        ${item.categoria || ''}
+        ${item.unidad || ''}
+        ${item.proveedor || ''}
+      `.toLowerCase()
 
-        <p className="text-sm text-[#b07a7a] mt-2">
-          Control de ingredientes, empaques y consumibles.
-        </p>
-      </div>
-    </div>
+      const matchesSearch =
+        !normalizedSearch || text.includes(normalizedSearch)
 
-    <section className="p-8 space-y-6">
+      return matchesCategory && matchesSearch
+    })
+  }, [inventario, search, selectedCategory])
 
-<div className="flex justify-end gap-3">
-  <button
-    type="button"
-    onClick={() => setShowModal(true)}
-    className="bg-[#8c0303] text-white px-5 py-3 rounded-2xl font-semibold flex items-center gap-2 hover:bg-[#6f0202]"
-  >
-    <Plus size={18} />
-    Nuevo Producto
-  </button>
+  const lowStockItems = useMemo(() => {
+    return inventario.filter((item) => {
+      const stock = Number(item.stock_actual || 0)
+      const minimo = Number(item.stock_minimo || 0)
 
-  <button
-    type="button"
-    onClick={fetchInventario}
-    className="bg-[#8c0303] text-white px-5 py-3 rounded-2xl font-semibold hover:bg-[#6f0202]"
-  >
-    Actualizar
-  </button>
-</div>
-<section className="p-8 space-y-6">
-</section>
+      return stock <= minimo
+    })
+  }, [inventario])
 
-<div className="flex flex-wrap items-center gap-3 mb-6">
-  {categories.map((category) => (
-    <button
-      key={category}
-      type="button"
-      onClick={() => setSelectedCategory(category)}
-      className={`px-4 py-2 rounded-full text-sm border transition ${
-        selectedCategory === category
-          ? 'bg-[#8c0303] text-white border-[#8c0303]'
-          : 'bg-white text-[#8c0303] border-[#efcccc] hover:bg-[#fff5f5]'
-      }`}
-    >
-      {category}
-    </button>
-  ))}
-</div>
+  const providersCount = useMemo(() => {
+    const providers = inventario
+      .map((item) => item.proveedor?.trim())
+      .filter(Boolean)
 
-        {/* KPIs */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {[
-['Total de Items', inventario.length],
-            ['Stock Bajo', lowStockItems.length],
-            [
-              'Proveedores',
-              new Set(
-               inventario.map((item) => item.proveedor)
-              ).size,
-            ],
-          ].map(([label, value]) => (
-            <div
-              key={label}
-              className="bg-white border border-[#f3dede] rounded-[30px] p-7"
-            >
-              <p className="text-xs uppercase tracking-[0.2em] text-[#b9a0a0]">
-                {label}
+    return new Set(providers).size
+  }, [inventario])
+
+  return (
+    <main className="min-h-screen bg-[#fcf8f8]">
+      <header className="bg-white border-b border-[#f1dede] px-5 md:px-8 py-3 md:h-[82px] md:py-0 md:flex md:items-center">
+        <div className="w-full">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <p className="text-[10px] uppercase tracking-[0.16em] text-[#b9a0a0]">
+                Inventario
               </p>
-              <h2 className="text-[52px] leading-none text-[#7a0000] ivy mt-4">
-                {value}
-              </h2>
+
+              <h1 className="mt-1 text-[21px] md:text-[23px] font-bold text-[#7a0000] leading-tight">
+                Inventario
+              </h1>
+
+              <p className="mt-1 text-xs md:text-sm text-[#b07a7a]">
+                Control de ingredientes, empaques y consumibles.
+              </p>
             </div>
-          ))}
-        </div>
 
-        {/* ALERTAS */}
-        {lowStockItems.length > 0 && (
-          <div className="bg-[#fff7f7] border border-[#f3dede] rounded-[30px] p-8">
-<div className="flex items-start gap-3 mb-5">
-  <AlertTriangle className="text-[#8c0303] mt-2" />
+            <div className="flex flex-col sm:flex-row gap-2 w-full lg:w-auto">
+              <Link
+                href="/inventario/nuevo"
+                className="w-full sm:w-auto bg-[#8c0303] text-white px-4 py-2.5 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 shadow-sm"
+              >
+                <Plus size={16} />
+                Nuevo producto
+              </Link>
 
-  <div>
-    <h3 className="text-[32px] ivy text-[#7a0000] leading-none">
-      Alertas de Inventario
-    </h3>
-
-    <p className="text-sm text-[#b07a7a] mt-2">
-      {lowStockItems.length} productos requieren reposición.
-    </p>
-  </div>
-</div>
-            <div className="space-y-2">
-              {lowStockItems.slice(0, 5).map((item) => (
-<div
-  key={item.id}
-  className="bg-white rounded-xl px-4 py-3 flex items-center justify-between border border-[#f3dede]"
->
-  <div>
-    <p className="font-semibold text-sm text-[#2e2e2e]">
-      {item.nombre}
-    </p>
-
-    <p className="text-xs text-[#b07a7a] mt-1">
-      Actual: {item.stock_actual || 0} {item.unidad || ''} · Mínimo: {item.stock_minimo || 0}
-    </p>
-  </div>
-
-  <span className="bg-[#fff3c4] text-[#9a6a00] px-3 py-1 rounded-full text-xs">
-    Bajo stock
-  </span>
-</div>
-              ))}
+              <button
+                type="button"
+                onClick={fetchInventario}
+                disabled={loading}
+                className="w-full sm:w-auto border border-[#efcaca] bg-white text-[#8c0303] px-4 py-2.5 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 hover:bg-[#fff5f5] disabled:opacity-60"
+              >
+                <RefreshCw
+                  size={16}
+                  className={loading ? 'animate-spin' : ''}
+                />
+                Actualizar
+              </button>
             </div>
           </div>
+        </div>
+      </header>
+
+      <section className="max-w-[1500px] mx-auto px-4 md:px-8 py-5 md:py-7">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <article className="bg-white border border-[#f3dede] rounded-[24px] p-5">
+            <p className="text-[10px] uppercase tracking-[0.16em] text-[#b9a0a0]">
+              Total de items
+            </p>
+
+            <p className="mt-3 text-[32px] font-bold text-[#7a0000] leading-none">
+              {inventario.length}
+            </p>
+          </article>
+
+          <article className="bg-white border border-[#f3dede] rounded-[24px] p-5">
+            <p className="text-[10px] uppercase tracking-[0.16em] text-[#b9a0a0]">
+              Stock bajo
+            </p>
+
+            <p className="mt-3 text-[32px] font-bold text-[#7a0000] leading-none">
+              {lowStockItems.length}
+            </p>
+          </article>
+
+          <article className="bg-white border border-[#f3dede] rounded-[24px] p-5">
+            <p className="text-[10px] uppercase tracking-[0.16em] text-[#b9a0a0]">
+              Proveedores
+            </p>
+
+            <p className="mt-3 text-[32px] font-bold text-[#7a0000] leading-none">
+              {providersCount}
+            </p>
+          </article>
+        </div>
+
+        {lowStockItems.length > 0 && (
+          <section className="mt-4 bg-[#fffafa] border border-[#f3dede] rounded-[24px] p-5">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-[#fff1f1] text-[#8c0303] flex items-center justify-center shrink-0">
+                <AlertTriangle size={18} />
+              </div>
+
+              <div>
+                <h2 className="text-[18px] font-bold text-[#7a0000]">
+                  Alertas de inventario
+                </h2>
+
+                <p className="text-sm text-[#b07a7a] mt-1">
+                  {lowStockItems.length} producto(s) requieren reposición.
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-4 space-y-3">
+              {lowStockItems.slice(0, 5).map((item) => {
+                const status = getStatus(item)
+
+                return (
+                  <Link
+                    key={item.id}
+                    href={`/inventario/${item.id}`}
+                    className="bg-white border border-[#f3dede] rounded-2xl px-4 py-3 flex items-center justify-between gap-4 hover:bg-[#fff5f5]"
+                  >
+                    <div className="min-w-0">
+                      <p className="font-semibold text-sm text-[#2e2e2e] truncate">
+                        {item.nombre}
+                      </p>
+
+                      <p className="text-xs text-[#b07a7a] mt-1">
+                        Actual: {item.stock_actual || 0} {item.unidad || ''}
+                        {' · '}
+                        Mínimo: {item.stock_minimo || 0}
+                      </p>
+                    </div>
+
+                    <span
+                      className={`${status.className} px-3 py-1 rounded-full text-xs font-semibold shrink-0`}
+                    >
+                      {status.label}
+                    </span>
+                  </Link>
+                )
+              })}
+            </div>
+          </section>
         )}
 
-        {/* SEARCH */}
-<div className="flex items-center gap-2 bg-white border border-[#efcccc] rounded-xl px-4 py-3 mb-6">
-  <Search size={17} className="text-[#9b8a8a]" />
-  <input
-    value={search}
-    onChange={(e) => setSearch(e.target.value)}
-    placeholder="Buscar insumo, SKU o categoría..."
-    className="w-full outline-none bg-transparent text-sm"
-  />
-</div>
+        <section className="mt-4 bg-white border border-[#f3dede] rounded-[24px] overflow-hidden">
+          <div className="p-5 md:p-6 border-b border-[#f3dede]">
+            <div className="flex flex-col gap-4">
+              <div>
+                <h2 className="text-[18px] md:text-[20px] font-bold text-[#7a0000]">
+                  Productos registrados
+                </h2>
 
-        {/* TABLE */}
-        <div className="bg-white border border-[#f3dede] rounded-[30px] p-6 overflow-x-auto">
-          {loading ? (
-            <div className="py-12 text-center text-gray-500">
-              Cargando inventario...
-            </div>
-          ) : filteredItems.length === 0 ? (
-            <div className="py-12 text-center text-gray-500">
-              No se encontraron registros.
-            </div>
-          ) : (
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-left border-b border-[#f3dede] text-[#b9a0a0] uppercase tracking-[0.15em] text-xs">
-                  <th className="py-4">Nombre</th>
-                  <th className="py-4">Categoría</th>
-                  <th className="py-4">Stock</th>
-                  <th className="py-4">Estado</th>
-                  <th className="py-4">Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredItems.map((item) => {
-                  const status = getStatus(item)
+                <p className="text-sm text-[#b07a7a] mt-1">
+                  Busca, filtra y administra los insumos disponibles.
+                </p>
+              </div>
 
-                  return (
-                    <tr key={item.id} className="border-b border-[#f9eded]">
-                      <td className="py-4 font-semibold">
-                        <div className="flex items-center gap-3">
-                          <Package
-                            size={16}
-                            className="text-[#8c0303]"
-                          />
-                          {item.nombre}
-                        </div>
-                      </td>
-                      <td className="py-4">
-                        {item.categoria || '-'}
-                      </td>
-                      <td className="py-4">
-                        {item.stock_actual} {item.unidad}
-                      </td>
-                      <td className="py-4">
-                        <span
-                          className={`${status.className} px-3 py-1 rounded-full text-xs`}
-                        >
-                          {status.label}
-                        </span>
-                      </td>
-<td className="py-4">
-  <div className="flex items-center gap-4">
-    <Link
-      href={`/inventario/${item.id}`}
-      className="text-blue-600 hover:text-blue-800"
-      title="Editar producto"
-    >
-      ✏️
-    </Link>
+              <div className="flex items-center gap-2 bg-[#fffafa] border border-[#efcccc] rounded-xl px-4 py-3">
+                <Search size={17} className="text-[#9b8a8a] shrink-0" />
 
-    <button
-      onClick={() => eliminarProducto(item.id)}
-      className="text-red-600 hover:text-red-800"
-      title="Eliminar producto"
-    >
-      <Trash2 size={18} />
-    </button>
-  </div>
-</td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          )}
-        </div>
-     </section>
-      
+                <input
+                  value={search}
+                  onChange={(event) => setSearch(event.target.value)}
+                  placeholder="Buscar producto, SKU, categoría o proveedor..."
+                  className="w-full outline-none bg-transparent text-sm text-[#2e2e2e]"
+                />
+              </div>
 
-      {/* MODAL */}
-      {showModal && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-<div className="bg-white rounded-3xl p-10 w-full max-w-5xl max-h-[90vh] overflow-y-auto space-y-4">
-                <h2 className="text-3xl ivy text-[#7a0000]">
-              Nuevo Producto
-            </h2>
-<div className="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
-<input
-  placeholder="SKU"
-  className="w-full border rounded-xl p-3"
-  value={form.sku}
-  onChange={(e) =>
-    setForm({
-      ...form,
-      sku: e.target.value,
-    })
-  }
-/><input
-  placeholder="Nombre"
-  className="w-full border rounded-xl p-3"
-  value={form.nombre}
-  onChange={(e) =>
-    setForm({
-      ...form,
-      nombre: e.target.value,
-    })
-  }
-/><input
-  placeholder="Categoría"
-  className="w-full border rounded-xl p-3"
-  value={form.categoria}
-  onChange={(e) =>
-    setForm({
-      ...form,
-      categoria: e.target.value,
-    })
-  }
-/><input
-  placeholder="Unidad"
-  className="w-full border rounded-xl p-3"
-  value={form.unidad}
-  onChange={(e) =>
-    setForm({
-      ...form,
-      unidad: e.target.value,
-    })
-  }
-/><input
-  type="number"
-placeholder="Stock Actual"
-  className="w-full border rounded-xl p-3"
-  value={form.stock_actual}
-  onChange={(e) =>
-    setForm({
-      ...form,
-      stock_actual: Number(e.target.value),
-    })
-  }
-/><input
-  type="number"
-  placeholder="Stock Mínimo"
-  className="w-full border rounded-xl p-3"
-  value={form.stock_minimo}
-  onChange={(e) =>
-    setForm({
-      ...form,
-      stock_minimo: Number(e.target.value),
-    })
-  }
-/><input
-  type="number"
-  step="0.01"
-  placeholder="Costo Unitario"
-  className="w-full border rounded-xl p-3"
-  value={form.costo_unitario}
-  onChange={(e) =>
-    setForm({
-      ...form,
-      costo_unitario: Number(e.target.value),
-    })
-  }
-/><input
-  placeholder="Proveedor"
-  className="w-full border rounded-xl p-3"
-  value={form.proveedor}
-  onChange={(e) =>
-    setForm({
-      ...form,
-      proveedor: e.target.value,
-    })
-  }
-/><input
-  placeholder="Proveedor URL"
-  className="w-full border rounded-xl p-3"
-  value={form.proveedor_url}
-  onChange={(e) =>
-    setForm({
-      ...form,
-      proveedor_url: e.target.value,
-    })
-  }
-/><textarea
-  placeholder="Notas"
-  className="w-full border rounded-xl p-3"
-  rows={4}
-  value={form.notas}
-  onChange={(e) =>
-    setForm({
-      ...form,
-      notas: e.target.value,
-    })
-  }
-/>
-            <div className="flex justify-end gap-3 pt-4">
-              <button
-                onClick={() => setShowModal(false)}
-                className="px-5 py-3 border rounded-xl"
-              >
-                Cancelar
-              </button>
-
-              <button
-                onClick={guardarProducto}
-                className="px-5 py-3 bg-[#7a0000] text-white rounded-xl"
-              >
-                Guardar
-              </button>
+              <div className="flex flex-wrap gap-2">
+                {categories.map((category) => (
+                  <button
+                    key={category}
+                    type="button"
+                    onClick={() => setSelectedCategory(category)}
+                    className={`px-4 py-2 rounded-full text-sm border transition ${
+                      selectedCategory === category
+                        ? 'bg-[#8c0303] text-white border-[#8c0303]'
+                        : 'bg-white text-[#8c0303] border-[#efcccc] hover:bg-[#fff5f5]'
+                    }`}
+                  >
+                    {category}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
-        </div>
-      )} 
+
+          <div className="md:hidden divide-y divide-[#f3dede]">
+            {loading ? (
+              <div className="px-5 py-10 text-center text-sm text-[#b07a7a]">
+                Cargando inventario...
+              </div>
+            ) : filteredItems.length === 0 ? (
+              <div className="px-5 py-10 text-center text-sm text-[#b07a7a]">
+                No se encontraron productos.
+              </div>
+            ) : (
+              filteredItems.map((item) => {
+                const status = getStatus(item)
+
+                return (
+                  <article key={item.id} className="p-5">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="text-[18px] font-bold text-[#7a0000] break-words">
+                          {item.nombre}
+                        </p>
+
+                        <p className="text-sm text-[#b07a7a] mt-1">
+                          {item.categoria || 'Sin categoría'}
+                        </p>
+                      </div>
+
+                      <span
+                        className={`${status.className} px-3 py-1 rounded-full text-xs font-semibold shrink-0`}
+                      >
+                        {status.label}
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3 mt-4">
+                      <div className="bg-[#fffafa] border border-[#f3dede] rounded-2xl p-3">
+                        <p className="text-[10px] uppercase tracking-[0.13em] text-[#b9a0a0]">
+                          Stock
+                        </p>
+
+                        <p className="mt-2 text-lg font-bold text-[#7a0000]">
+                          {item.stock_actual || 0} {item.unidad || ''}
+                        </p>
+                      </div>
+
+                      <div className="bg-[#fffafa] border border-[#f3dede] rounded-2xl p-3">
+                        <p className="text-[10px] uppercase tracking-[0.13em] text-[#b9a0a0]">
+                          Mínimo
+                        </p>
+
+                        <p className="mt-2 text-lg font-bold text-[#7a0000]">
+                          {item.stock_minimo || 0} {item.unidad || ''}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="mt-4 flex gap-3">
+                      <Link
+                        href={`/inventario/${item.id}`}
+                        className="flex-1 border border-[#efcaca] text-[#8c0303] rounded-xl py-3 text-sm font-semibold flex items-center justify-center gap-2"
+                      >
+                        Editar
+                        <ChevronRight size={16} />
+                      </Link>
+
+                      <button
+                        type="button"
+                        onClick={() =>
+                          eliminarProducto(item.id, item.nombre)
+                        }
+                        disabled={deletingId === item.id}
+                        className="w-12 rounded-xl border border-red-200 text-red-600 flex items-center justify-center disabled:opacity-50"
+                        aria-label={`Eliminar ${item.nombre}`}
+                      >
+                        <Trash2 size={17} />
+                      </button>
+                    </div>
+                  </article>
+                )
+              })
+            )}
+          </div>
+
+          <div className="hidden md:block overflow-x-auto">
+            <table className="min-w-[900px] w-full text-sm">
+              <thead className="bg-[#f8eeee] text-[#b07a7a] uppercase text-[11px] tracking-[0.15em]">
+                <tr>
+                  <th className="py-4 px-5 text-left">Producto</th>
+                  <th className="py-4 px-5 text-left">Categoría</th>
+                  <th className="py-4 px-5 text-left">Proveedor</th>
+                  <th className="py-4 px-5 text-left">Stock</th>
+                  <th className="py-4 px-5 text-left">Estado</th>
+                  <th className="py-4 px-5 text-right">Acciones</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {loading ? (
+                  <tr>
+                    <td
+                      colSpan="6"
+                      className="py-10 text-center text-[#b07a7a]"
+                    >
+                      Cargando inventario...
+                    </td>
+                  </tr>
+                ) : filteredItems.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan="6"
+                      className="py-10 text-center text-[#b07a7a]"
+                    >
+                      No se encontraron productos.
+                    </td>
+                  </tr>
+                ) : (
+                  filteredItems.map((item) => {
+                    const status = getStatus(item)
+
+                    return (
+                      <tr
+                        key={item.id}
+                        className="border-b border-[#f3dede] hover:bg-[#fffafa]"
+                      >
+                        <td className="py-4 px-5">
+                          <div className="flex items-center gap-3">
+                            <div className="w-9 h-9 rounded-xl bg-[#fff1f1] text-[#8c0303] flex items-center justify-center">
+                              <Package size={17} />
+                            </div>
+
+                            <div>
+                              <p className="font-semibold text-[#2e2e2e]">
+                                {item.nombre}
+                              </p>
+
+                              <p className="text-xs text-[#b07a7a] mt-1">
+                                {item.sku || 'Sin SKU'}
+                              </p>
+                            </div>
+                          </div>
+                        </td>
+
+                        <td className="py-4 px-5">
+                          {item.categoria || '-'}
+                        </td>
+
+                        <td className="py-4 px-5">
+                          <div className="flex items-center gap-2">
+                            <Truck
+                              size={15}
+                              className="text-[#b07a7a]"
+                            />
+                            {item.proveedor || '-'}
+                          </div>
+                        </td>
+
+                        <td className="py-4 px-5">
+                          {item.stock_actual || 0} {item.unidad || ''}
+                        </td>
+
+                        <td className="py-4 px-5">
+                          <span
+                            className={`${status.className} px-3 py-1 rounded-full text-xs font-semibold`}
+                          >
+                            {status.label}
+                          </span>
+                        </td>
+
+                        <td className="py-4 px-5">
+                          <div className="flex justify-end gap-2">
+                            <Link
+                              href={`/inventario/${item.id}`}
+                              className="px-3 py-2 rounded-xl border border-[#efcaca] text-[#8c0303] text-xs font-semibold hover:bg-[#fff5f5]"
+                            >
+                              Editar
+                            </Link>
+
+                            <button
+                              type="button"
+                              onClick={() =>
+                                eliminarProducto(item.id, item.nombre)
+                              }
+                              disabled={deletingId === item.id}
+                              className="w-9 h-9 rounded-xl border border-red-200 text-red-600 flex items-center justify-center hover:bg-red-50 disabled:opacity-50"
+                              aria-label={`Eliminar ${item.nombre}`}
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    )
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </section>
     </main>
   )
 }

@@ -24,16 +24,17 @@ export default function EditarProductoPage() {
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
 
-  const [form, setForm] = useState({
-    nombre: '',
-    categoria: '',
-    unidad: '',
-    stock_actual: 0,
-    stock_minimo: 0,
-    costo_unitario: 0,
-    proveedor: '',
-    proveedor_url: '',
-    notas: '',
+const [form, setForm] = useState({
+  sku: '',
+  nombre: '',
+  categoria: '',
+  unidad: '',
+  stock_actual: 0,
+  stock_minimo: 0,
+  costo_unitario: 0,
+  proveedor: '',
+  proveedor_url: '',
+  notas: '',
   })
 
   useEffect(() => {
@@ -59,6 +60,7 @@ export default function EditarProductoPage() {
     }
 
     setForm({
+      sku: data.sku || '',
       nombre: data.nombre || '',
       categoria: data.categoria || '',
       unidad: data.unidad || '',
@@ -93,6 +95,7 @@ export default function EditarProductoPage() {
     const { error } = await supabase
       .from('inventario')
       .update({
+        sku: form.sku.trim() || null,
         nombre: form.nombre.trim(),
         categoria: form.categoria.trim() || null,
         unidad: form.unidad.trim() || null,
@@ -220,6 +223,20 @@ export default function EditarProductoPage() {
                 </p>
               </div>
             </div>
+
+<div>
+  <label className="block text-xs font-medium text-[#b07a7a] mb-2">
+    SKU o código interno
+  </label>
+
+  <input
+    name="sku"
+    value={form.sku}
+    onChange={handleChange}
+    placeholder="Ej. FRS-001"
+    className={inputClass}
+  />
+</div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-7">
               <div>

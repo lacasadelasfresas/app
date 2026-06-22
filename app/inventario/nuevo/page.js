@@ -7,6 +7,7 @@ import {
   ArrowLeft,
   PackagePlus,
   Save,
+  Truck,
   WalletCards,
 } from 'lucide-react'
 
@@ -65,7 +66,7 @@ export default function NuevoProductoPage() {
     ])
 
     if (error) {
-      console.error(error)
+      console.error('Error guardando producto:', error)
       alert('No se pudo guardar el producto.')
       setSaving(false)
       return
@@ -80,16 +81,14 @@ export default function NuevoProductoPage() {
 
   const stockActual = Number(form.stock_actual || 0)
   const stockMinimo = Number(form.stock_minimo || 0)
-
-  const isLowStock =
-    stockActual <= stockMinimo && stockMinimo > 0
+  const stockBajo = stockMinimo > 0 && stockActual <= stockMinimo
 
   return (
     <main className="min-h-screen bg-[#fcf8f8]">
       <header className="bg-white border-b border-[#f1dede] px-5 md:px-8 py-3 md:h-[82px] md:py-0 md:flex md:items-center">
-        <div className="w-full max-w-none">
+        <div className="w-full">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div className="text-left">
+            <div>
               <p className="text-[10px] uppercase tracking-[0.16em] text-[#b9a0a0]">
                 Inventario
               </p>
@@ -99,14 +98,14 @@ export default function NuevoProductoPage() {
               </h1>
 
               <p className="mt-1 text-xs md:text-sm text-[#b07a7a]">
-                Agrega un nuevo insumo o producto para controlar tu inventario.
+                Agrega un insumo, empaque o producto para controlar tu inventario.
               </p>
             </div>
 
             <button
               type="button"
               onClick={() => router.push('/inventario')}
-              className="w-full sm:w-auto border border-[#efcaca] bg-white px-4 py-2.5 rounded-xl text-[#8c0303] font-semibold text-sm flex items-center justify-center gap-2 hover:bg-[#fff5f5]"
+              className="w-full sm:w-auto rounded-xl border border-[#efcaca] bg-white px-4 py-2.5 text-sm font-semibold text-[#8c0303] flex items-center justify-center gap-2 hover:bg-[#fff5f5]"
             >
               <ArrowLeft size={16} />
               Volver a inventario
@@ -115,9 +114,9 @@ export default function NuevoProductoPage() {
         </div>
       </header>
 
-      <section className="max-w-[1300px] mx-auto px-4 md:px-8 py-5 md:py-7">
-        <div className="grid grid-cols-1 xl:grid-cols-[1fr_320px] gap-5">
-          <section className="bg-white border border-[#f3dede] rounded-[28px] p-5 md:p-7">
+      <section className="max-w-[1150px] mx-auto px-4 md:px-8 py-5 md:py-7">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_290px] gap-5">
+          <section className="bg-white border border-[#f3dede] rounded-[26px] p-5 md:p-7">
             <div className="flex items-start gap-3">
               <div className="w-11 h-11 rounded-2xl bg-[#fff1f1] text-[#8c0303] flex items-center justify-center shrink-0">
                 <PackagePlus size={19} />
@@ -129,12 +128,12 @@ export default function NuevoProductoPage() {
                 </h2>
 
                 <p className="text-xs md:text-sm text-[#b07a7a] mt-1">
-                  Completa los datos necesarios para mantener el inventario ordenado.
+                  Completa los datos principales para registrarlo correctamente.
                 </p>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-7">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
               <div>
                 <label className="block text-xs font-medium text-[#b07a7a] mb-2">
                   SKU o código interno
@@ -172,7 +171,7 @@ export default function NuevoProductoPage() {
                   name="categoria"
                   value={form.categoria}
                   onChange={handleChange}
-                  placeholder="Ej. Frutas, toppings, empaque..."
+                  placeholder="Ej. Frutas, empaque, topping..."
                   className={inputClass}
                 />
               </div>
@@ -202,7 +201,6 @@ export default function NuevoProductoPage() {
                   name="stock_actual"
                   value={form.stock_actual}
                   onChange={handleChange}
-                  placeholder="0"
                   className={inputClass}
                 />
               </div>
@@ -218,7 +216,6 @@ export default function NuevoProductoPage() {
                   name="stock_minimo"
                   value={form.stock_minimo}
                   onChange={handleChange}
-                  placeholder="0"
                   className={inputClass}
                 />
               </div>
@@ -230,8 +227,8 @@ export default function NuevoProductoPage() {
 
                 <input
                   type="number"
-                  step="0.01"
                   min="0"
+                  step="0.01"
                   name="costo_unitario"
                   value={form.costo_unitario}
                   onChange={handleChange}
@@ -242,11 +239,23 @@ export default function NuevoProductoPage() {
             </div>
 
             <div className="mt-7 pt-6 border-t border-[#f3dede]">
-              <h3 className="text-[16px] font-bold text-[#7a0000]">
-                Datos del proveedor
-              </h3>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-[#fff1f1] text-[#8c0303] flex items-center justify-center">
+                  <Truck size={18} />
+                </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                <div>
+                  <h3 className="text-[16px] font-bold text-[#7a0000]">
+                    Datos del proveedor
+                  </h3>
+
+                  <p className="text-xs text-[#b07a7a] mt-1">
+                    Opcional, pero útil para compras futuras.
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-5">
                 <div>
                   <label className="block text-xs font-medium text-[#b07a7a] mb-2">
                     Proveedor
@@ -263,7 +272,7 @@ export default function NuevoProductoPage() {
 
                 <div>
                   <label className="block text-xs font-medium text-[#b07a7a] mb-2">
-                    Enlace del proveedor
+                    URL del proveedor
                   </label>
 
                   <input
@@ -286,18 +295,18 @@ export default function NuevoProductoPage() {
                 name="notas"
                 value={form.notas}
                 onChange={handleChange}
-                placeholder="Detalles de presentación, fecha de compra, observaciones o condiciones."
-                rows={5}
+                rows={4}
+                placeholder="Presentación, fecha de compra, detalles del insumo o cualquier información útil."
                 className={`${inputClass} resize-none`}
               />
             </div>
 
-            <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-3 mt-7 pt-6 border-t border-[#f3dede]">
+            <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 mt-7 pt-6 border-t border-[#f3dede]">
               <button
                 type="button"
                 onClick={() => router.push('/inventario')}
                 disabled={saving}
-                className="w-full sm:w-auto px-5 py-3 rounded-xl border border-[#efcaca] text-[#8c0303] font-semibold text-sm hover:bg-[#fff5f5] disabled:opacity-60"
+                className="w-full sm:w-auto rounded-xl border border-[#efcaca] px-5 py-3 text-sm font-semibold text-[#8c0303] hover:bg-[#fff5f5] disabled:opacity-60"
               >
                 Cancelar
               </button>
@@ -306,7 +315,7 @@ export default function NuevoProductoPage() {
                 type="button"
                 onClick={guardarProducto}
                 disabled={saving}
-                className="w-full sm:w-auto px-5 py-3 rounded-xl bg-[#8c0303] text-white font-semibold text-sm flex items-center justify-center gap-2 hover:bg-[#720000] disabled:opacity-60"
+                className="w-full sm:w-auto rounded-xl bg-[#8c0303] px-5 py-3 text-sm font-semibold text-white flex items-center justify-center gap-2 hover:bg-[#720000] disabled:opacity-60"
               >
                 <Save size={17} />
                 {saving ? 'Guardando...' : 'Guardar producto'}
@@ -315,12 +324,12 @@ export default function NuevoProductoPage() {
           </section>
 
           <aside className="space-y-5">
-            <section className="bg-white border border-[#f3dede] rounded-[28px] p-5">
+            <section className="bg-white border border-[#f3dede] rounded-[26px] p-5">
               <p className="text-[10px] uppercase tracking-[0.16em] text-[#b9a0a0]">
-                Vista previa de inventario
+                Resumen inicial
               </p>
 
-              <p className="mt-3 text-[29px] font-bold text-[#7a0000]">
+              <p className="mt-3 text-[30px] font-bold text-[#7a0000]">
                 {stockActual}
               </p>
 
@@ -330,46 +339,34 @@ export default function NuevoProductoPage() {
 
               <div
                 className={`mt-5 rounded-2xl px-4 py-3 text-sm font-semibold ${
-                  isLowStock
+                  stockBajo
                     ? 'bg-red-50 text-red-600'
                     : 'bg-[#fff1f1] text-[#8c0303]'
                 }`}
               >
-                {isLowStock
+                {stockBajo
                   ? 'Quedará en nivel mínimo'
                   : 'Inventario inicial disponible'}
               </div>
-
-              <div className="mt-4 pt-4 border-t border-[#f3dede] text-sm text-[#b07a7a]">
-                <p>
-                  Stock mínimo:{' '}
-                  <strong className="text-[#7a0000]">
-                    {stockMinimo}
-                  </strong>
-                </p>
-
-                <p className="mt-2">
-                  Costo unitario:{' '}
-                  <strong className="text-[#7a0000]">
-                    {formatCurrency(form.costo_unitario)}
-                  </strong>
-                </p>
-              </div>
             </section>
 
-            <section className="bg-white border border-[#f3dede] rounded-[28px] p-5">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-[#fff1f1] text-[#8c0303] flex items-center justify-center">
+            <section className="bg-white border border-[#f3dede] rounded-[26px] p-5">
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-[#fff1f1] text-[#8c0303] flex items-center justify-center shrink-0">
                   <WalletCards size={18} />
                 </div>
 
                 <div>
                   <p className="text-sm font-semibold text-[#7a0000]">
-                    Recomendación
+                    Costo registrado
                   </p>
 
-                  <p className="text-xs text-[#b07a7a] mt-1">
-                    Registra el costo real de compra para calcular márgenes con precisión.
+                  <p className="mt-2 text-[22px] font-bold text-[#7a0000]">
+                    {formatCurrency(form.costo_unitario)}
+                  </p>
+
+                  <p className="text-xs text-[#b07a7a] mt-2">
+                    Mantener este monto actualizado ayuda a calcular costos y márgenes.
                   </p>
                 </div>
               </div>
