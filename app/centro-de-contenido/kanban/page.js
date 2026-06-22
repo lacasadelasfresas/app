@@ -268,8 +268,8 @@ export default function KanbanContenidoPage() {
             Cargando tablero...
           </div>
         ) : (
-          <div className="overflow-x-auto pb-4">
-            <div className="flex gap-4 min-w-max">
+<div className="overflow-x-auto pb-4">
+  <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4 min-w-[1320px] xl:min-w-0">
               {COLUMNAS.map((column) => {
                 const Icon = column.icon
                 const items = getItemsByStatus(column.estado)
@@ -277,8 +277,8 @@ export default function KanbanContenidoPage() {
                 return (
                   <section
                     key={column.estado}
-                    className="w-[300px] shrink-0"
-                  >
+  className="w-full min-w-0"
+>
                     <div className="bg-white border border-[#f3dede] rounded-[24px] p-4">
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex items-start gap-3">
