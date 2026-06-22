@@ -6,13 +6,14 @@ import {
   ArrowLeft,
   CalendarDays,
   ChevronDown,
-  FolderKanban,
+  Image as ImageIcon,
   Lightbulb,
   ListChecks,
   RefreshCw,
   Send,
   Sparkles,
   Trophy,
+  Video,
 } from 'lucide-react'
 import { supabase } from '@/lib/supabaseClient'
 
@@ -90,28 +91,84 @@ export default function KanbanContenidoPage() {
     fetchContenido()
   }, [])
 
-  async function fetchContenido() {
-    setLoading(true)
+async function fetchContenido() {
+  setLoading(true)
 
-    const { data, error } = await supabase
-      .from('contenido')
-      .select('*')
-      .neq('estado', 'Archivado')
-      .order('fecha_programada', {
-        ascending: true,
-        nullsFirst: false,
-      })
+  const { data, error } = await supabase
+    .from('contenido')
+    .select('*')
+    .neq('estado', 'Archivado')
+    .order('fecha_programada', {
+      ascending: true,
+      nullsFirst: false,
+    })
 
-    if (error) {
-      console.error('Error cargando Kanban:', error)
-      alert('No se pudo cargar el contenido.')
-      setLoading(false)
-      return
-    }
-
-    setContenido(data || [])
+  if (error) {
+    console.error('Error cargando Kanban:', error)
+    alert('No se pudo cargar el contenido.')
     setLoading(false)
+    return
   }
+
+  const contenidoBase = data || []
+  const contenidoIds = contenidoBase.map((item) => item.id)
+
+  if (contenidoIds.length === 0) {
+    setContenido([])
+    setLoading(false)
+    return
+  }
+
+  const { data: archivosData, error: archivosError } = await supabase
+    .from('contenido_archivos')
+    .select('*')
+    .in('contenido_id', contenidoIds)
+    .eq('es_principal', true)
+
+  if (archivosError) {
+    console.error('Error cargando diseños principales:', archivosError)
+    setContenido(contenidoBase)
+    setLoading(false)
+    return
+  }
+
+  const archivosConUrl = await Promise.all(
+    (archivosData || []).map(async (archivo) => {
+      const { data: signedData, error: signedError } =
+        await supabase.storage
+          .from('contenido-media')
+          .createSignedUrl(archivo.storage_path, 60 * 60)
+
+      if (signedError) {
+        console.error(
+          `Error creando URL firmada para ${archivo.nombre_archivo}:`,
+          signedError
+        )
+      }
+
+      return {
+        ...archivo,
+        signedUrl: signedData?.signedUrl || '',
+      }
+    })
+  )
+
+  const archivoPorContenido = archivosConUrl.reduce(
+    (accumulator, archivo) => {
+      accumulator[archivo.contenido_id] = archivo
+      return accumulator
+    },
+    {}
+  )
+
+  const contenidoConDiseño = contenidoBase.map((item) => ({
+    ...item,
+    archivo_principal: archivoPorContenido[item.id] || null,
+  }))
+
+  setContenido(contenidoConDiseño)
+  setLoading(false)
+}
 
   async function cambiarEstado(id, estado) {
     setUpdatingId(id)
@@ -408,58 +465,104 @@ function KanbanColumn({ column, items, updatingId, cambiarEstado }) {
 }
 
 function ContentCard({ item, updatingId, cambiarEstado }) {
-  return (
-    <article className="bg-white border border-[#f3dede] rounded-[20px] p-4 shadow-[0_4px_20px_rgba(122,0,0,0.03)]">
-      <div className="flex items-start justify-between gap-3">
-        <span
-          className={`${getPriorityStyle(
-            item.prioridad
-          )} px-2.5 py-1 rounded-full text-[10px] font-bold`}
-        >
-          {item.prioridad || 'Media'}
-        </span>
+  const archivoPrincipal = item.archivo_principal
+  const esVideo = archivoPrincipal?.tipo_archivo === 'video'
 
-        {item.fecha_programada && (
-          <span className="text-[10px] text-[#b07a7a] text-right">
-            {formatDate(item.fecha_programada)}
-          </span>
+  return (
+    <article className="overflow-hidden bg-white border border-[#f3dede] rounded-[20px] shadow-[0_4px_20px_rgba(122,0,0,0.03)]">
+      <div className="relative aspect-[16/10] bg-[#fffafa] border-b border-[#f3dede]">
+        {archivoPrincipal?.signedUrl ? (
+          esVideo ? (
+            <>
+              <video
+                src={archivoPrincipal.signedUrl}
+                muted
+                preload="metadata"
+                className="w-full h-full object-cover"
+              />
+
+              <div className="absolute inset-0 bg-black/10 flex items-center justify-center">
+                <div className="w-10 h-10 rounded-full bg-white/90 text-[#8c0303] flex items-center justify-center shadow-sm">
+                  <Video size={17} />
+                </div>
+              </div>
+
+              <span className="absolute left-3 top-3 bg-[#7a0000] text-white px-2.5 py-1 rounded-full text-[10px] font-bold">
+                Video
+              </span>
+            </>
+          ) : (
+            <img
+              src={archivoPrincipal.signedUrl}
+              alt={item.titulo}
+              className="w-full h-full object-cover"
+            />
+          )
+        ) : (
+          <div className="w-full h-full flex flex-col items-center justify-center text-center px-5">
+            <div className="w-10 h-10 rounded-2xl bg-white border border-[#f3dede] text-[#b07a7a] flex items-center justify-center">
+              <ImageIcon size={18} />
+            </div>
+
+            <p className="mt-3 text-[11px] font-semibold text-[#b07a7a]">
+              Sin diseño adjunto
+            </p>
+          </div>
         )}
       </div>
 
-      <h4 className="mt-3 text-[16px] font-bold text-[#7a0000] leading-snug break-words">
-        {item.titulo}
-      </h4>
+      <div className="p-4">
+        <div className="flex items-start justify-between gap-3">
+          <span
+            className={`${getPriorityStyle(
+              item.prioridad
+            )} px-2.5 py-1 rounded-full text-[10px] font-bold`}
+          >
+            {item.prioridad || 'Media'}
+          </span>
 
-      <p className="mt-2 text-xs text-[#b07a7a] break-words">
-        {item.plataformas?.join(' · ') || 'Sin plataforma'}
-        {item.formato ? ` · ${item.formato}` : ''}
-      </p>
-
-      {(item.producto_relacionado || item.campana_relacionada) && (
-        <div className="mt-3 rounded-xl bg-[#fffafa] border border-[#f3dede] px-3 py-2">
-          <p className="text-[10px] text-[#b07a7a] break-words">
-            {item.producto_relacionado || item.campana_relacionada}
-          </p>
+          {item.fecha_programada && (
+            <span className="text-[10px] text-[#b07a7a] text-right">
+              {formatDate(item.fecha_programada)}
+            </span>
+          )}
         </div>
-      )}
 
-      <div className="mt-4 pt-4 border-t border-[#f3dede]">
-        <label className="block text-[10px] uppercase tracking-[0.12em] text-[#b9a0a0] mb-2">
-          Mover a
-        </label>
+        <h4 className="mt-3 text-[16px] font-bold text-[#7a0000] leading-snug break-words">
+          {item.titulo}
+        </h4>
 
-        <select
-          value={item.estado}
-          onChange={(event) => cambiarEstado(item.id, event.target.value)}
-          disabled={updatingId === item.id}
-          className="w-full h-10 rounded-xl border border-[#efcccc] bg-white px-3 text-xs text-[#2e2e2e] outline-none focus:border-[#8c0303] disabled:opacity-60"
-        >
-          {ESTADOS.map((status) => (
-            <option key={status} value={status}>
-              {status}
-            </option>
-          ))}
-        </select>
+        <p className="mt-2 text-xs text-[#b07a7a] break-words">
+          {item.plataformas?.join(' · ') || 'Sin plataforma'}
+          {item.formato ? ` · ${item.formato}` : ''}
+        </p>
+
+        {(item.producto_relacionado || item.campana_relacionada) && (
+          <div className="mt-3 rounded-xl bg-[#fffafa] border border-[#f3dede] px-3 py-2">
+            <p className="text-[10px] text-[#b07a7a] break-words">
+              {item.producto_relacionado || item.campana_relacionada}
+            </p>
+          </div>
+        )}
+
+        <div className="mt-4 pt-4 border-t border-[#f3dede]">
+          <label className="block text-[10px] uppercase tracking-[0.12em] text-[#b9a0a0] mb-2">
+            Mover a
+          </label>
+
+          <select
+            value={item.estado}
+            onChange={(event) => cambiarEstado(item.id, event.target.value)}
+            disabled={updatingId === item.id}
+            className="w-full h-10 rounded-xl border border-[#efcccc] bg-white px-3 text-xs text-[#2e2e2e] outline-none focus:border-[#8c0303] disabled:opacity-60"
+          >
+            {ESTADOS.map((status) => (
+              <option key={status} value={status}>
+                {status}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
     </article>
   )
