@@ -8,8 +8,10 @@ import {
   ChevronLeft,
   ChevronRight,
   FolderOpen,
+  Image as ImageIcon,
   ListChecks,
   RefreshCw,
+  Video,
 } from 'lucide-react'
 import { supabase } from '@/lib/supabaseClient'
 
@@ -115,27 +117,83 @@ export default function CalendarioContenidoPage() {
   }, [])
 
   async function fetchContenido() {
-    setLoading(true)
+  setLoading(true)
 
-    const { data, error } = await supabase
-      .from('contenido')
-      .select('*')
-      .not('fecha_programada', 'is', null)
-      .neq('estado', 'Archivado')
-      .order('fecha_programada', {
-        ascending: true,
-      })
+  const { data, error } = await supabase
+    .from('contenido')
+    .select('*')
+    .not('fecha_programada', 'is', null)
+    .neq('estado', 'Archivado')
+    .order('fecha_programada', {
+      ascending: true,
+    })
 
-    if (error) {
-      console.error('Error cargando calendario:', error)
-      alert('No se pudo cargar el calendario de contenido.')
-      setLoading(false)
-      return
-    }
-
-    setContenido(data || [])
+  if (error) {
+    console.error('Error cargando calendario:', error)
+    alert('No se pudo cargar el calendario de contenido.')
     setLoading(false)
+    return
   }
+
+  const contenidoBase = data || []
+  const contenidoIds = contenidoBase.map((item) => item.id)
+
+  if (contenidoIds.length === 0) {
+    setContenido([])
+    setLoading(false)
+    return
+  }
+
+  const { data: archivosData, error: archivosError } = await supabase
+    .from('contenido_archivos')
+    .select('*')
+    .in('contenido_id', contenidoIds)
+    .eq('es_principal', true)
+
+  if (archivosError) {
+    console.error('Error cargando diseños principales:', archivosError)
+    setContenido(contenidoBase)
+    setLoading(false)
+    return
+  }
+
+  const archivosConUrl = await Promise.all(
+    (archivosData || []).map(async (archivo) => {
+      const { data: signedData, error: signedError } =
+        await supabase.storage
+          .from('contenido-media')
+          .createSignedUrl(archivo.storage_path, 60 * 60)
+
+      if (signedError) {
+        console.error(
+          `Error creando URL firmada para ${archivo.nombre_archivo}:`,
+          signedError
+        )
+      }
+
+      return {
+        ...archivo,
+        signedUrl: signedData?.signedUrl || '',
+      }
+    })
+  )
+
+  const archivoPorContenido = archivosConUrl.reduce(
+    (accumulator, archivo) => {
+      accumulator[archivo.contenido_id] = archivo
+      return accumulator
+    },
+    {}
+  )
+
+  const contenidoConDiseño = contenidoBase.map((item) => ({
+    ...item,
+    archivo_principal: archivoPorContenido[item.id] || null,
+  }))
+
+  setContenido(contenidoConDiseño)
+  setLoading(false)
+}
 
   function previousMonth() {
     setCurrentMonth(
@@ -377,28 +435,37 @@ export default function CalendarioContenidoPage() {
                             key={item.id}
                             className="rounded-2xl border border-[#f3dede] bg-[#fffafa] p-4"
                           >
-                            <div className="flex items-start justify-between gap-3">
-                              <div className="min-w-0">
-                                <p className="font-bold text-[#7a0000] break-words">
-                                  {item.titulo}
-                                </p>
+                            <div className="flex gap-3">
+  <ContentThumbnail
+    item={item}
+    className="w-[68px] h-[68px] shrink-0"
+  />
 
-                                <p className="mt-1 text-sm text-[#b07a7a] break-words">
-                                  {formatTime(item.fecha_programada)}
-                                  {item.plataformas?.length > 0
-                                    ? ` · ${item.plataformas.join(' · ')}`
-                                    : ''}
-                                </p>
-                              </div>
+  <div className="min-w-0 flex-1">
+    <div className="flex items-start justify-between gap-3">
+      <div className="min-w-0">
+        <p className="font-bold text-[#7a0000] break-words">
+          {item.titulo}
+        </p>
 
-                              <span
-                                className={`${getStatusStyle(
-                                  item.estado
-                                )} px-3 py-1 rounded-full text-xs font-semibold shrink-0`}
-                              >
-                                {item.estado}
-                              </span>
-                            </div>
+        <p className="mt-1 text-sm text-[#b07a7a] break-words">
+          {formatTime(item.fecha_programada)}
+          {item.plataformas?.length > 0
+            ? ` · ${item.plataformas.join(' · ')}`
+            : ''}
+        </p>
+      </div>
+
+      <span
+        className={`${getStatusStyle(
+          item.estado
+        )} px-3 py-1 rounded-full text-xs font-semibold shrink-0`}
+      >
+        {item.estado}
+      </span>
+    </div>
+  </div>
+</div>
 
                             {(item.formato ||
                               item.producto_relacionado ||
@@ -479,29 +546,38 @@ export default function CalendarioContenidoPage() {
 
                       <div className="mt-3 space-y-2">
                         {items.slice(0, 3).map((item) => (
-                          <article
-                            key={item.id}
-                            className="rounded-xl border border-[#f3dede] bg-[#fffafa] px-2.5 py-2"
-                          >
-                            <p className="text-[11px] font-semibold text-[#7a0000] truncate">
-                              {item.titulo}
-                            </p>
+<article
+  key={item.id}
+  className="rounded-xl border border-[#f3dede] bg-[#fffafa] p-2"
+>
+  <div className="flex gap-2">
+    <ContentThumbnail
+      item={item}
+      className="w-9 h-9 shrink-0 rounded-lg"
+    />
 
-                            <p className="mt-1 text-[10px] text-[#b07a7a] truncate">
-                              {formatTime(item.fecha_programada)}
-                              {item.plataformas?.length > 0
-                                ? ` · ${item.plataformas[0]}`
-                                : ''}
-                            </p>
+    <div className="min-w-0 flex-1">
+      <p className="text-[11px] font-semibold text-[#7a0000] truncate">
+        {item.titulo}
+      </p>
 
-                            <span
-                              className={`${getStatusStyle(
-                                item.estado
-                              )} inline-flex mt-2 px-2 py-0.5 rounded-full text-[9px] font-semibold`}
-                            >
-                              {item.estado}
-                            </span>
-                          </article>
+      <p className="mt-1 text-[10px] text-[#b07a7a] truncate">
+        {formatTime(item.fecha_programada)}
+        {item.plataformas?.length > 0
+          ? ` · ${item.plataformas[0]}`
+          : ''}
+      </p>
+
+      <span
+        className={`${getStatusStyle(
+          item.estado
+        )} inline-flex mt-2 px-2 py-0.5 rounded-full text-[9px] font-semibold`}
+      >
+        {item.estado}
+      </span>
+    </div>
+  </div>
+</article>
                         ))}
 
                         {items.length > 3 && (
@@ -519,6 +595,46 @@ export default function CalendarioContenidoPage() {
         )}
       </section>
     </main>
+  )
+}
+
+function ContentThumbnail({ item, className = '' }) {
+  const archivoPrincipal = item.archivo_principal
+  const esVideo = archivoPrincipal?.tipo_archivo === 'video'
+
+  return (
+    <div
+      className={`relative overflow-hidden rounded-xl border border-[#f3dede] bg-[#fffafa] ${className}`}
+    >
+      {archivoPrincipal?.signedUrl ? (
+        esVideo ? (
+          <>
+            <video
+              src={archivoPrincipal.signedUrl}
+              muted
+              preload="metadata"
+              className="w-full h-full object-cover"
+            />
+
+            <div className="absolute inset-0 bg-black/10 flex items-center justify-center">
+              <div className="w-6 h-6 rounded-full bg-white/90 text-[#8c0303] flex items-center justify-center">
+                <Video size={12} />
+              </div>
+            </div>
+          </>
+        ) : (
+          <img
+            src={archivoPrincipal.signedUrl}
+            alt={item.titulo}
+            className="w-full h-full object-cover"
+          />
+        )
+      ) : (
+        <div className="w-full h-full flex items-center justify-center text-[#b07a7a]">
+          <ImageIcon size={15} />
+        </div>
+      )}
+    </div>
   )
 }
 
