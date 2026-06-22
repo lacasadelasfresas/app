@@ -6,16 +6,12 @@ import {
   ArrowLeft,
   CalendarDays,
   Check,
-  ChevronRight,
   ClipboardPenLine,
-  Eye,
   FileText,
   Film,
   FolderOpen,
   Image as ImageIcon,
-  Link2,
   LoaderCircle,
-  MessageCircle,
   Pencil,
   Plus,
   RefreshCw,
@@ -38,8 +34,6 @@ const ESTADOS = [
   'Archivado',
 ]
 
-const PRIORIDADES = ['Alta', 'Media', 'Baja']
-
 const PLATAFORMAS = [
   'Instagram',
   'TikTok',
@@ -48,62 +42,30 @@ const PLATAFORMAS = [
   'PedidosYa',
 ]
 
-const FORMATOS = [
-  'Reel',
-  'Historia',
-  'Carrusel',
-  'Post estático',
-  'Foto',
-  'Video',
-  'Promoción',
-  'Testimonio',
-  'Live',
-  'Otro',
-]
+const FORMATOS = ['Historia', 'Carrusel', 'Reel', 'Estático']
 
 const PILARES = [
-  'Producto',
-  'Promoción',
-  'Educación',
-  'Detrás de cámaras',
-  'Eventos y bazares',
-  'Clientes y testimonios',
-  'Marca',
-  'Temporada',
-  'Ventas',
+  'Educativo',
+  'Emocional',
+  'Estratégico',
+  'Promocional',
+  'Inspiracional',
+  'Venta directa',
 ]
 
 function createEmptyForm() {
   return {
     titulo: '',
-    descripcion: '',
     plataformas: [],
     formato: '',
     pilar: '',
     estado: 'Idea',
-    prioridad: 'Media',
     fecha_programada: '',
-    fecha_publicada: '',
     copy: '',
     cta: '',
-    producto_relacionado: '',
-    campana_relacionada: '',
-    evento_relacionado: '',
-    canal_venta: '',
     enlace_canva: '',
     enlace_drive: '',
     enlace_publicado: '',
-    responsable: '',
-    notas: '',
-    alcance: '',
-    reproducciones: '',
-    likes: '',
-    comentarios: '',
-    guardados: '',
-    compartidos: '',
-    mensajes_recibidos: '',
-    pedidos_generados: '',
-    ingresos_generados: '',
   }
 }
 
@@ -141,25 +103,12 @@ function getStatusStyle(status) {
   return styles[status] || 'bg-[#f4f4f4] text-[#666]'
 }
 
-function getPriorityStyle(priority) {
-  const styles = {
-    Alta: 'bg-red-50 text-red-600',
-    Media: 'bg-amber-50 text-amber-700',
-    Baja: 'bg-emerald-50 text-emerald-700',
-  }
-
-  return styles[priority] || 'bg-[#f4f4f4] text-[#666]'
-}
-
-function formatCurrency(value) {
-  return `$${Number(value || 0).toFixed(2)}`
-}
-
 export default function BibliotecaContenidoPage() {
   const [contenido, setContenido] = useState([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [deletingId, setDeletingId] = useState(null)
+
   const [editingId, setEditingId] = useState(null)
   const [formOpen, setFormOpen] = useState(false)
 
@@ -169,27 +118,26 @@ export default function BibliotecaContenidoPage() {
   const [filterFormato, setFilterFormato] = useState('Todos')
 
   const [form, setForm] = useState(createEmptyForm())
+
   const [archivos, setArchivos] = useState([])
-const [archivosPendientes, setArchivosPendientes] = useState([])
-const [uploadingMedia, setUploadingMedia] = useState(false)
+  const [archivosPendientes, setArchivosPendientes] = useState([])
+  const [uploadingMedia, setUploadingMedia] = useState(false)
 
-useEffect(() => {
-  fetchContenido()
+  useEffect(() => {
+    fetchContenido()
 
-  const params = new URLSearchParams(window.location.search)
+    const params = new URLSearchParams(window.location.search)
 
-  if (params.get('nuevo') === '1') {
-    setEditingId(null)
-    setForm(createEmptyForm())
-    setFormOpen(true)
+    if (params.get('nuevo') === '1') {
+      abrirNuevoContenido()
 
-    window.history.replaceState(
-      {},
-      '',
-      '/centro-de-contenido/biblioteca'
-    )
-  }
-}, [])
+      window.history.replaceState(
+        {},
+        '',
+        '/centro-de-contenido/biblioteca'
+      )
+    }
+  }, [])
 
   async function fetchContenido() {
     setLoading(true)
@@ -210,19 +158,38 @@ useEffect(() => {
     setLoading(false)
   }
 
-function resetForm() {
-  archivosPendientes.forEach((archivo) => {
-    if (archivo.signedUrl) {
-      URL.revokeObjectURL(archivo.signedUrl)
-    }
-  })
+  function abrirNuevoContenido() {
+    archivosPendientes.forEach((archivo) => {
+      if (archivo.signedUrl) {
+        URL.revokeObjectURL(archivo.signedUrl)
+      }
+    })
 
-  setEditingId(null)
-  setForm(createEmptyForm())
-  setArchivos([])
-  setArchivosPendientes([])
-  setFormOpen(false)
-}
+    setEditingId(null)
+    setForm(createEmptyForm())
+    setArchivos([])
+    setArchivosPendientes([])
+    setFormOpen(true)
+
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth',
+    })
+  }
+
+  function resetForm() {
+    archivosPendientes.forEach((archivo) => {
+      if (archivo.signedUrl) {
+        URL.revokeObjectURL(archivo.signedUrl)
+      }
+    })
+
+    setEditingId(null)
+    setForm(createEmptyForm())
+    setArchivos([])
+    setArchivosPendientes([])
+    setFormOpen(false)
+  }
 
   function handleChange(event) {
     const { name, value } = event.target
@@ -246,277 +213,265 @@ function resetForm() {
     })
   }
 
-async function cargarArchivos(contenidoId) {
-  if (!contenidoId) {
-    setArchivos([])
-    return
+  async function cargarArchivos(contenidoId) {
+    if (!contenidoId) {
+      setArchivos([])
+      return
+    }
+
+    const { data, error } = await supabase
+      .from('contenido_archivos')
+      .select('*')
+      .eq('contenido_id', contenidoId)
+      .order('es_principal', { ascending: false })
+      .order('orden', { ascending: true })
+
+    if (error) {
+      console.error('Error cargando archivos:', error)
+      return
+    }
+
+    const archivosConUrl = await Promise.all(
+      (data || []).map(async (archivo) => {
+        const { data: signedData, error: signedError } =
+          await supabase.storage
+            .from('contenido-media')
+            .createSignedUrl(archivo.storage_path, 60 * 60)
+
+        if (signedError) {
+          console.error(
+            `Error creando URL firmada para ${archivo.nombre_archivo}:`,
+            signedError
+          )
+        }
+
+        return {
+          ...archivo,
+          signedUrl: signedData?.signedUrl || '',
+        }
+      })
+    )
+
+    setArchivos(archivosConUrl)
   }
 
-  const { data, error } = await supabase
-    .from('contenido_archivos')
-    .select('*')
-    .eq('contenido_id', contenidoId)
-    .order('es_principal', { ascending: false })
-    .order('orden', { ascending: true })
+  function handleSeleccionarArchivos(event) {
+    const selectedFiles = Array.from(event.target.files || [])
 
-  if (error) {
-    console.error('Error cargando archivos:', error)
-    return
-  }
+    if (selectedFiles.length === 0) return
 
-  const archivosConUrl = await Promise.all(
-    (data || []).map(async (archivo) => {
-      const { data: signedData, error: signedError } =
-        await supabase.storage
-          .from('contenido-media')
-          .createSignedUrl(archivo.storage_path, 60 * 60)
+    const archivosValidos = selectedFiles.filter((file) => {
+      const isImage = file.type.startsWith('image/')
+      const isVideo = file.type.startsWith('video/')
+      const isValidSize = file.size <= 50 * 1024 * 1024
 
-      if (signedError) {
-        console.error('Error creando URL firmada:', signedError)
+      if (!isImage && !isVideo) {
+        alert(`${file.name} no es una imagen o video válido.`)
+        return false
       }
 
-      return {
-        ...archivo,
-        signedUrl: signedData?.signedUrl || '',
+      if (!isValidSize) {
+        alert(`${file.name} supera el límite de 50 MB.`)
+        return false
       }
+
+      return true
     })
-  )
 
-  setArchivos(archivosConUrl)
-}
+    const nuevosPendientes = archivosValidos.map((file) => ({
+      id: crypto.randomUUID(),
+      file,
+      nombre_archivo: file.name,
+      mime_type: file.type,
+      tamano_bytes: file.size,
+      tipo_archivo: file.type.startsWith('video/') ? 'video' : 'imagen',
+      signedUrl: URL.createObjectURL(file),
+    }))
 
-function handleSeleccionarArchivos(event) {
-  const selectedFiles = Array.from(event.target.files || [])
+    setArchivosPendientes((previous) => [
+      ...previous,
+      ...nuevosPendientes,
+    ])
 
-  if (selectedFiles.length === 0) return
+    event.target.value = ''
+  }
 
-  const archivosValidos = selectedFiles.filter((file) => {
-    const isImage = file.type.startsWith('image/')
-    const isVideo = file.type.startsWith('video/')
-    const isValidSize = file.size <= 50 * 1024 * 1024
+  function eliminarArchivoPendiente(id) {
+    setArchivosPendientes((previous) => {
+      const archivo = previous.find((item) => item.id === id)
 
-    if (!isImage && !isVideo) {
-      alert(`${file.name} no es una imagen o video válido.`)
-      return false
-    }
-
-    if (!isValidSize) {
-      alert(`${file.name} supera el límite de 50 MB.`)
-      return false
-    }
-
-    return true
-  })
-
-  const nuevosPendientes = archivosValidos.map((file) => ({
-    id: crypto.randomUUID(),
-    file,
-    nombre_archivo: file.name,
-    mime_type: file.type,
-    tamano_bytes: file.size,
-    tipo_archivo: file.type.startsWith('video/')
-      ? 'video'
-      : 'imagen',
-    signedUrl: URL.createObjectURL(file),
-    pendiente: true,
-  }))
-
-  setArchivosPendientes((previous) => [
-    ...previous,
-    ...nuevosPendientes,
-  ])
-
-  event.target.value = ''
-}
-
-function eliminarArchivoPendiente(id) {
-  setArchivosPendientes((previous) => {
-    const archivo = previous.find((item) => item.id === id)
-
-    if (archivo?.signedUrl) {
-      URL.revokeObjectURL(archivo.signedUrl)
-    }
-
-    return previous.filter((item) => item.id !== id)
-  })
-}
-
-async function subirArchivosPendientes(contenidoId) {
-  if (archivosPendientes.length === 0) return
-
-  setUploadingMedia(true)
-
-  try {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
-
-    const tienePrincipal =
-      archivos.some((archivo) => archivo.es_principal) === true
-
-    for (let index = 0; index < archivosPendientes.length; index += 1) {
-      const archivo = archivosPendientes[index]
-      const safeName = archivo.nombre_archivo
-        .replace(/[^\w.-]+/g, '-')
-        .toLowerCase()
-
-      const storagePath = `contenido/${contenidoId}/${Date.now()}-${crypto.randomUUID()}-${safeName}`
-
-      const { error: uploadError } = await supabase.storage
-        .from('contenido-media')
-        .upload(storagePath, archivo.file, {
-          contentType: archivo.mime_type,
-          upsert: false,
-        })
-
-      if (uploadError) {
-        throw uploadError
-      }
-
-      const { error: metadataError } = await supabase
-        .from('contenido_archivos')
-        .insert([
-          {
-            contenido_id: contenidoId,
-            bucket_id: 'contenido-media',
-            storage_path: storagePath,
-            nombre_archivo: archivo.nombre_archivo,
-            tipo_archivo: archivo.tipo_archivo,
-            mime_type: archivo.mime_type,
-            tamano_bytes: archivo.tamano_bytes,
-            es_principal: !tienePrincipal && index === 0,
-            orden: archivos.length + index,
-            creado_por: user?.id || null,
-          },
-        ])
-
-      if (metadataError) {
-        await supabase.storage
-          .from('contenido-media')
-          .remove([storagePath])
-
-        throw metadataError
-      }
-    }
-
-    archivosPendientes.forEach((archivo) => {
-      if (archivo.signedUrl) {
+      if (archivo?.signedUrl) {
         URL.revokeObjectURL(archivo.signedUrl)
       }
+
+      return previous.filter((item) => item.id !== id)
     })
-
-    setArchivosPendientes([])
-    await cargarArchivos(contenidoId)
-  } catch (error) {
-    console.error('Error subiendo archivos:', error)
-    alert('No se pudieron subir todos los archivos seleccionados.')
-  } finally {
-    setUploadingMedia(false)
-  }
-}
-
-async function eliminarArchivoExistente(archivo) {
-  const confirmar = confirm(
-    `¿Deseas eliminar "${archivo.nombre_archivo}"?`
-  )
-
-  if (!confirmar) return
-
-  const { error: storageError } = await supabase.storage
-    .from('contenido-media')
-    .remove([archivo.storage_path])
-
-  if (storageError) {
-    console.error('Error eliminando archivo de Storage:', storageError)
-    alert('No se pudo eliminar el archivo.')
-    return
   }
 
-  const { error: databaseError } = await supabase
-    .from('contenido_archivos')
-    .delete()
-    .eq('id', archivo.id)
+  async function subirArchivosPendientes(contenidoId) {
+    if (archivosPendientes.length === 0) return true
 
-  if (databaseError) {
-    console.error('Error eliminando registro del archivo:', databaseError)
-    alert('El archivo se eliminó, pero no se pudo actualizar el registro.')
-    return
+    setUploadingMedia(true)
+
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+
+      const tienePrincipal = archivos.some(
+        (archivo) => archivo.es_principal
+      )
+
+      for (let index = 0; index < archivosPendientes.length; index += 1) {
+        const archivo = archivosPendientes[index]
+
+        const safeName = archivo.nombre_archivo
+          .replace(/[^\w.-]+/g, '-')
+          .toLowerCase()
+
+        const storagePath = `contenido/${contenidoId}/${Date.now()}-${crypto.randomUUID()}-${safeName}`
+
+        const { error: uploadError } = await supabase.storage
+          .from('contenido-media')
+          .upload(storagePath, archivo.file, {
+            contentType: archivo.mime_type,
+            upsert: false,
+          })
+
+        if (uploadError) {
+          throw uploadError
+        }
+
+        const { error: metadataError } = await supabase
+          .from('contenido_archivos')
+          .insert([
+            {
+              contenido_id: contenidoId,
+              bucket_id: 'contenido-media',
+              storage_path: storagePath,
+              nombre_archivo: archivo.nombre_archivo,
+              tipo_archivo: archivo.tipo_archivo,
+              mime_type: archivo.mime_type,
+              tamano_bytes: archivo.tamano_bytes,
+              es_principal: !tienePrincipal && index === 0,
+              orden: archivos.length + index,
+              creado_por: user?.id || null,
+            },
+          ])
+
+        if (metadataError) {
+          await supabase.storage
+            .from('contenido-media')
+            .remove([storagePath])
+
+          throw metadataError
+        }
+      }
+
+      archivosPendientes.forEach((archivo) => {
+        if (archivo.signedUrl) {
+          URL.revokeObjectURL(archivo.signedUrl)
+        }
+      })
+
+      setArchivosPendientes([])
+      await cargarArchivos(contenidoId)
+
+      return true
+    } catch (error) {
+      console.error('Error subiendo archivos:', error)
+      alert('No se pudieron subir todos los archivos seleccionados.')
+      return false
+    } finally {
+      setUploadingMedia(false)
+    }
   }
 
-  setArchivos((previous) =>
-    previous.filter((item) => item.id !== archivo.id)
-  )
-}
+  async function eliminarArchivoExistente(archivo) {
+    const confirmar = confirm(
+      `¿Deseas eliminar "${archivo.nombre_archivo}"?`
+    )
 
-async function marcarComoPrincipal(archivo) {
-  if (!editingId || archivo.es_principal) return
+    if (!confirmar) return
 
-  const { error: clearError } = await supabase
-    .from('contenido_archivos')
-    .update({ es_principal: false })
-    .eq('contenido_id', editingId)
+    const { error: storageError } = await supabase.storage
+      .from('contenido-media')
+      .remove([archivo.storage_path])
 
-  if (clearError) {
-    console.error('Error limpiando archivo principal:', clearError)
-    alert('No se pudo actualizar el archivo principal.')
-    return
+    if (storageError) {
+      console.error('Error eliminando archivo de Storage:', storageError)
+      alert('No se pudo eliminar el archivo.')
+      return
+    }
+
+    const { error: databaseError } = await supabase
+      .from('contenido_archivos')
+      .delete()
+      .eq('id', archivo.id)
+
+    if (databaseError) {
+      console.error('Error eliminando registro del archivo:', databaseError)
+      alert('El archivo se eliminó, pero no se pudo actualizar el registro.')
+      return
+    }
+
+    setArchivos((previous) =>
+      previous.filter((item) => item.id !== archivo.id)
+    )
   }
 
-  const { error: principalError } = await supabase
-    .from('contenido_archivos')
-    .update({ es_principal: true })
-    .eq('id', archivo.id)
+  async function marcarComoPrincipal(archivo) {
+    if (!editingId || archivo.es_principal) return
 
-  if (principalError) {
-    console.error('Error marcando archivo principal:', principalError)
-    alert('No se pudo marcar el archivo principal.')
-    return
+    const { error: clearError } = await supabase
+      .from('contenido_archivos')
+      .update({ es_principal: false })
+      .eq('contenido_id', editingId)
+
+    if (clearError) {
+      console.error('Error limpiando archivo principal:', clearError)
+      alert('No se pudo actualizar el archivo principal.')
+      return
+    }
+
+    const { error: principalError } = await supabase
+      .from('contenido_archivos')
+      .update({ es_principal: true })
+      .eq('id', archivo.id)
+
+    if (principalError) {
+      console.error('Error marcando archivo principal:', principalError)
+      alert('No se pudo marcar el archivo principal.')
+      return
+    }
+
+    setArchivos((previous) =>
+      previous.map((item) => ({
+        ...item,
+        es_principal: item.id === archivo.id,
+      }))
+    )
   }
 
-  setArchivos((previous) =>
-    previous.map((item) => ({
-      ...item,
-      es_principal: item.id === archivo.id,
-    }))
-  )
-}
-
-async function editarContenido(item) {
+  async function editarContenido(item) {
     setEditingId(item.id)
     setArchivosPendientes([])
-await cargarArchivos(item.id)
 
     setForm({
       titulo: item.titulo || '',
-      descripcion: item.descripcion || '',
       plataformas: item.plataformas || [],
       formato: item.formato || '',
       pilar: item.pilar || '',
       estado: item.estado || 'Idea',
-      prioridad: item.prioridad || 'Media',
       fecha_programada: toInputDateTime(item.fecha_programada),
-      fecha_publicada: toInputDateTime(item.fecha_publicada),
       copy: item.copy || '',
       cta: item.cta || '',
-      producto_relacionado: item.producto_relacionado || '',
-      campana_relacionada: item.campana_relacionada || '',
-      evento_relacionado: item.evento_relacionado || '',
-      canal_venta: item.canal_venta || '',
       enlace_canva: item.enlace_canva || '',
       enlace_drive: item.enlace_drive || '',
       enlace_publicado: item.enlace_publicado || '',
-      responsable: item.responsable || '',
-      notas: item.notas || '',
-      alcance: item.alcance ?? '',
-      reproducciones: item.reproducciones ?? '',
-      likes: item.likes ?? '',
-      comentarios: item.comentarios ?? '',
-      guardados: item.guardados ?? '',
-      compartidos: item.compartidos ?? '',
-      mensajes_recibidos: item.mensajes_recibidos ?? '',
-      pedidos_generados: item.pedidos_generados ?? '',
-      ingresos_generados: item.ingresos_generados ?? '',
     })
+
+    await cargarArchivos(item.id)
 
     setFormOpen(true)
 
@@ -528,7 +483,7 @@ await cargarArchivos(item.id)
 
   async function guardarContenido() {
     if (!form.titulo.trim()) {
-      alert('El título interno es obligatorio.')
+      alert('El título es obligatorio.')
       return
     }
 
@@ -536,82 +491,68 @@ await cargarArchivos(item.id)
 
     const payload = {
       titulo: form.titulo.trim(),
-      descripcion: form.descripcion.trim() || null,
       plataformas: form.plataformas,
       formato: form.formato || null,
       pilar: form.pilar || null,
       estado: form.estado,
-      prioridad: form.prioridad,
       fecha_programada: form.fecha_programada
         ? new Date(form.fecha_programada).toISOString()
         : null,
-      fecha_publicada: form.fecha_publicada
-        ? new Date(form.fecha_publicada).toISOString()
-        : null,
       copy: form.copy.trim() || null,
       cta: form.cta.trim() || null,
-      producto_relacionado: form.producto_relacionado.trim() || null,
-      campana_relacionada: form.campana_relacionada.trim() || null,
-      evento_relacionado: form.evento_relacionado.trim() || null,
-      canal_venta: form.canal_venta.trim() || null,
       enlace_canva: form.enlace_canva.trim() || null,
       enlace_drive: form.enlace_drive.trim() || null,
       enlace_publicado: form.enlace_publicado.trim() || null,
-      responsable: form.responsable.trim() || null,
-      notas: form.notas.trim() || null,
-      alcance: Number(form.alcance || 0),
-      reproducciones: Number(form.reproducciones || 0),
-      likes: Number(form.likes || 0),
-      comentarios: Number(form.comentarios || 0),
-      guardados: Number(form.guardados || 0),
-      compartidos: Number(form.compartidos || 0),
-      mensajes_recibidos: Number(form.mensajes_recibidos || 0),
-      pedidos_generados: Number(form.pedidos_generados || 0),
-      ingresos_generados: Number(form.ingresos_generados || 0),
       updated_at: new Date().toISOString(),
     }
 
-let contenidoId = editingId
+    let contenidoId = editingId
 
-if (editingId) {
-  const { error } = await supabase
-    .from('contenido')
-    .update(payload)
-    .eq('id', editingId)
+    if (editingId) {
+      const { error } = await supabase
+        .from('contenido')
+        .update(payload)
+        .eq('id', editingId)
 
-  if (error) {
-    console.error('Error actualizando contenido:', error)
-    alert('No se pudo actualizar el contenido.')
+      if (error) {
+        console.error('Error actualizando contenido:', error)
+        alert('No se pudo actualizar el contenido.')
+        setSaving(false)
+        return
+      }
+    } else {
+      const { data, error } = await supabase
+        .from('contenido')
+        .insert([payload])
+        .select('id')
+        .single()
+
+      if (error || !data?.id) {
+        console.error('Error creando contenido:', error)
+        alert('No se pudo crear el contenido.')
+        setSaving(false)
+        return
+      }
+
+      contenidoId = data.id
+    }
+
+    const uploadSuccess = await subirArchivosPendientes(contenidoId)
+
+    if (!uploadSuccess) {
+      setSaving(false)
+      return
+    }
+
+    await fetchContenido()
+
+    const wasEditing = Boolean(editingId)
+
+    resetForm()
     setSaving(false)
-    return
-  }
-} else {
-  const { data, error } = await supabase
-    .from('contenido')
-    .insert([payload])
-    .select('id')
-    .single()
-
-  if (error || !data?.id) {
-    console.error('Error creando contenido:', error)
-    alert('No se pudo crear el contenido.')
-    setSaving(false)
-    return
-  }
-
-  contenidoId = data.id
-}
-
-if (archivosPendientes.length > 0) {
-  await subirArchivosPendientes(contenidoId)
-}
-
-await fetchContenido()
-resetForm()
-setSaving(false)
 
     alert(
-      editingId
+      wasEditing
         ? 'Contenido actualizado correctamente.'
         : 'Contenido creado correctamente.'
     )
@@ -625,6 +566,50 @@ setSaving(false)
     if (!confirmar) return
 
     setDeletingId(id)
+
+    const { data: archivosRelacionados, error: archivosError } = await supabase
+      .from('contenido_archivos')
+      .select('id, storage_path')
+      .eq('contenido_id', id)
+
+    if (archivosError) {
+      console.error('Error cargando archivos relacionados:', archivosError)
+      alert('No se pudo preparar la eliminación del contenido.')
+      setDeletingId(null)
+      return
+    }
+
+    const rutas = (archivosRelacionados || []).map(
+      (archivo) => archivo.storage_path
+    )
+
+    if (rutas.length > 0) {
+      const { error: storageError } = await supabase.storage
+        .from('contenido-media')
+        .remove(rutas)
+
+      if (storageError) {
+        console.error('Error eliminando archivos de Storage:', storageError)
+        alert('No se pudieron eliminar los archivos relacionados.')
+        setDeletingId(null)
+        return
+      }
+
+      const { error: deleteFilesError } = await supabase
+        .from('contenido_archivos')
+        .delete()
+        .eq('contenido_id', id)
+
+      if (deleteFilesError) {
+        console.error(
+          'Error eliminando registros de archivos:',
+          deleteFilesError
+        )
+        alert('No se pudieron eliminar los registros de archivos.')
+        setDeletingId(null)
+        return
+      }
+    }
 
     const { error } = await supabase
       .from('contenido')
@@ -648,13 +633,10 @@ setSaving(false)
     return contenido.filter((item) => {
       const text = `
         ${item.titulo || ''}
-        ${item.descripcion || ''}
         ${item.formato || ''}
         ${item.pilar || ''}
-        ${item.producto_relacionado || ''}
-        ${item.campana_relacionada || ''}
-        ${item.evento_relacionado || ''}
-        ${item.responsable || ''}
+        ${item.copy || ''}
+        ${item.cta || ''}
       `.toLowerCase()
 
       const matchesSearch =
@@ -718,11 +700,7 @@ setSaving(false)
 
               <button
                 type="button"
-                onClick={() => {
-                  setFormOpen(true)
-                  setEditingId(null)
-                  setForm(createEmptyForm())
-                }}
+                onClick={abrirNuevoContenido}
                 className="w-full sm:w-auto h-10 px-4 rounded-xl bg-[#8c0303] text-white font-semibold text-sm flex items-center justify-center gap-2 hover:bg-[#720000]"
               >
                 <Plus size={16} />
@@ -754,8 +732,8 @@ setSaving(false)
                   </h2>
 
                   <p className="mt-1 text-sm text-[#b07a7a]">
-                    Completa solo los campos que necesites ahora. Podrás
-                    actualizar el resto después.
+                    Completa los campos esenciales para producir, programar y
+                    publicar esta pieza.
                   </p>
                 </div>
               </div>
@@ -774,11 +752,11 @@ setSaving(false)
               <SectionTitle
                 icon={<FileText size={17} />}
                 title="Información principal"
-                description="Define qué contenido es, para qué sirve y en qué etapa se encuentra."
+                description="Define qué pieza es, dónde se publicará y cuándo debe salir."
               />
 
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mt-5">
-                <Field label="Título interno *">
+                <Field label="Título *">
                   <input
                     name="titulo"
                     value={form.titulo}
@@ -796,6 +774,7 @@ setSaving(false)
                     className={inputClass}
                   >
                     <option value="">Seleccionar formato...</option>
+
                     {FORMATOS.map((item) => (
                       <option key={item} value={item}>
                         {item}
@@ -812,6 +791,7 @@ setSaving(false)
                     className={inputClass}
                   >
                     <option value="">Seleccionar pilar...</option>
+
                     {PILARES.map((item) => (
                       <option key={item} value={item}>
                         {item}
@@ -835,41 +815,13 @@ setSaving(false)
                   </select>
                 </Field>
 
-                <Field label="Prioridad">
-                  <select
-                    name="prioridad"
-                    value={form.prioridad}
-                    onChange={handleChange}
-                    className={inputClass}
-                  >
-                    {PRIORIDADES.map((item) => (
-                      <option key={item} value={item}>
-                        {item}
-                      </option>
-                    ))}
-                  </select>
-                </Field>
-
-                <Field label="Responsable">
+                <Field label="Fecha programada">
                   <input
-                    name="responsable"
-                    value={form.responsable}
+                    type="datetime-local"
+                    name="fecha_programada"
+                    value={form.fecha_programada}
                     onChange={handleChange}
-                    placeholder="Ej. Nathalie"
                     className={inputClass}
-                  />
-                </Field>
-              </div>
-
-              <div className="mt-4">
-                <Field label="Descripción o enfoque">
-                  <textarea
-                    name="descripcion"
-                    value={form.descripcion}
-                    onChange={handleChange}
-                    rows={3}
-                    placeholder="Resume la idea, ángulo creativo o mensaje central."
-                    className={`${inputClass} resize-none`}
                   />
                 </Field>
               </div>
@@ -905,79 +857,9 @@ setSaving(false)
 
             <div className="mt-8 pt-7 border-t border-[#f3dede]">
               <SectionTitle
-                icon={<CalendarDays size={17} />}
-                title="Planificación comercial"
-                description="Relaciona el contenido con el producto, campaña, evento o canal de venta."
-              />
-
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mt-5">
-                <Field label="Fecha programada">
-                  <input
-                    type="datetime-local"
-                    name="fecha_programada"
-                    value={form.fecha_programada}
-                    onChange={handleChange}
-                    className={inputClass}
-                  />
-                </Field>
-
-                <Field label="Fecha publicada">
-                  <input
-                    type="datetime-local"
-                    name="fecha_publicada"
-                    value={form.fecha_publicada}
-                    onChange={handleChange}
-                    className={inputClass}
-                  />
-                </Field>
-
-                <Field label="Canal de venta">
-                  <input
-                    name="canal_venta"
-                    value={form.canal_venta}
-                    onChange={handleChange}
-                    placeholder="Ej. WhatsApp, PedidosYa, delivery..."
-                    className={inputClass}
-                  />
-                </Field>
-
-                <Field label="Producto relacionado">
-                  <input
-                    name="producto_relacionado"
-                    value={form.producto_relacionado}
-                    onChange={handleChange}
-                    placeholder="Ej. Fresas con crema"
-                    className={inputClass}
-                  />
-                </Field>
-
-                <Field label="Campaña relacionada">
-                  <input
-                    name="campana_relacionada"
-                    value={form.campana_relacionada}
-                    onChange={handleChange}
-                    placeholder="Ej. Día del Padre"
-                    className={inputClass}
-                  />
-                </Field>
-
-                <Field label="Evento o bazar">
-                  <input
-                    name="evento_relacionado"
-                    value={form.evento_relacionado}
-                    onChange={handleChange}
-                    placeholder="Ej. Northside Galleries"
-                    className={inputClass}
-                  />
-                </Field>
-              </div>
-            </div>
-
-            <div className="mt-8 pt-7 border-t border-[#f3dede]">
-              <SectionTitle
                 icon={<Film size={17} />}
                 title="Copy, CTA y recursos"
-                description="Guarda la información que necesitas para producir o publicar sin buscarla después."
+                description="Guarda la información necesaria para producir y publicar sin buscarla después."
               />
 
               <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 mt-5">
@@ -986,7 +868,7 @@ setSaving(false)
                     name="copy"
                     value={form.copy}
                     onChange={handleChange}
-                    rows={6}
+                    rows={7}
                     placeholder="Escribe aquí el copy, texto del carrusel, guion del reel o instrucciones para la pieza."
                     className={`${inputClass} resize-none`}
                   />
@@ -1013,7 +895,7 @@ setSaving(false)
                     />
                   </Field>
 
-                  <Field label="Enlace de Drive o archivos">
+                  <Field label="Enlace de Drive">
                     <input
                       name="enlace_drive"
                       value={form.enlace_drive}
@@ -1034,255 +916,71 @@ setSaving(false)
                   </Field>
                 </div>
               </div>
-
-              <div className="mt-4">
-                <Field label="Notas internas">
-                  <textarea
-                    name="notas"
-                    value={form.notas}
-                    onChange={handleChange}
-                    rows={3}
-                    placeholder="Comentarios de producción, pendientes, referencias, observaciones o aprendizajes."
-                    className={`${inputClass} resize-none`}
-                  />
-                </Field>
-              </div>
             </div>
-
-<div className="mt-8 pt-7 border-t border-[#f3dede]">
-  <SectionTitle
-    icon={<ImageIcon size={17} />}
-    title="Diseño, imágenes y videos"
-    description="Guarda aquí el arte final, video de reel, foto de producto o cualquier archivo que necesites publicar."
-  />
-
-  <div className="mt-5 rounded-[22px] border border-dashed border-[#efcccc] bg-[#fffafa] p-5">
-    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-      <div>
-        <p className="text-sm font-semibold text-[#7a0000]">
-          Adjuntar diseño o video
-        </p>
-
-        <p className="mt-1 text-xs text-[#b07a7a]">
-          Puedes subir imágenes o videos de hasta 50 MB.
-        </p>
-      </div>
-
-      <label className="w-full sm:w-auto h-11 px-5 rounded-xl bg-[#8c0303] text-white font-semibold text-sm flex items-center justify-center gap-2 hover:bg-[#720000] cursor-pointer">
-        <Upload size={17} />
-        Seleccionar archivos
-
-        <input
-          type="file"
-          accept="image/*,video/*"
-          multiple
-          onChange={handleSeleccionarArchivos}
-          className="hidden"
-        />
-      </label>
-    </div>
-  </div>
-
-  {(archivos.length > 0 || archivosPendientes.length > 0) && (
-    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 mt-5">
-      {archivos.map((archivo) => (
-        <article
-          key={archivo.id}
-          className="relative overflow-hidden rounded-[22px] border border-[#f3dede] bg-white"
-        >
-          <div className="aspect-square bg-[#fffafa]">
-            {archivo.tipo_archivo === 'video' ? (
-              <video
-                src={archivo.signedUrl}
-                controls
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <img
-                src={archivo.signedUrl}
-                alt={archivo.nombre_archivo}
-                className="w-full h-full object-cover"
-              />
-            )}
-          </div>
-
-          <div className="p-4">
-            <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <p className="text-sm font-semibold text-[#7a0000] truncate">
-                  {archivo.nombre_archivo}
-                </p>
-
-                <p className="mt-1 text-xs text-[#b07a7a]">
-                  {archivo.tipo_archivo === 'video'
-                    ? 'Video'
-                    : 'Imagen'}
-                </p>
-              </div>
-
-              {archivo.es_principal && (
-                <span className="shrink-0 bg-[#fff1f1] text-[#8c0303] px-2 py-1 rounded-full text-[10px] font-bold">
-                  Principal
-                </span>
-              )}
-            </div>
-
-            <div className="flex gap-2 mt-4">
-              <button
-                type="button"
-                onClick={() => marcarComoPrincipal(archivo)}
-                disabled={archivo.es_principal}
-                className="flex-1 h-10 rounded-xl border border-[#efcccc] text-[#8c0303] text-xs font-semibold flex items-center justify-center gap-2 hover:bg-[#fff5f5] disabled:opacity-50"
-              >
-                <Star size={14} />
-                Principal
-              </button>
-
-              <button
-                type="button"
-                onClick={() => eliminarArchivoExistente(archivo)}
-                className="w-10 h-10 rounded-xl border border-red-200 text-red-600 flex items-center justify-center hover:bg-red-50"
-                aria-label={`Eliminar ${archivo.nombre_archivo}`}
-              >
-                <Trash2 size={16} />
-              </button>
-            </div>
-          </div>
-        </article>
-      ))}
-
-      {archivosPendientes.map((archivo) => (
-        <article
-          key={archivo.id}
-          className="relative overflow-hidden rounded-[22px] border border-dashed border-[#efcccc] bg-[#fffafa]"
-        >
-          <div className="aspect-square">
-            {archivo.tipo_archivo === 'video' ? (
-              <video
-                src={archivo.signedUrl}
-                controls
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <img
-                src={archivo.signedUrl}
-                alt={archivo.nombre_archivo}
-                className="w-full h-full object-cover"
-              />
-            )}
-          </div>
-
-          <div className="p-4">
-            <p className="text-sm font-semibold text-[#7a0000] truncate">
-              {archivo.nombre_archivo}
-            </p>
-
-            <p className="mt-1 text-xs text-[#b07a7a]">
-              Pendiente de guardar
-            </p>
-
-            <div className="flex items-center justify-between mt-4">
-              <span className="text-xs text-[#8c0303] font-semibold">
-                {archivo.tipo_archivo === 'video'
-                  ? 'Video'
-                  : 'Imagen'}
-              </span>
-
-              <button
-                type="button"
-                onClick={() => eliminarArchivoPendiente(archivo.id)}
-                className="w-10 h-10 rounded-xl border border-red-200 text-red-600 flex items-center justify-center hover:bg-red-50"
-                aria-label={`Quitar ${archivo.nombre_archivo}`}
-              >
-                <Trash2 size={16} />
-              </button>
-            </div>
-          </div>
-        </article>
-      ))}
-    </div>
-  )}
-
-  {uploadingMedia && (
-    <div className="mt-4 flex items-center gap-2 text-sm text-[#8c0303]">
-      <LoaderCircle size={17} className="animate-spin" />
-      Subiendo archivos...
-    </div>
-  )}
-</div>
 
             <div className="mt-8 pt-7 border-t border-[#f3dede]">
               <SectionTitle
-                icon={<Eye size={17} />}
-                title="Métricas y resultados"
-                description="Completa estos datos después de publicar para identificar qué contenido genera ventas."
+                icon={<ImageIcon size={17} />}
+                title="Diseño, imágenes y videos"
+                description="Guarda el arte final, foto de producto, reel o archivo visual asociado a esta publicación."
               />
 
-              <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4 mt-5">
-                <MetricInput
-                  label="Alcance"
-                  name="alcance"
-                  value={form.alcance}
-                  onChange={handleChange}
-                />
+              <div className="mt-5 rounded-[22px] border border-dashed border-[#efcccc] bg-[#fffafa] p-5">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <p className="text-sm font-semibold text-[#7a0000]">
+                      Adjuntar diseño o video
+                    </p>
 
-                <MetricInput
-                  label="Reproducciones"
-                  name="reproducciones"
-                  value={form.reproducciones}
-                  onChange={handleChange}
-                />
+                    <p className="mt-1 text-xs text-[#b07a7a]">
+                      Puedes subir imágenes o videos de hasta 50 MB.
+                    </p>
+                  </div>
 
-                <MetricInput
-                  label="Likes"
-                  name="likes"
-                  value={form.likes}
-                  onChange={handleChange}
-                />
+                  <label className="w-full sm:w-auto h-11 px-5 rounded-xl bg-[#8c0303] text-white font-semibold text-sm flex items-center justify-center gap-2 hover:bg-[#720000] cursor-pointer">
+                    <Upload size={17} />
+                    Seleccionar archivos
 
-                <MetricInput
-                  label="Comentarios"
-                  name="comentarios"
-                  value={form.comentarios}
-                  onChange={handleChange}
-                />
-
-                <MetricInput
-                  label="Guardados"
-                  name="guardados"
-                  value={form.guardados}
-                  onChange={handleChange}
-                />
-
-                <MetricInput
-                  label="Compartidos"
-                  name="compartidos"
-                  value={form.compartidos}
-                  onChange={handleChange}
-                />
-
-                <MetricInput
-                  label="Mensajes"
-                  name="mensajes_recibidos"
-                  value={form.mensajes_recibidos}
-                  onChange={handleChange}
-                />
-
-                <MetricInput
-                  label="Pedidos"
-                  name="pedidos_generados"
-                  value={form.pedidos_generados}
-                  onChange={handleChange}
-                />
-
-                <MetricInput
-                  label="Ingresos generados"
-                  name="ingresos_generados"
-                  value={form.ingresos_generados}
-                  onChange={handleChange}
-                  step="0.01"
-                />
+                    <input
+                      type="file"
+                      accept="image/*,video/*"
+                      multiple
+                      onChange={handleSeleccionarArchivos}
+                      className="hidden"
+                    />
+                  </label>
+                </div>
               </div>
+
+              {(archivos.length > 0 || archivosPendientes.length > 0) && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 mt-5">
+                  {archivos.map((archivo) => (
+                    <MediaCard
+                      key={archivo.id}
+                      archivo={archivo}
+                      onMakePrimary={() => marcarComoPrincipal(archivo)}
+                      onDelete={() => eliminarArchivoExistente(archivo)}
+                    />
+                  ))}
+
+                  {archivosPendientes.map((archivo) => (
+                    <PendingMediaCard
+                      key={archivo.id}
+                      archivo={archivo}
+                      onDelete={() =>
+                        eliminarArchivoPendiente(archivo.id)
+                      }
+                    />
+                  ))}
+                </div>
+              )}
+
+              {uploadingMedia && (
+                <div className="mt-4 flex items-center gap-2 text-sm text-[#8c0303]">
+                  <LoaderCircle size={17} className="animate-spin" />
+                  Subiendo archivos...
+                </div>
+              )}
             </div>
 
             <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 mt-8 pt-6 border-t border-[#f3dede]">
@@ -1298,10 +996,11 @@ setSaving(false)
               <button
                 type="button"
                 onClick={guardarContenido}
-                disabled={saving}
+                disabled={saving || uploadingMedia}
                 className="w-full sm:w-auto px-5 py-3 rounded-xl bg-[#8c0303] text-white text-sm font-semibold flex items-center justify-center gap-2 hover:bg-[#720000] disabled:opacity-60"
               >
                 <Save size={17} />
+
                 {saving
                   ? 'Guardando...'
                   : editingId
@@ -1362,6 +1061,7 @@ setSaving(false)
                   className={inputClass}
                 >
                   <option value="Todos">Todos los estados</option>
+
                   {ESTADOS.map((item) => (
                     <option key={item} value={item}>
                       {item}
@@ -1377,6 +1077,7 @@ setSaving(false)
                   className={inputClass}
                 >
                   <option value="Todos">Todas las plataformas</option>
+
                   {PLATAFORMAS.map((item) => (
                     <option key={item} value={item}>
                       {item}
@@ -1390,6 +1091,7 @@ setSaving(false)
                   className={inputClass}
                 >
                   <option value="Todos">Todos los formatos</option>
+
                   {FORMATOS.map((item) => (
                     <option key={item} value={item}>
                       {item}
@@ -1429,21 +1131,10 @@ setSaving(false)
                     </span>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3 mt-4">
-                    <SmallInfo
-                      label="Prioridad"
-                      value={item.prioridad || 'Media'}
-                      badgeClass={getPriorityStyle(item.prioridad)}
-                    />
-
-                    <SmallInfo
-                      label="Fecha"
-                      value={
-                        item.fecha_programada
-                          ? formatDate(item.fecha_programada)
-                          : 'Sin fecha'
-                      }
-                    />
+                  <div className="mt-3 text-sm text-[#b07a7a]">
+                    {item.fecha_programada
+                      ? `Programado: ${formatDate(item.fecha_programada)}`
+                      : 'Sin fecha programada'}
                   </div>
 
                   <div className="mt-4 flex gap-3">
@@ -1458,7 +1149,9 @@ setSaving(false)
 
                     <button
                       type="button"
-                      onClick={() => eliminarContenido(item.id, item.titulo)}
+                      onClick={() =>
+                        eliminarContenido(item.id, item.titulo)
+                      }
                       disabled={deletingId === item.id}
                       className="w-12 rounded-xl border border-red-200 text-red-600 flex items-center justify-center hover:bg-red-50 disabled:opacity-50"
                       aria-label={`Eliminar ${item.titulo}`}
@@ -1472,12 +1165,13 @@ setSaving(false)
           </div>
 
           <div className="hidden md:block overflow-x-auto">
-            <table className="min-w-[1120px] w-full text-sm">
+            <table className="min-w-[1050px] w-full text-sm">
               <thead className="bg-[#f8eeee] text-[#b07a7a] uppercase text-[11px] tracking-[0.14em]">
                 <tr>
                   <th className="py-4 px-5 text-left">Contenido</th>
                   <th className="py-4 px-5 text-left">Plataforma</th>
                   <th className="py-4 px-5 text-left">Formato</th>
+                  <th className="py-4 px-5 text-left">Pilar</th>
                   <th className="py-4 px-5 text-left">Estado</th>
                   <th className="py-4 px-5 text-left">Fecha</th>
                   <th className="py-4 px-5 text-right">Acciones</th>
@@ -1488,7 +1182,7 @@ setSaving(false)
                 {loading ? (
                   <tr>
                     <td
-                      colSpan="6"
+                      colSpan="7"
                       className="py-10 text-center text-[#b07a7a]"
                     >
                       Cargando contenido...
@@ -1497,7 +1191,7 @@ setSaving(false)
                 ) : filteredContent.length === 0 ? (
                   <tr>
                     <td
-                      colSpan="6"
+                      colSpan="7"
                       className="py-10 text-center text-[#b07a7a]"
                     >
                       No hay contenido registrado con estos filtros.
@@ -1521,10 +1215,9 @@ setSaving(false)
                             </p>
 
                             <p className="mt-1 text-xs text-[#b07a7a]">
-                              {item.producto_relacionado ||
-                                item.campana_relacionada ||
-                                item.pilar ||
-                                'Sin relación comercial'}
+                              {item.copy
+                                ? 'Copy o guion registrado'
+                                : 'Sin copy registrado'}
                             </p>
                           </div>
                         </div>
@@ -1536,6 +1229,10 @@ setSaving(false)
 
                       <td className="py-4 px-5 text-[#2e2e2e]">
                         {item.formato || '—'}
+                      </td>
+
+                      <td className="py-4 px-5 text-[#2e2e2e]">
+                        {item.pilar || '—'}
                       </td>
 
                       <td className="py-4 px-5">
@@ -1598,7 +1295,8 @@ function SectionTitle({ icon, title, description }) {
       </div>
 
       <div>
-        <h3 className="text-[17px] font-bold text-[#7a0000]">{title}</h3>
+        <h3 className="text-[18px] font-bold text-[#7a0000]">{title}</h3>
+
         <p className="mt-1 text-sm text-[#b07a7a]">{description}</p>
       </div>
     </div>
@@ -1607,62 +1305,140 @@ function SectionTitle({ icon, title, description }) {
 
 function Field({ label, children }) {
   return (
-    <div>
-      <label className="block text-xs font-medium text-[#b07a7a] mb-2">
+    <label className="block">
+      <span className="block text-xs font-medium text-[#b07a7a] mb-2">
         {label}
-      </label>
+      </span>
+
       {children}
-    </div>
+    </label>
   )
 }
 
-function MetricInput({ label, name, value, onChange, step = '1' }) {
-  return (
-    <div>
-      <label className="block text-xs font-medium text-[#b07a7a] mb-2">
-        {label}
-      </label>
+function MediaCard({ archivo, onMakePrimary, onDelete }) {
+  const esVideo = archivo.tipo_archivo === 'video'
 
-      <input
-        type="number"
-        min="0"
-        step={step}
-        name={name}
-        value={value}
-        onChange={onChange}
-        placeholder="0"
-        className="w-full rounded-xl border border-[#efcaca] bg-white px-4 py-3 text-sm text-[#2e2e2e] outline-none transition focus:border-[#8c0303] focus:ring-2 focus:ring-[#fff1f1]"
-      />
-    </div>
+  return (
+    <article className="relative overflow-hidden rounded-[22px] border border-[#f3dede] bg-white">
+      <div className="aspect-square bg-[#fffafa]">
+        {esVideo ? (
+          <video
+            src={archivo.signedUrl}
+            controls
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <img
+            src={archivo.signedUrl}
+            alt={archivo.nombre_archivo}
+            className="w-full h-full object-cover"
+          />
+        )}
+      </div>
+
+      <div className="p-4">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-[#7a0000] truncate">
+              {archivo.nombre_archivo}
+            </p>
+
+            <p className="mt-1 text-xs text-[#b07a7a]">
+              {esVideo ? 'Video' : 'Imagen'}
+            </p>
+          </div>
+
+          {archivo.es_principal && (
+            <span className="shrink-0 bg-[#fff1f1] text-[#8c0303] px-2 py-1 rounded-full text-[10px] font-bold">
+              Principal
+            </span>
+          )}
+        </div>
+
+        <div className="flex gap-2 mt-4">
+          <button
+            type="button"
+            onClick={onMakePrimary}
+            disabled={archivo.es_principal}
+            className="flex-1 h-10 rounded-xl border border-[#efcccc] text-[#8c0303] text-xs font-semibold flex items-center justify-center gap-2 hover:bg-[#fff5f5] disabled:opacity-50"
+          >
+            <Star size={14} />
+            Principal
+          </button>
+
+          <button
+            type="button"
+            onClick={onDelete}
+            className="w-10 h-10 rounded-xl border border-red-200 text-red-600 flex items-center justify-center hover:bg-red-50"
+            aria-label={`Eliminar ${archivo.nombre_archivo}`}
+          >
+            <Trash2 size={16} />
+          </button>
+        </div>
+      </div>
+    </article>
   )
 }
 
-function SmallInfo({ label, value, badgeClass }) {
-  return (
-    <div className="rounded-2xl border border-[#f3dede] bg-[#fffafa] p-3">
-      <p className="text-[10px] uppercase tracking-[0.13em] text-[#b9a0a0]">
-        {label}
-      </p>
+function PendingMediaCard({ archivo, onDelete }) {
+  const esVideo = archivo.tipo_archivo === 'video'
 
-      {badgeClass ? (
-        <span
-          className={`${badgeClass} inline-flex mt-2 px-3 py-1 rounded-full text-xs font-semibold`}
-        >
-          {value}
-        </span>
-      ) : (
-        <p className="mt-2 text-sm font-semibold text-[#7a0000] break-words">
-          {value}
+  return (
+    <article className="relative overflow-hidden rounded-[22px] border border-dashed border-[#efcccc] bg-[#fffafa]">
+      <div className="aspect-square">
+        {esVideo ? (
+          <video
+            src={archivo.signedUrl}
+            controls
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <img
+            src={archivo.signedUrl}
+            alt={archivo.nombre_archivo}
+            className="w-full h-full object-cover"
+          />
+        )}
+      </div>
+
+      <div className="p-4">
+        <p className="text-sm font-semibold text-[#7a0000] truncate">
+          {archivo.nombre_archivo}
         </p>
-      )}
-    </div>
+
+        <p className="mt-1 text-xs text-[#b07a7a]">
+          Pendiente de guardar
+        </p>
+
+        <div className="flex items-center justify-between mt-4">
+          <span className="text-xs text-[#8c0303] font-semibold">
+            {esVideo ? 'Video' : 'Imagen'}
+          </span>
+
+          <button
+            type="button"
+            onClick={onDelete}
+            className="w-10 h-10 rounded-xl border border-red-200 text-red-600 flex items-center justify-center hover:bg-red-50"
+            aria-label={`Quitar ${archivo.nombre_archivo}`}
+          >
+            <Trash2 size={16} />
+          </button>
+        </div>
+      </div>
+    </article>
   )
 }
 
 function EmptyState({ text }) {
   return (
-    <div className="min-h-[150px] px-5 flex items-center justify-center text-center text-sm text-[#b07a7a]">
-      {text}
+    <div className="min-h-[180px] flex flex-col items-center justify-center text-center px-5">
+      <FolderOpen size={31} className="text-[#b07a7a]" />
+
+      <p className="mt-4 text-sm font-semibold text-[#7a0000]">
+        No hay contenido para mostrar
+      </p>
+
+      <p className="mt-1 text-sm text-[#b07a7a]">{text}</p>
     </div>
   )
 }
