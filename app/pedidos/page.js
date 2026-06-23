@@ -1,30 +1,42 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '@/lib/supabaseClient'
 import {
-  Search,
-  Plus,
-  Download,
-  X,
-  ChevronDown,
-  Eye,
-  Pencil,
-  RefreshCw,
-  Trash2,
   CalendarDays,
+  ChevronDown,
+  Download,
+  Eye,
   Filter,
+  ListPlus,
+  Pencil,
+  Plus,
+  RefreshCw,
+  Search,
   ShoppingBag,
-  DollarSign,
-  CreditCard,
-  ReceiptText,
+  Trash2,
+  X,
+  Zap,
 } from 'lucide-react'
 
+const SUCURSALES = [
+  'Northside Galleries',
+  'Signature Plaza',
+  'Evento Corporativo',
+  'Evento Privado',
+  'Delivery',
+  'Pickup',
+]
+
+const METODOS_PAGO = ['Efectivo', 'Yappy', 'Tarjeta', 'Transferencia']
+
+const VENDEDORES = ['Nathalie', 'Sugelys']
+
 function getTodayDate() {
-  const today = new Date()
-  const year = today.getFullYear()
-  const month = String(today.getMonth() + 1).padStart(2, '0')
-  const day = String(today.getDate()).padStart(2, '0')
+  const date = new Date()
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
 
   return `${year}-${month}-${day}`
 }
@@ -37,39 +49,81 @@ function formatOrderId(order) {
   const rawId = order.operacion || order.id || ''
   const numberPart = String(rawId).replace(/\D/g, '').slice(-4)
 
-  if (numberPart) {
-    return `#OP-${numberPart.padStart(4, '0')}`
-  }
-
-  return '#OP-0000'
+  return numberPart ? `#OP-${numberPart.padStart(4, '0')}` : '#OP-0000'
 }
 
-function createEmptyForm() {
+function createCompleteForm() {
   return {
     cliente: '',
     whatsapp: '',
     email: '',
     producto: '',
+    monto_pago: '',
+    fecha: getTodayDate(),
+    metodo_pago: 'Efectivo',
     tipo_pedido: 'Northside Galleries',
     vendedor: 'Nathalie',
-    metodo_pago: 'Efectivo',
-    fecha: getTodayDate(),
     cupon: '',
     tipo_descuento: 'Sin descuento',
     descuento: '',
     observaciones: '',
-    monto_pago: '',
   }
+}
+
+function createQuickForm() {
+  return {
+    producto: '',
+    monto_pago: '',
+    fecha: getTodayDate(),
+    metodo_pago: 'Efectivo',
+    tipo_pedido: 'Northside Galleries',
+    vendedor: 'Nathalie',
+  }
+}
+
+function createBulkCommon() {
+  return {
+    fecha: getTodayDate(),
+    metodo_pago: 'Efectivo',
+    tipo_pedido: 'Northside Galleries',
+    vendedor: 'Nathalie',
+  }
+}
+
+function createBulkRow(mode = 'complete') {
+  return {
+    id: crypto.randomUUID(),
+    cliente: mode === 'quick' ? 'Walk-in' : '',
+    whatsapp: '',
+    email: '',
+    producto: '',
+    monto_pago: '',
+    cupon: '',
+    tipo_descuento: 'Sin descuento',
+    descuento: '',
+    observaciones: '',
+  }
+}
+
+function Field({ label, children }) {
+  return (
+    <label className="block">
+      <span className="block text-sm font-medium text-[#2e2e2e]">
+        {label}
+      </span>
+      {children}
+    </label>
+  )
 }
 
 function DetailItem({ label, value }) {
   return (
-    <div className="border border-[#f3dede] rounded-2xl px-4 py-3 bg-[#fffafa]">
-      <p className="text-[10px] uppercase tracking-[0.14em] text-[#b07a7a] mb-1">
+    <div className="rounded-2xl border border-[#f3dede] bg-[#fffafa] px-4 py-3">
+      <p className="text-[10px] uppercase tracking-[0.14em] text-[#b07a7a]">
         {label}
       </p>
 
-      <p className="text-sm text-[#2e2e2e] font-medium break-words">
+      <p className="mt-1 text-sm font-medium text-[#2e2e2e] break-words">
         {value || '—'}
       </p>
     </div>
@@ -78,23 +132,23 @@ function DetailItem({ label, value }) {
 
 function StatCard({ label, value, icon: Icon }) {
   return (
-    <div className="bg-white border border-[#f3dede] rounded-2xl p-4 md:p-5">
+    <article className="rounded-[24px] border border-[#f3dede] bg-white p-5">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-[10px] uppercase tracking-[0.16em] text-[#b9a0a0]">
+          <p className="text-[10px] uppercase tracking-[0.14em] text-[#b9a0a0]">
             {label}
           </p>
 
-          <p className="text-[27px] md:text-3xl ivy text-[#8c0303] leading-none mt-3 break-words">
+          <p className="mt-3 text-[26px] font-bold text-[#7a0000]">
             {value}
           </p>
         </div>
 
-        <div className="w-10 h-10 rounded-2xl bg-[#fff1f1] text-[#8c0303] flex items-center justify-center shrink-0">
+        <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#fff1f1] text-[#8c0303]">
           <Icon size={18} />
         </div>
       </div>
-    </div>
+    </article>
   )
 }
 
@@ -102,10 +156,21 @@ export default function PedidosPage() {
   const [orders, setOrders] = useState([])
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
-
-  const [showModal, setShowModal] = useState(false)
-  const [showFilters, setShowFilters] = useState(false)
   const [saving, setSaving] = useState(false)
+
+  const [showFilters, setShowFilters] = useState(false)
+  const [showModal, setShowModal] = useState(false)
+  const [selectedOrder, setSelectedOrder] = useState(null)
+  const [editingOrder, setEditingOrder] = useState(null)
+
+  const [saleMode, setSaleMode] = useState('complete')
+  const [entryMode, setEntryMode] = useState('single')
+
+  const [form, setForm] = useState(createCompleteForm())
+  const [quickForm, setQuickForm] = useState(createQuickForm())
+
+  const [bulkCommon, setBulkCommon] = useState(createBulkCommon())
+  const [bulkRows, setBulkRows] = useState([createBulkRow('complete')])
 
   const [search, setSearch] = useState('')
   const [fechaInicio, setFechaInicio] = useState('')
@@ -113,21 +178,12 @@ export default function PedidosPage() {
   const [productoFiltro, setProductoFiltro] = useState('Todos')
   const [metodoPagoFiltro, setMetodoPagoFiltro] = useState('Todos')
 
-  const [selectedOrder, setSelectedOrder] = useState(null)
-  const [editingOrder, setEditingOrder] = useState(null)
-  const [form, setForm] = useState(createEmptyForm())
+  const inputClass =
+    'mt-2 w-full min-w-0 rounded-xl border border-[#efcccc] bg-white px-4 py-3 text-sm text-[#2e2e2e] outline-none focus:border-[#8c0303] focus:ring-2 focus:ring-[#fff1f1]'
 
   useEffect(() => {
     fetchOrders()
     fetchProducts()
-  }, [])
-
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search)
-
-    if (params.get('new') === '1') {
-      openCreateModal()
-    }
   }, [])
 
   async function fetchOrders() {
@@ -136,14 +192,10 @@ export default function PedidosPage() {
     const { data, error } = await supabase
       .from('ventas')
       .select('*')
-      .not('fecha', 'is', null)
-      .not('producto', 'is', null)
-      .not('metodo_pago', 'is', null)
-      .not('monto_pago', 'is', null)
       .order('fecha', { ascending: false })
 
     if (error) {
-      console.error('ERROR FETCH ORDERS:', error)
+      console.error('Error cargando ventas:', error)
       setLoading(false)
       return
     }
@@ -159,53 +211,58 @@ export default function PedidosPage() {
       .order('nombre', { ascending: true })
 
     if (error) {
-      console.error('ERROR FETCH PRODUCTS:', error)
+      console.error('Error cargando productos:', error)
       return
     }
 
     setProducts(data || [])
   }
 
-  function openCreateModal() {
+  function resetSaleStates() {
     setEditingOrder(null)
-    setSelectedOrder(null)
-    setForm(createEmptyForm())
+    setSaleMode('complete')
+    setEntryMode('single')
+    setForm(createCompleteForm())
+    setQuickForm(createQuickForm())
+    setBulkCommon(createBulkCommon())
+    setBulkRows([createBulkRow('complete')])
+  }
+
+  function openCreateModal(mode = 'complete') {
+    resetSaleStates()
+    setSaleMode(mode)
+    setBulkRows([createBulkRow(mode)])
     setShowModal(true)
   }
 
   function closeModal() {
     setShowModal(false)
-    setEditingOrder(null)
-    setForm(createEmptyForm())
+    resetSaleStates()
   }
 
-  function setFiltroHoy() {
-    const today = getTodayDate()
-    setFechaInicio(today)
-    setFechaFin(today)
-  }
+  function openEditOrder(order) {
+    setEditingOrder(order)
+    setSaleMode('complete')
+    setEntryMode('single')
 
-  function setFiltroMesActual() {
-    const today = new Date()
-    const year = today.getFullYear()
-    const month = String(today.getMonth() + 1).padStart(2, '0')
+    setForm({
+      cliente: order.cliente || '',
+      whatsapp: order.whatsapp || '',
+      email: order.email || '',
+      producto: order.producto || '',
+      monto_pago: Number(order.monto_pago || 0),
+      fecha: order.fecha || getTodayDate(),
+      metodo_pago: order.metodo_pago || 'Efectivo',
+      tipo_pedido: order.tipo_pedido || 'Northside Galleries',
+      vendedor: order.vendedor || 'Nathalie',
+      cupon: order.cupon || '',
+      tipo_descuento: order.tipo_descuento || 'Sin descuento',
+      descuento: order.descuento || '',
+      observaciones: order.observaciones || '',
+    })
 
-    const firstDay = `${year}-${month}-01`
-
-    const lastDay = new Date(year, today.getMonth() + 1, 0)
-      .toISOString()
-      .split('T')[0]
-
-    setFechaInicio(firstDay)
-    setFechaFin(lastDay)
-  }
-
-  function limpiarFiltrosPedidos() {
-    setSearch('')
-    setFechaInicio('')
-    setFechaFin('')
-    setProductoFiltro('Todos')
-    setMetodoPagoFiltro('Todos')
+    setSelectedOrder(null)
+    setShowModal(true)
   }
 
   function handleChange(event) {
@@ -217,255 +274,120 @@ export default function PedidosPage() {
     }))
   }
 
-  function handleProductChange(event) {
-    const selectedProductName = event.target.value
+  function handleQuickChange(event) {
+    const { name, value } = event.target
 
-    const selectedProduct = products.find(
-      (product) => product.nombre === selectedProductName
-    )
-
-    setForm((previous) => ({
+    setQuickForm((previous) => ({
       ...previous,
-      producto: selectedProductName,
-      monto_pago: selectedProduct
-        ? Number(selectedProduct.precio || 0)
-        : '',
+      [name]: value,
     }))
   }
 
-  function openEditOrder(order) {
-    setEditingOrder(order)
+  function handleBulkCommonChange(event) {
+    const { name, value } = event.target
 
-    setForm({
-      cliente: order.cliente || '',
-      whatsapp: order.whatsapp || '',
-      email: order.email || '',
-      producto: order.producto || '',
-      tipo_pedido: order.tipo_pedido || 'Northside Galleries',
-      vendedor: order.vendedor || 'Nathalie',
-      metodo_pago: order.metodo_pago || 'Efectivo',
-      fecha: order.fecha || getTodayDate(),
-      cupon: order.cupon || '',
-      tipo_descuento: order.tipo_descuento || 'Sin descuento',
-      descuento: order.descuento || '',
-      observaciones: order.observaciones || '',
-      monto_pago: Number(order.monto_pago || 0),
-    })
-
-    setSelectedOrder(null)
-    setShowModal(true)
+    setBulkCommon((previous) => ({
+      ...previous,
+      [name]: value,
+    }))
   }
 
-  const validOrders = orders.filter(
-    (order) =>
-      order.fecha &&
-      order.producto &&
-      order.metodo_pago &&
-      order.monto_pago !== null
-  )
+  function handleProductChange(event) {
+    const productName = event.target.value
+    const product = products.find((item) => item.nombre === productName)
 
-  const productosFiltro = [
-    'Todos',
-    ...new Set(validOrders.map((order) => order.producto).filter(Boolean)),
-  ]
-
-  const metodosPagoFiltro = [
-    'Todos',
-    ...new Set(
-      validOrders.map((order) => order.metodo_pago).filter(Boolean)
-    ),
-  ]
-
-  const filteredOrders = validOrders.filter((order) => {
-    const text = `
-      ${order.cliente || ''}
-      ${order.producto || ''}
-      ${order.metodo_pago || ''}
-      ${order.tipo_pedido || ''}
-      ${order.vendedor || ''}
-      ${order.operacion || ''}
-      ${formatOrderId(order)}
-    `.toLowerCase()
-
-    const matchesSearch = text.includes(search.toLowerCase())
-
-    const orderFecha =
-      order.fecha || order.created_at?.split('T')[0] || ''
-
-    const matchesFechaInicio =
-      !fechaInicio || orderFecha >= fechaInicio
-
-    const matchesFechaFin =
-      !fechaFin || orderFecha <= fechaFin
-
-    const matchesProducto =
-      productoFiltro === 'Todos' || order.producto === productoFiltro
-
-    const matchesMetodoPago =
-      metodoPagoFiltro === 'Todos' ||
-      order.metodo_pago === metodoPagoFiltro
-
-    return (
-      matchesSearch &&
-      matchesFechaInicio &&
-      matchesFechaFin &&
-      matchesProducto &&
-      matchesMetodoPago
-    )
-  })
-
-  const ventasFiltradas = filteredOrders.length
-
-  const totalFiltrado = filteredOrders.reduce(
-    (accumulator, order) =>
-      accumulator + Number(order.monto_pago || 0),
-    0
-  )
-
-  const ticketPromedioFiltrado =
-    ventasFiltradas > 0
-      ? totalFiltrado / ventasFiltradas
-      : 0
-
-  const metodoMasUsado = (() => {
-    const conteo = {}
-
-    filteredOrders.forEach((order) => {
-      const metodo = order.metodo_pago || 'Sin método'
-
-      conteo[metodo] = (conteo[metodo] || 0) + 1
-    })
-
-    const top = Object.entries(conteo).sort(
-      (a, b) => b[1] - a[1]
-    )[0]
-
-    return top ? top[0] : 'Sin datos'
-  })()
-
-  function exportToCSV() {
-    const headers = [
-      'ID',
-      'Fecha',
-      'Cliente',
-      'WhatsApp',
-      'Email',
-      'Producto',
-      'Sucursal',
-      'Vendedor',
-      'Metodo de Pago',
-      'Total',
-      'Cupon',
-      'Tipo de Descuento',
-      'Descuento',
-      'Observaciones',
-    ]
-
-    const rows = filteredOrders.map((order) => [
-      formatOrderId(order),
-      order.fecha || order.created_at?.split('T')[0] || '',
-      order.cliente || 'Walk-in',
-      order.whatsapp || '',
-      order.email || '',
-      order.producto || '',
-      order.tipo_pedido || 'Punto de Venta',
-      order.vendedor || '',
-      order.metodo_pago || '',
-      Number(order.monto_pago || 0).toFixed(2),
-      order.cupon || '',
-      order.tipo_descuento || 'Sin descuento',
-      Number(order.descuento || 0).toFixed(2),
-      order.observaciones || '',
-    ])
-
-    const csvContent = [
-      headers.join(','),
-      ...rows.map((row) =>
-        row
-          .map((value) => `"${String(value).replace(/"/g, '""')}"`)
-          .join(',')
-      ),
-    ].join('\n')
-
-    const blob = new Blob([csvContent], {
-      type: 'text/csv;charset=utf-8;',
-    })
-
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement('a')
-
-    link.href = url
-    link.setAttribute(
-      'download',
-      `registro-pedidos-${getTodayDate()}.csv`
-    )
-
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-
-    URL.revokeObjectURL(url)
+    setForm((previous) => ({
+      ...previous,
+      producto: productName,
+      monto_pago: product ? Number(product.precio || 0) : '',
+    }))
   }
 
-  function exportToExcel() {
-    const headers = [
-      'ID',
-      'Fecha',
-      'Cliente',
-      'WhatsApp',
-      'Email',
-      'Producto',
-      'Sucursal',
-      'Vendedor',
-      'Metodo de Pago',
-      'Total',
-      'Cupon',
-      'Tipo de Descuento',
-      'Descuento',
-      'Observaciones',
-    ]
+  function handleQuickProductChange(event) {
+    const productName = event.target.value
+    const product = products.find((item) => item.nombre === productName)
 
-    const rows = filteredOrders.map((order) => [
-      formatOrderId(order),
-      order.fecha || order.created_at?.split('T')[0] || '',
-      order.cliente || 'Walk-in',
-      order.whatsapp || '',
-      order.email || '',
-      order.producto || '',
-      order.tipo_pedido || 'Punto de Venta',
-      order.vendedor || '',
-      order.metodo_pago || '',
-      Number(order.monto_pago || 0).toFixed(2),
-      order.cupon || '',
-      order.tipo_descuento || 'Sin descuento',
-      Number(order.descuento || 0).toFixed(2),
-      order.observaciones || '',
-    ])
+    setQuickForm((previous) => ({
+      ...previous,
+      producto: productName,
+      monto_pago: product ? Number(product.precio || 0) : '',
+    }))
+  }
 
-    const excelContent = [
-      headers.join('\t'),
-      ...rows.map((row) =>
-        row
-          .map((cell) => `"${String(cell).replace(/"/g, '""')}"`)
-          .join('\t')
-      ),
-    ].join('\n')
+  function updateBulkRow(rowId, field, value) {
+    setBulkRows((previous) =>
+      previous.map((row) =>
+        row.id === rowId ? { ...row, [field]: value } : row
+      )
+    )
+  }
 
-    const blob = new Blob([excelContent], {
-      type: 'application/vnd.ms-excel;charset=utf-8;',
+  function handleBulkProductChange(rowId, productName) {
+    const product = products.find((item) => item.nombre === productName)
+
+    setBulkRows((previous) =>
+      previous.map((row) =>
+        row.id === rowId
+          ? {
+              ...row,
+              producto: productName,
+              monto_pago: product ? Number(product.precio || 0) : '',
+            }
+          : row
+      )
+    )
+  }
+
+  function addBulkRow() {
+    setBulkRows((previous) => [...previous, createBulkRow(saleMode)])
+  }
+
+  function removeBulkRow(rowId) {
+    setBulkRows((previous) => {
+      if (previous.length === 1) return previous
+      return previous.filter((row) => row.id !== rowId)
     })
+  }
 
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement('a')
+  function setNewSaleMode(mode) {
+    if (editingOrder) return
 
-    link.href = url
-    link.download = `registro-pedidos-${getTodayDate()}.xls`
+    setSaleMode(mode)
+    setEntryMode('single')
+    setQuickForm(createQuickForm())
+    setBulkCommon(createBulkCommon())
+    setBulkRows([createBulkRow(mode)])
+  }
 
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
+  function setNewEntryMode(mode) {
+    if (editingOrder) return
 
-    URL.revokeObjectURL(url)
+    setEntryMode(mode)
+
+    if (mode === 'bulk') {
+      setBulkCommon(createBulkCommon())
+      setBulkRows([createBulkRow(saleMode)])
+    }
+  }
+
+  function buildVentaPayload(values) {
+    return {
+      fecha: values.fecha || getTodayDate(),
+      cliente: values.cliente?.trim() || 'Walk-in',
+      whatsapp: values.whatsapp?.trim() || null,
+      email: values.email?.trim() || null,
+      producto: values.producto,
+      monto_pago: Number(values.monto_pago || 0),
+      metodo_pago: values.metodo_pago || 'Efectivo',
+      tipo_pedido: values.tipo_pedido || 'Northside Galleries',
+      vendedor: values.vendedor || 'Nathalie',
+      cupon: values.cupon?.trim() || null,
+      tipo_descuento: values.tipo_descuento || 'Sin descuento',
+      descuento: Number(values.descuento || 0),
+      observaciones: values.observaciones?.trim() || null,
+      status: 'Pagado',
+      cantidad: 1,
+    }
   }
 
   async function descontarInventarioPorVenta(productoNombre, ventaId) {
@@ -478,10 +400,7 @@ export default function PedidosPage() {
       .single()
 
     if (productoError || !producto) {
-      console.warn(
-        'No se encontró producto para descontar inventario:',
-        productoNombre
-      )
+      console.warn('Producto no encontrado para inventario:', productoNombre)
       return
     }
 
@@ -502,38 +421,27 @@ export default function PedidosPage() {
       .eq('producto_id', producto.id)
 
     if (recipeError) {
-      console.error('Error buscando recipe:', recipeError)
+      console.error('Error buscando receta:', recipeError)
       return
     }
 
-    if (!recipeItems || recipeItems.length === 0) {
-      console.warn(
-        'Este producto no tiene recipe registrada:',
-        productoNombre
-      )
+    if (!recipeItems?.length) {
+      console.warn('Este producto no tiene receta:', productoNombre)
       return
     }
 
     for (const item of recipeItems) {
-      const stockActual = Number(
-        item.inventario?.stock_actual || 0
-      )
-
+      const stockActual = Number(item.inventario?.stock_actual || 0)
       const cantidadUsada = Number(item.cantidad || 0)
       const nuevoStock = stockActual - cantidadUsada
 
-      const { error: updateError } = await supabase
+      const { error: stockError } = await supabase
         .from('inventario')
-        .update({
-          stock_actual: nuevoStock,
-        })
+        .update({ stock_actual: nuevoStock })
         .eq('id', item.inventario_id)
 
-      if (updateError) {
-        console.error(
-          'Error descontando inventario:',
-          updateError
-        )
+      if (stockError) {
+        console.error('Error descontando inventario:', stockError)
         continue
       }
 
@@ -545,67 +453,38 @@ export default function PedidosPage() {
             tipo: 'salida',
             cantidad: cantidadUsada,
             motivo: 'Venta',
-            referencia: ventaId
-              ? `Venta ${ventaId}`
-              : productoNombre,
+            referencia: ventaId ? `Venta ${ventaId}` : productoNombre,
           },
         ])
 
       if (movimientoError) {
-        console.error(
-          'Error registrando salida de inventario:',
-          movimientoError
-        )
+        console.error('Error creando movimiento de inventario:', movimientoError)
       }
     }
   }
 
-  async function recalcularInventarioDeVenta(venta) {
-    if (!venta?.id || !venta?.producto) {
-      alert('No se encontró la información de esta venta.')
-      return
-    }
-
-    const confirmar = confirm(
-      `¿Deseas recalcular el inventario de esta venta?\n\nProducto: ${venta.producto}\n\nEsto devolverá el descuento anterior y aplicará la recipe actual.`
-    )
-
-    if (!confirmar) return
-
+  async function devolverInventarioDeVenta(venta) {
     const referencia = `Venta ${venta.id}`
 
-    const { data: movimientosAnteriores, error: movimientosError } =
-      await supabase
-        .from('inventario_movimientos')
-        .select(`
+    const { data: movimientos, error } = await supabase
+      .from('inventario_movimientos')
+      .select(`
+        id,
+        inventario_id,
+        cantidad,
+        tipo,
+        inventario (
           id,
-          inventario_id,
-          cantidad,
-          tipo,
-          inventario (
-            id,
-            nombre,
-            stock_actual
-          )
-        `)
-        .eq('referencia', referencia)
-        .eq('tipo', 'salida')
+          stock_actual
+        )
+      `)
+      .eq('referencia', referencia)
+      .eq('tipo', 'salida')
 
-    if (movimientosError) {
-      console.error(
-        'Error buscando movimientos anteriores:',
-        movimientosError
-      )
+    if (error) throw error
 
-      alert('No se pudieron buscar los movimientos anteriores.')
-      return
-    }
-
-    for (const movimiento of movimientosAnteriores || []) {
-      const stockActual = Number(
-        movimiento.inventario?.stock_actual || 0
-      )
-
+    for (const movimiento of movimientos || []) {
+      const stockActual = Number(movimiento.inventario?.stock_actual || 0)
       const cantidadDevuelta = Number(movimiento.cantidad || 0)
 
       const { error: updateError } = await supabase
@@ -615,386 +494,482 @@ export default function PedidosPage() {
         })
         .eq('id', movimiento.inventario_id)
 
-      if (updateError) {
-        console.error(
-          'Error devolviendo inventario:',
-          updateError
-        )
-
-        alert(
-          'Hubo un error devolviendo inventario. Revisa la consola.'
-        )
-        return
-      }
+      if (updateError) throw updateError
     }
 
-    if (movimientosAnteriores?.length > 0) {
-      const ids = movimientosAnteriores.map(
-        (movimiento) => movimiento.id
-      )
-
+    if (movimientos?.length) {
       const { error: deleteError } = await supabase
         .from('inventario_movimientos')
         .delete()
-        .in('id', ids)
-
-      if (deleteError) {
-        console.error(
-          'Error eliminando movimientos anteriores:',
-          deleteError
+        .in(
+          'id',
+          movimientos.map((item) => item.id)
         )
 
-        alert(
-          'No se pudieron eliminar los movimientos anteriores.'
-        )
-        return
-      }
+      if (deleteError) throw deleteError
     }
-
-    await descontarInventarioPorVenta(
-      venta.producto,
-      venta.id
-    )
-
-    alert('Inventario recalculado correctamente.')
-    fetchOrders()
   }
 
-  async function eliminarVenta(venta) {
-    if (!venta?.id) {
-      alert('No se encontró la venta para eliminar.')
-      return
-    }
-
-    const confirmar = confirm(
-      `¿Deseas eliminar esta venta?\n\nVenta ${formatOrderId(
-        venta
-      )}\nProducto: ${
-        venta.producto
-      }\n\nEsto también devolverá al inventario los insumos descontados.`
-    )
-
-    if (!confirmar) return
-
-    const referencia = `Venta ${venta.id}`
-
-    const { data: movimientos, error: movimientosError } =
-      await supabase
-        .from('inventario_movimientos')
-        .select(`
-          id,
-          inventario_id,
-          cantidad,
-          tipo,
-          inventario (
-            id,
-            nombre,
-            stock_actual
-          )
-        `)
-        .eq('referencia', referencia)
-        .eq('tipo', 'salida')
-
-    if (movimientosError) {
-      console.error(
-        'Error buscando movimientos de inventario:',
-        movimientosError
-      )
-
-      alert(
-        'No se pudieron buscar los movimientos de inventario.'
-      )
-      return
-    }
-
-    for (const movimiento of movimientos || []) {
-      const stockActual = Number(
-        movimiento.inventario?.stock_actual || 0
-      )
-
-      const cantidadDevuelta = Number(movimiento.cantidad || 0)
-
-      const { error: updateError } = await supabase
-        .from('inventario')
-        .update({
-          stock_actual: stockActual + cantidadDevuelta,
-        })
-        .eq('id', movimiento.inventario_id)
-
-      if (updateError) {
-        console.error(
-          'Error devolviendo inventario:',
-          updateError
-        )
-
-        alert(
-          'Hubo un error devolviendo inventario. Revisa la consola.'
-        )
-        return
-      }
-    }
-
-    if (movimientos?.length > 0) {
-      const ids = movimientos.map((movimiento) => movimiento.id)
-
-      const { error: deleteMovimientosError } = await supabase
-        .from('inventario_movimientos')
-        .delete()
-        .in('id', ids)
-
-      if (deleteMovimientosError) {
-        console.error(
-          'Error eliminando movimientos:',
-          deleteMovimientosError
-        )
-
-        alert('No se pudieron eliminar los movimientos.')
-        return
-      }
-    }
-
-    const { error: ventaError } = await supabase
+  async function insertarVentaConInventario(payload) {
+    const { data, error } = await supabase
       .from('ventas')
-      .delete()
-      .eq('id', venta.id)
+      .insert([payload])
+      .select()
+      .single()
 
-    if (ventaError) {
-      console.error('Error eliminando venta:', ventaError)
-      alert('No se pudo eliminar la venta.')
+    if (error) throw error
+
+    await descontarInventarioPorVenta(payload.producto, data.id)
+
+    return data
+  }
+
+  async function guardarVentaCompleta() {
+    if (!form.cliente.trim()) {
+      alert('Debes colocar el nombre del cliente.')
       return
     }
 
-    alert('Venta eliminada correctamente.')
-
-    setSelectedOrder(null)
-    fetchOrders()
-  }
-
-  async function guardarPedido() {
-    if (!form.producto || !form.monto_pago) {
+    if (!form.producto || Number(form.monto_pago) <= 0) {
       alert('Debes seleccionar un producto y agregar el precio.')
       return
     }
 
     setSaving(true)
 
-    const payload = {
-      fecha: form.fecha || getTodayDate(),
-      cliente: form.cliente || 'Walk-in',
-      whatsapp: form.whatsapp || null,
-      email: form.email || null,
-      producto: form.producto,
-      tipo_pedido: form.tipo_pedido || 'Northside Galleries',
-      metodo_pago: form.metodo_pago || 'Efectivo',
-      vendedor: form.vendedor || 'Nathalie',
-      monto_pago: Number(form.monto_pago || 0),
-      cupon: form.cupon || null,
-      tipo_descuento: form.tipo_descuento || 'Sin descuento',
-      descuento: Number(form.descuento || 0),
-      observaciones: form.observaciones || null,
-      status: 'Pagado',
+    try {
+      const payload = buildVentaPayload(form)
+
+      if (editingOrder) {
+        const { error } = await supabase
+          .from('ventas')
+          .update({
+            ...payload,
+            editado_por: 'Nathalie',
+            editado_en: new Date().toISOString(),
+          })
+          .eq('id', editingOrder.id)
+
+        if (error) throw error
+
+        alert('Venta actualizada correctamente.')
+      } else {
+        await insertarVentaConInventario(payload)
+        alert('Venta registrada correctamente.')
+      }
+
+      await fetchOrders()
+      closeModal()
+    } catch (error) {
+      console.error('Error guardando venta:', error)
+      alert('No se pudo guardar la venta.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  async function guardarVentaRapida() {
+    if (!quickForm.producto || Number(quickForm.monto_pago) <= 0) {
+      alert('Debes seleccionar un producto y agregar el precio.')
+      return
     }
 
-    if (editingOrder) {
-      const { error } = await supabase
-        .from('ventas')
-        .update({
-          ...payload,
-          editado_por: 'Nathalie',
-          editado_en: new Date().toISOString(),
-        })
-        .eq('id', editingOrder.id)
+    setSaving(true)
 
-      if (error) {
-        console.error('Error editando venta:', error)
-        alert('No se pudo actualizar la venta.')
-        setSaving(false)
+    try {
+      await insertarVentaConInventario(
+        buildVentaPayload({
+          ...quickForm,
+          cliente: 'Walk-in',
+        })
+      )
+
+      await fetchOrders()
+      closeModal()
+      alert('Venta rápida registrada correctamente.')
+    } catch (error) {
+      console.error('Error guardando venta rápida:', error)
+      alert('No se pudo guardar la venta rápida.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  async function guardarVentasBulk() {
+    const rowsValidas = bulkRows.filter(
+      (row) => row.producto && Number(row.monto_pago) > 0
+    )
+
+    if (!rowsValidas.length) {
+      alert('Agrega al menos una venta con producto y precio.')
+      return
+    }
+
+    if (rowsValidas.length !== bulkRows.length) {
+      alert('Hay filas incompletas. Completa o elimina cada fila.')
+      return
+    }
+
+    if (
+      saleMode === 'complete' &&
+      rowsValidas.some((row) => !row.cliente.trim())
+    ) {
+      alert('Cada venta completa debe tener nombre de cliente.')
+      return
+    }
+
+    setSaving(true)
+
+    const errors = []
+
+    try {
+      for (const row of rowsValidas) {
+        const payload = buildVentaPayload({
+          ...bulkCommon,
+          ...row,
+          cliente: saleMode === 'quick' ? 'Walk-in' : row.cliente,
+        })
+
+        try {
+          await insertarVentaConInventario(payload)
+        } catch (error) {
+          console.error('Error en venta bulk:', error)
+          errors.push(row.producto)
+        }
+      }
+
+      await fetchOrders()
+
+      if (errors.length) {
+        alert(
+          `Se registraron ${
+            rowsValidas.length - errors.length
+          } venta(s). Fallaron: ${errors.join(', ')}.`
+        )
         return
       }
 
-      alert('Venta actualizada correctamente.')
       closeModal()
-      await fetchOrders()
+      alert(`${rowsValidas.length} venta(s) registradas correctamente.`)
+    } finally {
       setSaving(false)
-      return
     }
-
-    const { data, error } = await supabase
-      .from('ventas')
-      .insert([
-        {
-          ...payload,
-          cantidad: 1,
-        },
-      ])
-      .select()
-      .single()
-
-    if (error) {
-      console.error('ERROR GUARDANDO VENTA:', error)
-      alert('No se pudo guardar la venta. Revisa la consola.')
-      setSaving(false)
-      return
-    }
-
-    await descontarInventarioPorVenta(
-      form.producto,
-      data?.id
-    )
-
-    await fetchOrders()
-
-    closeModal()
-    setSaving(false)
   }
 
-  const inputClass =
-    'w-full px-4 py-3 rounded-xl border border-[#efcccc] bg-white outline-none text-sm text-[#2e2e2e] focus:border-[#8c0303]'
+  async function recalcularInventarioDeVenta(venta) {
+    const confirmacion = confirm(
+      `¿Deseas recalcular el inventario de ${venta.producto}?`
+    )
+
+    if (!confirmacion) return
+
+    try {
+      await devolverInventarioDeVenta(venta)
+      await descontarInventarioPorVenta(venta.producto, venta.id)
+
+      await fetchOrders()
+      alert('Inventario recalculado correctamente.')
+    } catch (error) {
+      console.error('Error recalculando inventario:', error)
+      alert('No se pudo recalcular el inventario.')
+    }
+  }
+
+  async function eliminarVenta(venta) {
+    const confirmacion = confirm(
+      `¿Deseas eliminar la venta ${formatOrderId(venta)}? Esto devolverá el inventario.`
+    )
+
+    if (!confirmacion) return
+
+    try {
+      await devolverInventarioDeVenta(venta)
+
+      const { error } = await supabase
+        .from('ventas')
+        .delete()
+        .eq('id', venta.id)
+
+      if (error) throw error
+
+      setSelectedOrder(null)
+      await fetchOrders()
+
+      alert('Venta eliminada correctamente.')
+    } catch (error) {
+      console.error('Error eliminando venta:', error)
+      alert('No se pudo eliminar la venta.')
+    }
+  }
+
+  function exportToCSV() {
+    const headers = [
+      'ID',
+      'Fecha',
+      'Cliente',
+      'Producto',
+      'Sucursal',
+      'Vendedor',
+      'Método de pago',
+      'Total',
+    ]
+
+    const rows = filteredOrders.map((order) => [
+      formatOrderId(order),
+      order.fecha || '',
+      order.cliente || 'Walk-in',
+      order.producto || '',
+      order.tipo_pedido || '',
+      order.vendedor || '',
+      order.metodo_pago || '',
+      Number(order.monto_pago || 0).toFixed(2),
+    ])
+
+    const csv = [
+      headers.join(','),
+      ...rows.map((row) =>
+        row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(',')
+      ),
+    ].join('\n')
+
+    const blob = new Blob([csv], {
+      type: 'text/csv;charset=utf-8;',
+    })
+
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+
+    link.href = url
+    link.download = `ventas-${getTodayDate()}.csv`
+
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+
+    URL.revokeObjectURL(url)
+  }
+
+  function limpiarFiltros() {
+    setSearch('')
+    setFechaInicio('')
+    setFechaFin('')
+    setProductoFiltro('Todos')
+    setMetodoPagoFiltro('Todos')
+  }
+
+  const validOrders = useMemo(
+    () =>
+      orders.filter(
+        (order) =>
+          order.fecha &&
+          order.producto &&
+          order.metodo_pago &&
+          order.monto_pago !== null
+      ),
+    [orders]
+  )
+
+  const productosFiltro = useMemo(
+    () => [
+      'Todos',
+      ...new Set(validOrders.map((order) => order.producto).filter(Boolean)),
+    ],
+    [validOrders]
+  )
+
+  const metodosFiltro = useMemo(
+    () => [
+      'Todos',
+      ...new Set(
+        validOrders.map((order) => order.metodo_pago).filter(Boolean)
+      ),
+    ],
+    [validOrders]
+  )
+
+  const filteredOrders = useMemo(() => {
+    return validOrders.filter((order) => {
+      const text = `
+        ${order.cliente || ''}
+        ${order.producto || ''}
+        ${order.metodo_pago || ''}
+        ${order.tipo_pedido || ''}
+        ${order.vendedor || ''}
+        ${order.operacion || ''}
+      `.toLowerCase()
+
+      const matchesSearch = text.includes(search.toLowerCase())
+      const orderDate = order.fecha || order.created_at?.split('T')[0] || ''
+
+      const matchesStart = !fechaInicio || orderDate >= fechaInicio
+      const matchesEnd = !fechaFin || orderDate <= fechaFin
+
+      const matchesProduct =
+        productoFiltro === 'Todos' || order.producto === productoFiltro
+
+      const matchesPayment =
+        metodoPagoFiltro === 'Todos' ||
+        order.metodo_pago === metodoPagoFiltro
+
+      return (
+        matchesSearch &&
+        matchesStart &&
+        matchesEnd &&
+        matchesProduct &&
+        matchesPayment
+      )
+    })
+  }, [
+    validOrders,
+    search,
+    fechaInicio,
+    fechaFin,
+    productoFiltro,
+    metodoPagoFiltro,
+  ])
+
+  const totalVendido = filteredOrders.reduce(
+    (sum, item) => sum + Number(item.monto_pago || 0),
+    0
+  )
+
+  const ticketPromedio = filteredOrders.length
+    ? totalVendido / filteredOrders.length
+    : 0
+
+  const metodoMasUsado = useMemo(() => {
+    const count = {}
+
+    filteredOrders.forEach((order) => {
+      const metodo = order.metodo_pago || 'Sin método'
+      count[metodo] = (count[metodo] || 0) + 1
+    })
+
+    const top = Object.entries(count).sort((a, b) => b[1] - a[1])[0]
+
+    return top?.[0] || 'Sin datos'
+  }, [filteredOrders])
 
   return (
-    <main className="min-h-screen bg-[#fcf8f8] w-full">
-<header className="bg-white border-b border-[#f1dede] px-5 md:px-8 py-3 md:h-[82px] md:py-0 md:flex md:items-center">
-  <div className="w-full max-w-none">
-    <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-      <div className="text-left">
-        <p className="text-[10px] uppercase tracking-[0.16em] text-[#b9a0a0]">
-          Operación comercial
-        </p>
+    <main className="min-h-screen bg-[#fcf8f8]">
+      <header className="border-b border-[#f1dede] bg-white px-5 py-3 md:flex md:h-[82px] md:items-center md:px-8 md:py-0">
+        <div className="w-full">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <p className="text-[10px] uppercase tracking-[0.16em] text-[#b9a0a0]">
+                Operación comercial
+              </p>
 
-        <h1 className="mt-1 text-[21px] md:text-[23px] font-bold text-[#7a0000] leading-tight">
-          Registro de ventas
-        </h1>
+              <h1 className="mt-1 text-[21px] font-bold text-[#7a0000] md:text-[23px]">
+                Registro de ventas
+              </h1>
 
-        <p className="mt-1 text-xs md:text-sm text-[#b07a7a]">
-          Registra, consulta y administra las ventas del negocio.
-        </p>
-      </div>
+              <p className="mt-1 text-xs text-[#b07a7a] md:text-sm">
+                Registra, consulta y administra las ventas del negocio.
+              </p>
+            </div>
 
-      <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full lg:w-auto">
-        <button
-          type="button"
-          onClick={exportToCSV}
-          className="w-full sm:w-auto h-10 px-4 rounded-xl border border-[#efcaca] bg-white text-[#8c0303] font-semibold text-sm flex items-center justify-center gap-2 hover:bg-[#fff5f5]"
-        >
-          <Download size={16} />
-          CSV
-        </button>
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <button
+                type="button"
+                onClick={exportToCSV}
+                className="flex h-10 items-center justify-center gap-2 rounded-xl border border-[#efcccc] bg-white px-4 text-sm font-semibold text-[#8c0303] hover:bg-[#fff5f5]"
+              >
+                <Download size={16} />
+                CSV
+              </button>
 
-        <button
-          type="button"
-          onClick={exportToExcel}
-          className="w-full sm:w-auto h-10 px-4 rounded-xl border border-[#efcaca] bg-white text-[#8c0303] font-semibold text-sm flex items-center justify-center gap-2 hover:bg-[#fff5f5]"
-        >
-          <Download size={16} />
-          Excel
-        </button>
+              <button
+                type="button"
+                onClick={() => openCreateModal('quick')}
+                className="flex h-10 items-center justify-center gap-2 rounded-xl border border-[#efcccc] bg-white px-4 text-sm font-semibold text-[#8c0303] hover:bg-[#fff5f5]"
+              >
+                <Zap size={16} />
+                Venta rápida
+              </button>
 
-        <button
-          type="button"
-          onClick={openCreateModal}
-          className="w-full sm:w-auto h-10 bg-[#8c0303] text-white px-4 rounded-xl font-semibold flex items-center justify-center gap-2 text-sm whitespace-nowrap shadow-sm"
-        >
-          <Plus size={16} />
-          Registrar venta
-        </button>
-      </div>
-    </div>
-  </div>
-</header>
+              <button
+                type="button"
+                onClick={() => openCreateModal('complete')}
+                className="flex h-10 items-center justify-center gap-2 rounded-xl bg-[#8c0303] px-4 text-sm font-semibold text-white hover:bg-[#720000]"
+              >
+                <Plus size={16} />
+                Registrar venta
+              </button>
+            </div>
+          </div>
+        </div>
+      </header>
 
-      <section className="px-4 md:px-8 py-5 md:py-7 max-w-[1600px] mx-auto">
-        <div className="bg-white border border-[#f3dede] rounded-[28px] overflow-hidden">
+      <section className="mx-auto max-w-[1600px] space-y-5 px-4 py-5 md:px-8 md:py-7">
+        <section className="overflow-hidden rounded-[26px] border border-[#f3dede] bg-white">
           <button
             type="button"
-            onClick={() => setShowFilters((current) => !current)}
-            className="w-full flex items-center justify-between gap-4 px-5 md:px-6 py-5 text-left"
+            onClick={() => setShowFilters((previous) => !previous)}
+            className="flex w-full items-center justify-between gap-4 px-5 py-5 text-left"
           >
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-[#fff1f1] text-[#8c0303] flex items-center justify-center">
+              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#fff1f1] text-[#8c0303]">
                 <Filter size={18} />
               </div>
 
               <div>
-                <p className="text-[22px] ivy text-[#7a0000] leading-none">
+                <h2 className="text-[20px] font-bold text-[#7a0000]">
                   Filtros de ventas
-                </p>
+                </h2>
 
-                <p className="text-sm text-[#b07a7a] mt-1">
-                  Busca por fecha, producto, cliente o método de pago.
+                <p className="mt-1 text-sm text-[#b07a7a]">
+                  Busca por cliente, producto, fecha o método de pago.
                 </p>
               </div>
             </div>
 
             <ChevronDown
-              size={21}
-              className={`text-[#8c0303] transition-transform ${
+              size={20}
+              className={`text-[#8c0303] transition ${
                 showFilters ? 'rotate-180' : ''
               }`}
             />
           </button>
 
           {showFilters && (
-            <div className="border-t border-[#f3dede] px-5 md:px-6 py-5">
-              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4">
-                <div className="sm:col-span-2 xl:col-span-1">
-                  <label className="block text-xs uppercase tracking-[0.18em] text-[#b9a0a0] mb-2">
-                    Buscar
-                  </label>
-
-                  <div className="flex items-center gap-2 px-4 py-3 rounded-xl border border-[#efcccc] bg-white">
+            <div className="border-t border-[#f3dede] px-5 py-5">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-5">
+                <Field label="Buscar">
+                  <div className="mt-2 flex items-center gap-2 rounded-xl border border-[#efcccc] px-4 py-3">
                     <Search size={17} className="text-[#b07a7a]" />
 
                     <input
                       value={search}
-                      onChange={(event) =>
-                        setSearch(event.target.value)
-                      }
-                      placeholder="Cliente, ID o producto..."
-                      className="w-full bg-transparent outline-none text-sm"
+                      onChange={(event) => setSearch(event.target.value)}
+                      placeholder="Cliente, producto o venta..."
+                      className="w-full bg-transparent text-sm outline-none"
                     />
                   </div>
-                </div>
+                </Field>
 
-                <div>
-                  <label className="block text-xs uppercase tracking-[0.18em] text-[#b9a0a0] mb-2">
-                    Desde
-                  </label>
-
+                <Field label="Desde">
                   <input
                     type="date"
                     value={fechaInicio}
-                    onChange={(event) =>
-                      setFechaInicio(event.target.value)
-                    }
+                    onChange={(event) => setFechaInicio(event.target.value)}
                     className={inputClass}
                   />
-                </div>
+                </Field>
 
-                <div>
-                  <label className="block text-xs uppercase tracking-[0.18em] text-[#b9a0a0] mb-2">
-                    Hasta
-                  </label>
-
+                <Field label="Hasta">
                   <input
                     type="date"
                     value={fechaFin}
-                    onChange={(event) =>
-                      setFechaFin(event.target.value)
-                    }
+                    onChange={(event) => setFechaFin(event.target.value)}
                     className={inputClass}
                   />
-                </div>
+                </Field>
 
-                <div>
-                  <label className="block text-xs uppercase tracking-[0.18em] text-[#b9a0a0] mb-2">
-                    Producto
-                  </label>
-
+                <Field label="Producto">
                   <select
                     value={productoFiltro}
-                    onChange={(event) =>
-                      setProductoFiltro(event.target.value)
-                    }
+                    onChange={(event) => setProductoFiltro(event.target.value)}
                     className={inputClass}
                   >
                     {productosFiltro.map((item) => (
@@ -1003,13 +978,9 @@ export default function PedidosPage() {
                       </option>
                     ))}
                   </select>
-                </div>
+                </Field>
 
-                <div>
-                  <label className="block text-xs uppercase tracking-[0.18em] text-[#b9a0a0] mb-2">
-                    Método de pago
-                  </label>
-
+                <Field label="Método de pago">
                   <select
                     value={metodoPagoFiltro}
                     onChange={(event) =>
@@ -1017,622 +988,985 @@ export default function PedidosPage() {
                     }
                     className={inputClass}
                   >
-                    {metodosPagoFiltro.map((item) => (
+                    {metodosFiltro.map((item) => (
                       <option key={item} value={item}>
                         {item}
                       </option>
                     ))}
                   </select>
-                </div>
+                </Field>
               </div>
 
-              <div className="flex flex-wrap gap-3 mt-5">
+              <div className="mt-5 flex flex-wrap gap-3">
                 <button
                   type="button"
-                  onClick={setFiltroHoy}
-                  className="px-4 py-2 rounded-full border border-[#efcccc] text-[#8c0303] bg-white hover:bg-[#fff5f5] text-sm font-semibold"
+                  onClick={() => {
+                    const today = getTodayDate()
+                    setFechaInicio(today)
+                    setFechaFin(today)
+                  }}
+                  className="rounded-full border border-[#efcccc] px-4 py-2 text-sm font-semibold text-[#8c0303]"
                 >
                   Hoy
                 </button>
 
                 <button
                   type="button"
-                  onClick={setFiltroMesActual}
-                  className="px-4 py-2 rounded-full border border-[#efcccc] text-[#8c0303] bg-white hover:bg-[#fff5f5] text-sm font-semibold"
-                >
-                  Este mes
-                </button>
-
-                <button
-                  type="button"
-                  onClick={limpiarFiltrosPedidos}
-                  className="px-4 py-2 rounded-full bg-[#8c0303] text-white hover:bg-[#6f0202] text-sm font-semibold"
+                  onClick={limpiarFiltros}
+                  className="rounded-full bg-[#8c0303] px-4 py-2 text-sm font-semibold text-white"
                 >
                   Limpiar filtros
                 </button>
               </div>
             </div>
           )}
-        </div>
+        </section>
 
-        <div className="grid grid-cols-2 xl:grid-cols-4 gap-4 mt-5 md:mt-6">
+        <section className="grid grid-cols-2 gap-4 xl:grid-cols-4">
           <StatCard
             label="Ventas filtradas"
-            value={ventasFiltradas}
+            value={filteredOrders.length}
             icon={ShoppingBag}
           />
 
           <StatCard
             label="Total vendido"
-            value={formatCurrency(totalFiltrado)}
-            icon={DollarSign}
+            value={formatCurrency(totalVendido)}
+            icon={CalendarDays}
           />
 
           <StatCard
             label="Ticket promedio"
-            value={formatCurrency(ticketPromedioFiltrado)}
-            icon={ReceiptText}
+            value={formatCurrency(ticketPromedio)}
+            icon={Zap}
           />
 
           <StatCard
             label="Método más usado"
             value={metodoMasUsado}
-            icon={CreditCard}
+            icon={Filter}
           />
-        </div>
+        </section>
 
-        <section className="mt-5 md:mt-6">
-          <div className="bg-white border border-[#f3dede] rounded-[28px] overflow-hidden">
-            <div className="px-5 md:px-6 py-5 border-b border-[#f3dede]">
-              <h2 className="text-[28px] md:text-[32px] ivy text-[#7a0000] leading-none">
-                Ventas registradas
-              </h2>
+        <section className="overflow-hidden rounded-[26px] border border-[#f3dede] bg-white">
+          <div className="border-b border-[#f3dede] px-5 py-5">
+            <h2 className="text-[20px] font-bold text-[#7a0000]">
+              Ventas registradas
+            </h2>
 
-              <p className="text-sm text-[#b07a7a] mt-2">
-                Historial de ventas y pedidos registrados.
+            <p className="mt-1 text-sm text-[#b07a7a]">
+              Historial de ventas individuales registradas.
+            </p>
+          </div>
+
+          <div className="divide-y divide-[#f3dede] md:hidden">
+            {loading ? (
+              <p className="px-5 py-10 text-center text-[#b07a7a]">
+                Cargando ventas...
               </p>
-            </div>
+            ) : filteredOrders.length === 0 ? (
+              <p className="px-5 py-10 text-center text-[#b07a7a]">
+                No hay ventas registradas.
+              </p>
+            ) : (
+              filteredOrders.map((order) => (
+                <article key={order.id} className="p-5">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-xs font-semibold text-[#8c0303]">
+                        {formatOrderId(order)}
+                      </p>
 
-            <div className="md:hidden divide-y divide-[#f3dede]">
-              {loading ? (
-                <div className="px-5 py-10 text-center text-[#b07a7a]">
-                  Cargando ventas...
-                </div>
-              ) : filteredOrders.length === 0 ? (
-                <div className="px-5 py-10 text-center text-[#b07a7a]">
-                  No hay ventas registradas.
-                </div>
-              ) : (
-                filteredOrders.map((order) => (
-                  <article
-                    key={order.id}
-                    className="p-5"
-                  >
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="min-w-0">
-                        <p className="text-xs font-semibold text-[#8c0303]">
-                          {formatOrderId(order)}
-                        </p>
+                      <h3 className="mt-2 text-lg font-bold text-[#7a0000]">
+                        {order.producto}
+                      </h3>
 
-                        <h3 className="text-[22px] ivy text-[#7a0000] mt-2 leading-tight break-words">
-                          {order.producto || 'Sin producto'}
-                        </h3>
-
-                        <p className="text-sm text-[#b07a7a] mt-2">
-                          {order.cliente || 'Walk-in'} ·{' '}
-                          {order.fecha ||
-                            order.created_at?.split('T')[0] ||
-                            'Sin fecha'}
-                        </p>
-                      </div>
-
-                      <p className="text-xl ivy text-[#8c0303] shrink-0">
-                        {formatCurrency(order.monto_pago)}
+                      <p className="mt-1 text-sm text-[#b07a7a]">
+                        {order.cliente || 'Walk-in'} · {order.fecha}
                       </p>
                     </div>
 
-                    <div className="flex flex-wrap gap-2 mt-4">
-                      <span className="px-3 py-1 rounded-full bg-[#fff1f1] text-[#8c0303] text-xs">
-                        {order.metodo_pago || 'Sin método'}
-                      </span>
+                    <p className="text-lg font-bold text-[#8c0303]">
+                      {formatCurrency(order.monto_pago)}
+                    </p>
+                  </div>
 
-                      <span className="px-3 py-1 rounded-full bg-purple-100 text-purple-700 text-xs">
-                        {order.tipo_pedido || 'Punto de Venta'}
-                      </span>
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    <span className="rounded-full bg-[#fff1f1] px-3 py-1 text-xs text-[#8c0303]">
+                      {order.metodo_pago}
+                    </span>
 
-                      {order.vendedor && (
-                        <span className="px-3 py-1 rounded-full bg-[#f7f3f3] text-[#7a0000] text-xs">
-                          {order.vendedor}
-                        </span>
-                      )}
-                    </div>
+                    <span className="rounded-full bg-purple-100 px-3 py-1 text-xs text-purple-700">
+                      {order.tipo_pedido}
+                    </span>
+                  </div>
 
-                    <div className="grid grid-cols-4 gap-2 mt-5">
-                      <button
-                        type="button"
-                        onClick={() => setSelectedOrder(order)}
-                        className="h-11 rounded-xl border border-[#efcccc] text-[#8c0303] flex items-center justify-center"
-                        aria-label="Ver detalle"
-                      >
-                        <Eye size={17} />
-                      </button>
+                  <div className="mt-4 grid grid-cols-4 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedOrder(order)}
+                      className="flex h-10 items-center justify-center rounded-xl border border-[#efcccc] text-[#8c0303]"
+                    >
+                      <Eye size={16} />
+                    </button>
 
-                      <button
-                        type="button"
-                        onClick={() => openEditOrder(order)}
-                        className="h-11 rounded-xl border border-[#efcccc] text-[#8c0303] flex items-center justify-center"
-                        aria-label="Editar venta"
-                      >
-                        <Pencil size={17} />
-                      </button>
+                    <button
+                      type="button"
+                      onClick={() => openEditOrder(order)}
+                      className="flex h-10 items-center justify-center rounded-xl border border-[#efcccc] text-[#8c0303]"
+                    >
+                      <Pencil size={16} />
+                    </button>
 
-                      <button
-                        type="button"
-                        onClick={() =>
-                          recalcularInventarioDeVenta(order)
-                        }
-                        className="h-11 rounded-xl border border-[#efcccc] text-[#8c0303] flex items-center justify-center"
-                        aria-label="Recalcular inventario"
-                      >
-                        <RefreshCw size={17} />
-                      </button>
+                    <button
+                      type="button"
+                      onClick={() => recalcularInventarioDeVenta(order)}
+                      className="flex h-10 items-center justify-center rounded-xl border border-[#efcccc] text-[#8c0303]"
+                    >
+                      <RefreshCw size={16} />
+                    </button>
 
-                      <button
-                        type="button"
-                        onClick={() => eliminarVenta(order)}
-                        className="h-11 rounded-xl border border-red-200 text-red-600 flex items-center justify-center"
-                        aria-label="Eliminar venta"
-                      >
-                        <Trash2 size={17} />
-                      </button>
-                    </div>
-                  </article>
-                ))
-              )}
-            </div>
+                    <button
+                      type="button"
+                      onClick={() => eliminarVenta(order)}
+                      className="flex h-10 items-center justify-center rounded-xl border border-red-200 text-red-600"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                </article>
+              ))
+            )}
+          </div>
 
-            <div className="hidden md:block overflow-x-auto">
-              <table className="min-w-[1050px] w-full text-sm">
-                <thead className="bg-[#f8eeee] text-[#a16f6f] uppercase text-[11px] tracking-[0.12em]">
-                  <tr className="text-left">
-                    <th className="py-4 px-5">ID</th>
-                    <th className="py-4 px-5">Fecha</th>
-                    <th className="py-4 px-5">Cliente</th>
-                    <th className="py-4 px-5">Producto</th>
-                    <th className="py-4 px-5">Sucursal</th>
-                    <th className="py-4 px-5">Vendedor</th>
-                    <th className="py-4 px-5">Pago</th>
-                    <th className="py-4 px-5">Total</th>
-                    <th className="py-4 px-5 text-right">Acciones</th>
+          <div className="hidden overflow-x-auto md:block">
+            <table className="min-w-[1050px] w-full text-sm">
+              <thead className="bg-[#f8eeee] text-left text-[11px] uppercase tracking-[0.12em] text-[#a16f6f]">
+                <tr>
+                  <th className="px-5 py-4">ID</th>
+                  <th className="px-5 py-4">Fecha</th>
+                  <th className="px-5 py-4">Cliente</th>
+                  <th className="px-5 py-4">Producto</th>
+                  <th className="px-5 py-4">Sucursal</th>
+                  <th className="px-5 py-4">Vendedor</th>
+                  <th className="px-5 py-4">Pago</th>
+                  <th className="px-5 py-4">Total</th>
+                  <th className="px-5 py-4 text-right">Acciones</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {loading ? (
+                  <tr>
+                    <td
+                      colSpan="9"
+                      className="px-5 py-10 text-center text-[#b07a7a]"
+                    >
+                      Cargando ventas...
+                    </td>
                   </tr>
-                </thead>
+                ) : filteredOrders.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan="9"
+                      className="px-5 py-10 text-center text-[#b07a7a]"
+                    >
+                      No hay ventas registradas.
+                    </td>
+                  </tr>
+                ) : (
+                  filteredOrders.map((order) => (
+                    <tr
+                      key={order.id}
+                      className="border-t border-[#f3dede] hover:bg-[#fffafa]"
+                    >
+                      <td className="px-5 py-4 font-medium text-[#8c0303]">
+                        {formatOrderId(order)}
+                      </td>
 
-                <tbody>
-                  {loading ? (
-                    <tr>
-                      <td
-                        colSpan="9"
-                        className="px-5 py-10 text-center text-[#b07a7a]"
-                      >
-                        Cargando pedidos...
+                      <td className="px-5 py-4">{order.fecha}</td>
+
+                      <td className="px-5 py-4">
+                        {order.cliente || 'Walk-in'}
+                      </td>
+
+                      <td className="px-5 py-4">{order.producto}</td>
+
+                      <td className="px-5 py-4">{order.tipo_pedido}</td>
+
+                      <td className="px-5 py-4">{order.vendedor}</td>
+
+                      <td className="px-5 py-4">{order.metodo_pago}</td>
+
+                      <td className="px-5 py-4 font-semibold">
+                        {formatCurrency(order.monto_pago)}
+                      </td>
+
+                      <td className="px-5 py-4">
+                        <div className="flex justify-end gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setSelectedOrder(order)}
+                            className="flex h-9 w-9 items-center justify-center rounded-xl border border-[#efcccc] text-[#8c0303]"
+                          >
+                            <Eye size={16} />
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => openEditOrder(order)}
+                            className="flex h-9 w-9 items-center justify-center rounded-xl border border-[#efcccc] text-[#8c0303]"
+                          >
+                            <Pencil size={16} />
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => recalcularInventarioDeVenta(order)}
+                            className="flex h-9 w-9 items-center justify-center rounded-xl border border-[#efcccc] text-[#8c0303]"
+                          >
+                            <RefreshCw size={16} />
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => eliminarVenta(order)}
+                            className="flex h-9 w-9 items-center justify-center rounded-xl border border-red-200 text-red-600"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
                       </td>
                     </tr>
-                  ) : filteredOrders.length === 0 ? (
-                    <tr>
-                      <td
-                        colSpan="9"
-                        className="px-5 py-10 text-center text-[#b07a7a]"
-                      >
-                        No hay pedidos registrados.
-                      </td>
-                    </tr>
-                  ) : (
-                    filteredOrders.map((order) => (
-                      <tr
-                        key={order.id}
-                        className="border-t border-[#f3dede] hover:bg-[#fffafa]"
-                      >
-                        <td className="px-5 py-4 text-[#8c0303] font-medium">
-                          {formatOrderId(order)}
-                        </td>
-
-                        <td className="px-5 py-4">
-                          {order.fecha ||
-                            order.created_at?.split('T')[0] ||
-                            '—'}
-                        </td>
-
-                        <td className="px-5 py-4">
-                          {order.cliente || 'Walk-in'}
-                        </td>
-
-                        <td className="px-5 py-4">
-                          {order.producto || 'Sin producto'}
-                        </td>
-
-                        <td className="px-5 py-4">
-                          <span className="px-3 py-1 rounded-full text-xs bg-purple-100 text-purple-700">
-                            {order.tipo_pedido ||
-                              'Punto de Venta'}
-                          </span>
-                        </td>
-
-                        <td className="px-5 py-4">
-                          {order.vendedor || '—'}
-                        </td>
-
-                        <td className="px-5 py-4">
-                          {order.metodo_pago || '—'}
-                        </td>
-
-                        <td className="px-5 py-4 font-semibold">
-                          {formatCurrency(order.monto_pago)}
-                        </td>
-
-                        <td className="px-5 py-4">
-                          <div className="flex items-center justify-end gap-2">
-                            <button
-                              type="button"
-                              title="Ver detalle"
-                              onClick={() =>
-                                setSelectedOrder(order)
-                              }
-                              className="w-9 h-9 rounded-xl border border-[#efcccc] text-[#8c0303] hover:bg-[#fff5f5] flex items-center justify-center"
-                            >
-                              <Eye size={16} />
-                            </button>
-
-                            <button
-                              type="button"
-                              title="Editar venta"
-                              onClick={() =>
-                                openEditOrder(order)
-                              }
-                              className="w-9 h-9 rounded-xl border border-[#efcccc] text-[#8c0303] hover:bg-[#fff5f5] flex items-center justify-center"
-                            >
-                              <Pencil size={16} />
-                            </button>
-
-                            <button
-                              type="button"
-                              title="Recalcular inventario"
-                              onClick={() =>
-                                recalcularInventarioDeVenta(
-                                  order
-                                )
-                              }
-                              className="w-9 h-9 rounded-xl border border-[#efcccc] text-[#8c0303] hover:bg-[#fff5f5] flex items-center justify-center"
-                            >
-                              <RefreshCw size={16} />
-                            </button>
-
-                            <button
-                              type="button"
-                              title="Eliminar venta"
-                              onClick={() =>
-                                eliminarVenta(order)
-                              }
-                              className="w-9 h-9 rounded-xl border border-red-200 text-red-600 hover:bg-red-50 flex items-center justify-center"
-                            >
-                              <Trash2 size={16} />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
+                  ))
+                )}
+              </tbody>
+            </table>
           </div>
         </section>
       </section>
 
       {showModal && (
-        <div className="fixed inset-0 z-[100] bg-black/40 flex items-end md:items-center justify-center">
-          <div className="bg-white w-full max-w-5xl max-h-[92vh] overflow-y-auto rounded-t-[30px] md:rounded-[30px] border border-[#f3dede]">
-            <div className="sticky top-0 z-10 bg-white border-b border-[#f3dede] px-5 md:px-7 py-5 flex items-center justify-between">
+        <div className="fixed inset-0 z-[100] flex items-end justify-center bg-black/40 md:items-center">
+          <div className="max-h-[92vh] w-full max-w-6xl overflow-y-auto rounded-t-[30px] border border-[#f3dede] bg-white md:rounded-[30px]">
+            <div className="sticky top-0 z-20 flex items-start justify-between gap-4 border-b border-[#f3dede] bg-white px-5 py-5 md:px-7">
               <div>
-                <h2 className="text-[30px] ivy text-[#7a0000] leading-none">
+                <p className="text-[10px] uppercase tracking-[0.16em] text-[#b9a0a0]">
+                  Operación comercial
+                </p>
+
+                <h2 className="mt-1 text-[25px] font-bold text-[#7a0000]">
                   {editingOrder
                     ? 'Editar venta'
-                    : 'Registrar venta'}
+                    : saleMode === 'quick'
+                      ? 'Registrar venta rápida'
+                      : 'Registrar venta completa'}
                 </h2>
 
-                <p className="text-sm text-[#b07a7a] mt-2">
+                <p className="mt-1 text-sm text-[#b07a7a]">
                   {editingOrder
-                    ? 'Actualiza los datos de esta venta.'
-                    : 'Registra una nueva venta y descuenta inventario.'}
+                    ? 'Actualiza la información de esta venta.'
+                    : entryMode === 'bulk'
+                      ? 'Cada fila se guarda como una venta independiente.'
+                      : 'Registra una venta individual.'}
                 </p>
               </div>
 
               <button
                 type="button"
                 onClick={closeModal}
-                className="w-11 h-11 rounded-full border border-[#efcccc] text-[#8c0303] flex items-center justify-center"
-                aria-label="Cerrar"
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-[#efcccc] text-[#8c0303]"
               >
                 <X size={20} />
               </button>
             </div>
 
-            <div className="p-5 md:p-7 space-y-5">
-              <div className="border border-[#f3dede] rounded-2xl p-5">
-                <p className="text-xs uppercase tracking-[0.16em] text-[#8c0303] mb-4">
-                  Información del cliente
-                </p>
+            <div className="space-y-6 p-5 md:p-7">
+              {!editingOrder && (
+                <div className="space-y-3">
+                  <div className="grid grid-cols-2 gap-2 rounded-2xl border border-[#f3dede] bg-[#fff7f7] p-2">
+                    <button
+                      type="button"
+                      onClick={() => setNewSaleMode('complete')}
+                      className={`h-11 rounded-xl text-sm font-semibold ${
+                        saleMode === 'complete'
+                          ? 'bg-[#8c0303] text-white'
+                          : 'text-[#8c0303]'
+                      }`}
+                    >
+                      Venta completa
+                    </button>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <label className="text-sm text-[#2e2e2e]">
-                      Nombre del cliente
-                    </label>
-
-                    <input
-                      name="cliente"
-                      value={form.cliente}
-                      onChange={handleChange}
-                      placeholder="Ej. Valentina Torres"
-                      className={`${inputClass} mt-2`}
-                    />
+                    <button
+                      type="button"
+                      onClick={() => setNewSaleMode('quick')}
+                      className={`h-11 rounded-xl text-sm font-semibold ${
+                        saleMode === 'quick'
+                          ? 'bg-[#8c0303] text-white'
+                          : 'text-[#8c0303]'
+                      }`}
+                    >
+                      Venta rápida
+                    </button>
                   </div>
 
-                  <div>
-                    <label className="text-sm text-[#2e2e2e]">
-                      WhatsApp
-                    </label>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setNewEntryMode('single')}
+                      className={`flex h-10 items-center gap-2 rounded-xl border px-4 text-sm font-semibold ${
+                        entryMode === 'single'
+                          ? 'border-[#8c0303] bg-[#fff1f1] text-[#8c0303]'
+                          : 'border-[#efcccc] text-[#8c0303]'
+                      }`}
+                    >
+                      <Plus size={15} />
+                      Venta individual
+                    </button>
 
-                    <input
-                      name="whatsapp"
-                      value={form.whatsapp}
-                      onChange={handleChange}
-                      placeholder="5512345678"
-                      className={`${inputClass} mt-2`}
-                    />
-                  </div>
-
-                  <div>
-                    <label className="text-sm text-[#2e2e2e]">
-                      Email
-                    </label>
-
-                    <input
-                      name="email"
-                      type="email"
-                      value={form.email}
-                      onChange={handleChange}
-                      placeholder="cliente@email.com"
-                      className={`${inputClass} mt-2`}
-                    />
+                    <button
+                      type="button"
+                      onClick={() => setNewEntryMode('bulk')}
+                      className={`flex h-10 items-center gap-2 rounded-xl border px-4 text-sm font-semibold ${
+                        entryMode === 'bulk'
+                          ? 'border-[#8c0303] bg-[#fff1f1] text-[#8c0303]'
+                          : 'border-[#efcccc] text-[#8c0303]'
+                      }`}
+                    >
+                      <ListPlus size={15} />
+                      Carga en bloque
+                    </button>
                   </div>
                 </div>
-              </div>
+              )}
 
-              <div className="border border-[#f3dede] rounded-2xl p-5">
-                <p className="text-xs uppercase tracking-[0.16em] text-[#8c0303] mb-4">
-                  Producto y pago
-                </p>
+              {(editingOrder ||
+                (saleMode === 'complete' && entryMode === 'single')) && (
+                <>
+                  <section className="rounded-2xl border border-[#f3dede] p-5">
+                    <p className="text-xs uppercase tracking-[0.16em] text-[#8c0303]">
+                      Información del cliente
+                    </p>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-sm text-[#2e2e2e]">
-                      Producto
-                    </label>
+                    <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-3">
+                      <Field label="Nombre del cliente">
+                        <input
+                          name="cliente"
+                          value={form.cliente}
+                          onChange={handleChange}
+                          placeholder="Ej. Valentina Torres"
+                          className={inputClass}
+                        />
+                      </Field>
 
-                    <select
-                      name="producto"
-                      value={form.producto}
-                      onChange={handleProductChange}
-                      className={`${inputClass} mt-2`}
-                    >
-                      <option value="">
-                        Seleccionar producto...
-                      </option>
+                      <Field label="WhatsApp">
+                        <input
+                          name="whatsapp"
+                          value={form.whatsapp}
+                          onChange={handleChange}
+                          placeholder="5512345678"
+                          className={inputClass}
+                        />
+                      </Field>
 
-                      {products.map((product) => (
-                        <option
-                          key={product.id}
-                          value={product.nombre}
+                      <Field label="Email">
+                        <input
+                          type="email"
+                          name="email"
+                          value={form.email}
+                          onChange={handleChange}
+                          placeholder="cliente@email.com"
+                          className={inputClass}
+                        />
+                      </Field>
+                    </div>
+                  </section>
+
+                  <section className="rounded-2xl border border-[#f3dede] p-5">
+                    <p className="text-xs uppercase tracking-[0.16em] text-[#8c0303]">
+                      Producto y pago
+                    </p>
+
+                    <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+                      <Field label="Producto">
+                        <select
+                          name="producto"
+                          value={form.producto}
+                          onChange={handleProductChange}
+                          className={inputClass}
                         >
-                          {product.nombre}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                          <option value="">Seleccionar producto...</option>
 
-                  <div>
-                    <label className="text-sm text-[#2e2e2e]">
-                      Precio
-                    </label>
+                          {products.map((product) => (
+                            <option key={product.id} value={product.nombre}>
+                              {product.nombre}
+                            </option>
+                          ))}
+                        </select>
+                      </Field>
 
-                    <input
-                      type="number"
-                      step="0.01"
-                      name="monto_pago"
-                      value={form.monto_pago}
+                      <Field label="Precio">
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          name="monto_pago"
+                          value={form.monto_pago}
+                          onChange={handleChange}
+                          className={inputClass}
+                        />
+                      </Field>
+
+                      <Field label="Método de pago">
+                        <select
+                          name="metodo_pago"
+                          value={form.metodo_pago}
+                          onChange={handleChange}
+                          className={inputClass}
+                        >
+                          {METODOS_PAGO.map((item) => (
+                            <option key={item}>{item}</option>
+                          ))}
+                        </select>
+                      </Field>
+
+                      <Field label="Fecha">
+                        <input
+                          type="date"
+                          name="fecha"
+                          value={form.fecha}
+                          onChange={handleChange}
+                          className={inputClass}
+                        />
+                      </Field>
+                    </div>
+                  </section>
+
+                  <section className="rounded-2xl border border-[#f3dede] p-5">
+                    <p className="text-xs uppercase tracking-[0.16em] text-[#8c0303]">
+                      Detalles de operación
+                    </p>
+
+                    <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+                      <Field label="Sucursal">
+                        <select
+                          name="tipo_pedido"
+                          value={form.tipo_pedido}
+                          onChange={handleChange}
+                          className={inputClass}
+                        >
+                          {SUCURSALES.map((item) => (
+                            <option key={item}>{item}</option>
+                          ))}
+                        </select>
+                      </Field>
+
+                      <Field label="Vendedor">
+                        <select
+                          name="vendedor"
+                          value={form.vendedor}
+                          onChange={handleChange}
+                          className={inputClass}
+                        >
+                          {VENDEDORES.map((item) => (
+                            <option key={item}>{item}</option>
+                          ))}
+                        </select>
+                      </Field>
+                    </div>
+                  </section>
+
+                  <section className="rounded-2xl border border-[#f3dede] p-5">
+                    <p className="text-xs uppercase tracking-[0.16em] text-[#8c0303]">
+                      Cupón y descuento
+                    </p>
+
+                    <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-3">
+                      <input
+                        name="cupon"
+                        value={form.cupon}
+                        onChange={handleChange}
+                        placeholder="Código de cupón"
+                        className={inputClass}
+                      />
+
+                      <select
+                        name="tipo_descuento"
+                        value={form.tipo_descuento}
+                        onChange={handleChange}
+                        className={inputClass}
+                      >
+                        <option>Sin descuento</option>
+                        <option>Porcentaje</option>
+                        <option>Monto fijo</option>
+                      </select>
+
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        name="descuento"
+                        value={form.descuento}
+                        onChange={handleChange}
+                        placeholder="Monto descuento"
+                        className={inputClass}
+                      />
+                    </div>
+                  </section>
+
+                  <Field label="Notas del pedido">
+                    <textarea
+                      name="observaciones"
+                      value={form.observaciones}
                       onChange={handleChange}
-                      className={`${inputClass} mt-2`}
+                      rows={4}
+                      placeholder="Ej. Entregar en portería..."
+                      className={`${inputClass} resize-none`}
                     />
-                  </div>
+                  </Field>
 
-                  <div>
-                    <label className="text-sm text-[#2e2e2e]">
-                      Método de pago
-                    </label>
-
-                    <select
-                      name="metodo_pago"
-                      value={form.metodo_pago}
-                      onChange={handleChange}
-                      className={`${inputClass} mt-2`}
+                  <div className="flex flex-col-reverse gap-3 pt-2 sm:flex-row sm:justify-end">
+                    <button
+                      type="button"
+                      onClick={closeModal}
+                      className="rounded-xl border border-[#efcccc] px-5 py-3 font-semibold text-[#8c0303]"
                     >
-                      <option>Efectivo</option>
-                      <option>Yappy</option>
-                      <option>Tarjeta</option>
-                    </select>
-                  </div>
+                      Cancelar
+                    </button>
 
-                  <div>
-                    <label className="text-sm text-[#2e2e2e]">
-                      Fecha
-                    </label>
-
-                    <input
-                      type="date"
-                      name="fecha"
-                      value={form.fecha}
-                      onChange={handleChange}
-                      className={`${inputClass} mt-2`}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="border border-[#f3dede] rounded-2xl p-5">
-                <p className="text-xs uppercase tracking-[0.16em] text-[#8c0303] mb-4">
-                  Detalles de operación
-                </p>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-sm text-[#2e2e2e]">
-                      Sucursal / canal
-                    </label>
-
-                    <select
-                      name="tipo_pedido"
-                      value={form.tipo_pedido}
-                      onChange={handleChange}
-                      className={`${inputClass} mt-2`}
+                    <button
+                      type="button"
+                      onClick={guardarVentaCompleta}
+                      disabled={saving}
+                      className="rounded-xl bg-[#8c0303] px-5 py-3 font-semibold text-white disabled:opacity-50"
                     >
-                      <option>Northside Galleries</option>
-                      <option>Signature Plaza</option>
-                      <option>Evento Corporativo</option>
-                      <option>Evento Privado</option>
-                    </select>
+                      {saving
+                        ? 'Guardando...'
+                        : editingOrder
+                          ? 'Guardar cambios'
+                          : 'Registrar venta'}
+                    </button>
                   </div>
+                </>
+              )}
 
-                  <div>
-                    <label className="text-sm text-[#2e2e2e]">
-                      Vendedor
-                    </label>
+              {!editingOrder &&
+                saleMode === 'quick' &&
+                entryMode === 'single' && (
+                  <>
+                    <section className="rounded-2xl border border-[#f3dede] bg-[#fffafa] p-5">
+                      <p className="text-sm font-semibold text-[#7a0000]">
+                        Registrar venta rápida
+                      </p>
 
-                    <select
-                      name="vendedor"
-                      value={form.vendedor}
-                      onChange={handleChange}
-                      className={`${inputClass} mt-2`}
-                    >
-                      <option value="Nathalie">Nathalie</option>
-                      <option value="Sugelys">Sugelys</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
+                      <p className="mt-1 text-sm text-[#b07a7a]">
+                        Se guardará como venta individual con cliente Walk-in.
+                      </p>
 
-              <div className="border border-[#f3dede] rounded-2xl p-5">
-                <p className="text-xs uppercase tracking-[0.16em] text-[#8c0303] mb-4">
-                  Cupón y descuento
-                </p>
+                      <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+                        <Field label="Fecha">
+                          <input
+                            type="date"
+                            name="fecha"
+                            value={quickForm.fecha}
+                            onChange={handleQuickChange}
+                            className={inputClass}
+                          />
+                        </Field>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <input
-                    name="cupon"
-                    value={form.cupon}
-                    onChange={handleChange}
-                    placeholder="Código de cupón"
-                    className={inputClass}
-                  />
+                        <Field label="Producto">
+                          <select
+                            name="producto"
+                            value={quickForm.producto}
+                            onChange={handleQuickProductChange}
+                            className={inputClass}
+                          >
+                            <option value="">Seleccionar producto...</option>
 
-                  <select
-                    name="tipo_descuento"
-                    value={form.tipo_descuento}
-                    onChange={handleChange}
-                    className={inputClass}
-                  >
-                    <option>Sin descuento</option>
-                    <option>Porcentaje</option>
-                    <option>Monto fijo</option>
-                  </select>
+                            {products.map((product) => (
+                              <option key={product.id} value={product.nombre}>
+                                {product.nombre}
+                              </option>
+                            ))}
+                          </select>
+                        </Field>
 
-                  <input
-                    name="descuento"
-                    type="number"
-                    step="0.01"
-                    value={form.descuento}
-                    onChange={handleChange}
-                    placeholder="Monto descuento"
-                    className={inputClass}
-                  />
-                </div>
-              </div>
+                        <Field label="Precio">
+                          <input
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            name="monto_pago"
+                            value={quickForm.monto_pago}
+                            onChange={handleQuickChange}
+                            className={inputClass}
+                          />
+                        </Field>
 
-              <div>
-                <label className="text-sm text-[#2e2e2e]">
-                  Notas del pedido
-                </label>
+                        <Field label="Método de pago">
+                          <select
+                            name="metodo_pago"
+                            value={quickForm.metodo_pago}
+                            onChange={handleQuickChange}
+                            className={inputClass}
+                          >
+                            {METODOS_PAGO.map((item) => (
+                              <option key={item}>{item}</option>
+                            ))}
+                          </select>
+                        </Field>
 
-                <textarea
-                  name="observaciones"
-                  value={form.observaciones}
-                  onChange={handleChange}
-                  placeholder="Ej. Sin azúcar en la crema, entregar en portería..."
-                  rows={4}
-                  className={`${inputClass} mt-2 resize-none`}
-                />
-              </div>
+                        <Field label="Sucursal">
+                          <select
+                            name="tipo_pedido"
+                            value={quickForm.tipo_pedido}
+                            onChange={handleQuickChange}
+                            className={inputClass}
+                          >
+                            {SUCURSALES.map((item) => (
+                              <option key={item}>{item}</option>
+                            ))}
+                          </select>
+                        </Field>
 
-              <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={closeModal}
-                  className="px-5 py-3 border border-[#efcccc] rounded-xl text-[#8c0303] font-semibold"
-                >
-                  Cancelar
-                </button>
+                        <Field label="Vendedor">
+                          <select
+                            name="vendedor"
+                            value={quickForm.vendedor}
+                            onChange={handleQuickChange}
+                            className={inputClass}
+                          >
+                            {VENDEDORES.map((item) => (
+                              <option key={item}>{item}</option>
+                            ))}
+                          </select>
+                        </Field>
+                      </div>
+                    </section>
 
-                {editingOrder && (
-                  <button
-                    type="button"
-                    onClick={() =>
-                      recalcularInventarioDeVenta(editingOrder)
-                    }
-                    className="px-5 py-3 border border-[#efcccc] text-[#8c0303] rounded-xl font-semibold hover:bg-[#fff5f5]"
-                  >
-                    Recalcular inventario
-                  </button>
+                    <div className="flex flex-col-reverse gap-3 pt-2 sm:flex-row sm:justify-end">
+                      <button
+                        type="button"
+                        onClick={closeModal}
+                        className="rounded-xl border border-[#efcccc] px-5 py-3 font-semibold text-[#8c0303]"
+                      >
+                        Cancelar
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={guardarVentaRapida}
+                        disabled={saving}
+                        className="rounded-xl bg-[#8c0303] px-5 py-3 font-semibold text-white disabled:opacity-50"
+                      >
+                        {saving ? 'Guardando...' : 'Guardar venta rápida'}
+                      </button>
+                    </div>
+                  </>
                 )}
 
-                <button
-                  type="button"
-                  onClick={guardarPedido}
-                  disabled={saving}
-                  className="px-5 py-3 bg-[#8c0303] text-white rounded-xl font-semibold disabled:opacity-50"
-                >
-                  {saving
-                    ? editingOrder
-                      ? 'Guardando cambios...'
-                      : 'Registrando...'
-                    : editingOrder
-                      ? 'Guardar cambios'
-                      : 'Registrar venta'}
-                </button>
-              </div>
+              {!editingOrder && entryMode === 'bulk' && (
+                <>
+                  <section className="rounded-2xl border border-[#f3dede] bg-[#fffafa] p-5">
+                    <p className="text-sm font-semibold text-[#7a0000]">
+                      Datos comunes para todas las ventas
+                    </p>
+
+                    <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+                      <Field label="Fecha">
+                        <input
+                          type="date"
+                          name="fecha"
+                          value={bulkCommon.fecha}
+                          onChange={handleBulkCommonChange}
+                          className={inputClass}
+                        />
+                      </Field>
+
+                      <Field label="Método de pago">
+                        <select
+                          name="metodo_pago"
+                          value={bulkCommon.metodo_pago}
+                          onChange={handleBulkCommonChange}
+                          className={inputClass}
+                        >
+                          {METODOS_PAGO.map((item) => (
+                            <option key={item}>{item}</option>
+                          ))}
+                        </select>
+                      </Field>
+
+                      <Field label="Sucursal">
+                        <select
+                          name="tipo_pedido"
+                          value={bulkCommon.tipo_pedido}
+                          onChange={handleBulkCommonChange}
+                          className={inputClass}
+                        >
+                          {SUCURSALES.map((item) => (
+                            <option key={item}>{item}</option>
+                          ))}
+                        </select>
+                      </Field>
+
+                      <Field label="Vendedor">
+                        <select
+                          name="vendedor"
+                          value={bulkCommon.vendedor}
+                          onChange={handleBulkCommonChange}
+                          className={inputClass}
+                        >
+                          {VENDEDORES.map((item) => (
+                            <option key={item}>{item}</option>
+                          ))}
+                        </select>
+                      </Field>
+                    </div>
+                  </section>
+
+                  <div className="flex items-center justify-between gap-4">
+                    <div>
+                      <h3 className="text-lg font-bold text-[#7a0000]">
+                        Ventas por registrar
+                      </h3>
+
+                      <p className="mt-1 text-sm text-[#b07a7a]">
+                        Cada fila crea una venta independiente.
+                      </p>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={addBulkRow}
+                      className="flex h-10 items-center gap-2 rounded-xl bg-[#8c0303] px-4 text-sm font-semibold text-white"
+                    >
+                      <Plus size={16} />
+                      Agregar venta
+                    </button>
+                  </div>
+
+                  <div className="space-y-4">
+                    {bulkRows.map((row, index) => (
+                      <article
+                        key={row.id}
+                        className="rounded-2xl border border-[#f3dede] bg-white p-5"
+                      >
+                        <div className="flex items-center justify-between gap-3">
+                          <p className="text-sm font-bold text-[#7a0000]">
+                            Venta #{index + 1}
+                          </p>
+
+                          <button
+                            type="button"
+                            onClick={() => removeBulkRow(row.id)}
+                            disabled={bulkRows.length === 1}
+                            className="flex h-9 w-9 items-center justify-center rounded-xl border border-red-200 text-red-600 disabled:opacity-40"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+
+                        <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+                          {saleMode === 'complete' && (
+                            <>
+                              <Field label="Cliente *">
+                                <input
+                                  value={row.cliente}
+                                  onChange={(event) =>
+                                    updateBulkRow(
+                                      row.id,
+                                      'cliente',
+                                      event.target.value
+                                    )
+                                  }
+                                  placeholder="Nombre del cliente"
+                                  className={inputClass}
+                                />
+                              </Field>
+
+                              <Field label="WhatsApp">
+                                <input
+                                  value={row.whatsapp}
+                                  onChange={(event) =>
+                                    updateBulkRow(
+                                      row.id,
+                                      'whatsapp',
+                                      event.target.value
+                                    )
+                                  }
+                                  placeholder="5512345678"
+                                  className={inputClass}
+                                />
+                              </Field>
+
+                              <Field label="Email">
+                                <input
+                                  type="email"
+                                  value={row.email}
+                                  onChange={(event) =>
+                                    updateBulkRow(
+                                      row.id,
+                                      'email',
+                                      event.target.value
+                                    )
+                                  }
+                                  placeholder="cliente@email.com"
+                                  className={inputClass}
+                                />
+                              </Field>
+                            </>
+                          )}
+
+                          <Field label="Producto *">
+                            <select
+                              value={row.producto}
+                              onChange={(event) =>
+                                handleBulkProductChange(
+                                  row.id,
+                                  event.target.value
+                                )
+                              }
+                              className={inputClass}
+                            >
+                              <option value="">Seleccionar producto...</option>
+
+                              {products.map((product) => (
+                                <option key={product.id} value={product.nombre}>
+                                  {product.nombre}
+                                </option>
+                              ))}
+                            </select>
+                          </Field>
+
+                          <Field label="Precio *">
+                            <input
+                              type="number"
+                              min="0"
+                              step="0.01"
+                              value={row.monto_pago}
+                              onChange={(event) =>
+                                updateBulkRow(
+                                  row.id,
+                                  'monto_pago',
+                                  event.target.value
+                                )
+                              }
+                              className={inputClass}
+                            />
+                          </Field>
+
+                          {saleMode === 'complete' && (
+                            <>
+                              <Field label="Cupón">
+                                <input
+                                  value={row.cupon}
+                                  onChange={(event) =>
+                                    updateBulkRow(
+                                      row.id,
+                                      'cupon',
+                                      event.target.value
+                                    )
+                                  }
+                                  placeholder="Opcional"
+                                  className={inputClass}
+                                />
+                              </Field>
+
+                              <Field label="Tipo de descuento">
+                                <select
+                                  value={row.tipo_descuento}
+                                  onChange={(event) =>
+                                    updateBulkRow(
+                                      row.id,
+                                      'tipo_descuento',
+                                      event.target.value
+                                    )
+                                  }
+                                  className={inputClass}
+                                >
+                                  <option>Sin descuento</option>
+                                  <option>Porcentaje</option>
+                                  <option>Monto fijo</option>
+                                </select>
+                              </Field>
+
+                              <Field label="Descuento">
+                                <input
+                                  type="number"
+                                  min="0"
+                                  step="0.01"
+                                  value={row.descuento}
+                                  onChange={(event) =>
+                                    updateBulkRow(
+                                      row.id,
+                                      'descuento',
+                                      event.target.value
+                                    )
+                                  }
+                                  className={inputClass}
+                                />
+                              </Field>
+
+                              <div className="md:col-span-2 xl:col-span-3">
+                                <Field label="Notas">
+                                  <input
+                                    value={row.observaciones}
+                                    onChange={(event) =>
+                                      updateBulkRow(
+                                        row.id,
+                                        'observaciones',
+                                        event.target.value
+                                      )
+                                    }
+                                    placeholder="Opcional"
+                                    className={inputClass}
+                                  />
+                                </Field>
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      </article>
+                    ))}
+                  </div>
+
+                  <div className="flex flex-col-reverse gap-3 pt-2 sm:flex-row sm:justify-end">
+                    <button
+                      type="button"
+                      onClick={closeModal}
+                      className="rounded-xl border border-[#efcccc] px-5 py-3 font-semibold text-[#8c0303]"
+                    >
+                      Cancelar
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={guardarVentasBulk}
+                      disabled={saving}
+                      className="rounded-xl bg-[#8c0303] px-5 py-3 font-semibold text-white disabled:opacity-50"
+                    >
+                      {saving
+                        ? 'Registrando ventas...'
+                        : `Guardar ${bulkRows.length} venta(s)`}
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>
       )}
 
       {selectedOrder && (
-        <div className="fixed inset-0 z-[100] bg-black/40 flex items-end md:items-center justify-center">
-          <div className="bg-white w-full max-w-2xl max-h-[92vh] overflow-y-auto rounded-t-[30px] md:rounded-[30px] shadow-2xl">
-            <div className="sticky top-0 z-10 bg-white flex items-center justify-between px-5 md:px-6 py-5 border-b border-[#f3dede]">
+        <div className="fixed inset-0 z-[110] flex items-end justify-center bg-black/40 md:items-center">
+          <div className="max-h-[92vh] w-full max-w-2xl overflow-y-auto rounded-t-[30px] bg-white md:rounded-[30px]">
+            <div className="sticky top-0 z-10 flex items-center justify-between border-b border-[#f3dede] bg-white px-5 py-5">
               <div>
-                <h2 className="text-[30px] ivy text-[#7a0000] leading-none">
+                <h2 className="text-xl font-bold text-[#7a0000]">
                   Detalle de venta
                 </h2>
 
-                <p className="text-sm text-[#b07a7a] mt-2">
+                <p className="mt-1 text-sm text-[#b07a7a]">
                   {formatOrderId(selectedOrder)}
                 </p>
               </div>
@@ -1640,78 +1974,37 @@ export default function PedidosPage() {
               <button
                 type="button"
                 onClick={() => setSelectedOrder(null)}
-                className="w-11 h-11 rounded-full border border-[#efcccc] text-[#8c0303] flex items-center justify-center"
-                aria-label="Cerrar detalle"
+                className="flex h-11 w-11 items-center justify-center rounded-full border border-[#efcccc] text-[#8c0303]"
               >
                 <X size={20} />
               </button>
             </div>
 
-            <div className="p-5 md:p-6 space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <DetailItem
-                  label="Fecha"
-                  value={
-                    selectedOrder.fecha ||
-                    selectedOrder.created_at?.split('T')[0] ||
-                    'Sin fecha'
-                  }
-                />
-
+            <div className="space-y-4 p-5">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <DetailItem label="Fecha" value={selectedOrder.fecha} />
                 <DetailItem
                   label="Cliente"
                   value={selectedOrder.cliente || 'Walk-in'}
                 />
-
-                <DetailItem
-                  label="WhatsApp"
-                  value={selectedOrder.whatsapp || 'No registrado'}
-                />
-
-                <DetailItem
-                  label="Email"
-                  value={selectedOrder.email || 'No registrado'}
-                />
-
-                <DetailItem
-                  label="Producto"
-                  value={selectedOrder.producto || 'Sin producto'}
-                />
-
+                <DetailItem label="WhatsApp" value={selectedOrder.whatsapp} />
+                <DetailItem label="Email" value={selectedOrder.email} />
+                <DetailItem label="Producto" value={selectedOrder.producto} />
                 <DetailItem
                   label="Sucursal"
-                  value={
-                    selectedOrder.tipo_pedido || 'Punto de Venta'
-                  }
+                  value={selectedOrder.tipo_pedido}
                 />
-
-                <DetailItem
-                  label="Vendedor"
-                  value={selectedOrder.vendedor || 'No registrado'}
-                />
-
+                <DetailItem label="Vendedor" value={selectedOrder.vendedor} />
                 <DetailItem
                   label="Método de pago"
-                  value={
-                    selectedOrder.metodo_pago || 'No registrado'
-                  }
+                  value={selectedOrder.metodo_pago}
                 />
-
                 <DetailItem
                   label="Total"
                   value={formatCurrency(selectedOrder.monto_pago)}
                 />
-
-                <DetailItem
-                  label="Estado"
-                  value={selectedOrder.status || 'Pagado'}
-                />
-
-                <DetailItem
-                  label="Cupón"
-                  value={selectedOrder.cupon || 'Sin cupón'}
-                />
-
+                <DetailItem label="Estado" value={selectedOrder.status} />
+                <DetailItem label="Cupón" value={selectedOrder.cupon} />
                 <DetailItem
                   label="Descuento"
                   value={
@@ -1722,48 +2015,30 @@ export default function PedidosPage() {
                 />
               </div>
 
-              <div className="border border-[#f3dede] rounded-2xl px-4 py-4 bg-[#fffafa]">
-                <p className="text-[10px] uppercase tracking-[0.14em] text-[#b07a7a] mb-2">
+              <div className="rounded-2xl border border-[#f3dede] bg-[#fffafa] p-4">
+                <p className="text-[10px] uppercase tracking-[0.14em] text-[#b07a7a]">
                   Observaciones
                 </p>
 
-                <p className="text-sm text-[#2e2e2e] leading-relaxed">
+                <p className="mt-2 text-sm text-[#2e2e2e]">
                   {selectedOrder.observaciones ||
                     'Sin observaciones registradas.'}
                 </p>
               </div>
 
-              <div className="border border-[#f3dede] rounded-2xl px-4 py-4 bg-[#fffafa]">
-                <p className="text-[10px] uppercase tracking-[0.14em] text-[#b07a7a] mb-2">
-                  Última edición
-                </p>
-
-                <p className="text-sm text-[#2e2e2e] leading-relaxed">
-                  {selectedOrder.editado_en
-                    ? `${new Date(
-                        selectedOrder.editado_en
-                      ).toLocaleString('es-PA')} por ${
-                        selectedOrder.editado_por || 'No registrado'
-                      }`
-                    : 'Sin ediciones registradas'}
-                </p>
-              </div>
-
-              <div className="flex flex-col sm:flex-row sm:justify-end gap-3 pt-2">
+              <div className="flex flex-col gap-3 pt-2 sm:flex-row sm:justify-end">
                 <button
                   type="button"
                   onClick={() => setSelectedOrder(null)}
-                  className="px-5 py-3 border border-[#efcccc] rounded-xl text-[#8c0303] font-semibold"
+                  className="rounded-xl border border-[#efcccc] px-5 py-3 font-semibold text-[#8c0303]"
                 >
                   Cerrar
                 </button>
 
                 <button
                   type="button"
-                  onClick={() =>
-                    recalcularInventarioDeVenta(selectedOrder)
-                  }
-                  className="px-5 py-3 border border-[#efcccc] text-[#8c0303] rounded-xl font-semibold hover:bg-[#fff5f5]"
+                  onClick={() => recalcularInventarioDeVenta(selectedOrder)}
+                  className="rounded-xl border border-[#efcccc] px-5 py-3 font-semibold text-[#8c0303]"
                 >
                   Recalcular inventario
                 </button>
@@ -1771,7 +2046,7 @@ export default function PedidosPage() {
                 <button
                   type="button"
                   onClick={() => eliminarVenta(selectedOrder)}
-                  className="px-5 py-3 border border-red-200 text-red-600 rounded-xl font-semibold hover:bg-red-50"
+                  className="rounded-xl border border-red-200 px-5 py-3 font-semibold text-red-600"
                 >
                   Eliminar venta
                 </button>
@@ -1779,7 +2054,7 @@ export default function PedidosPage() {
                 <button
                   type="button"
                   onClick={() => openEditOrder(selectedOrder)}
-                  className="px-5 py-3 bg-[#8c0303] text-white rounded-xl font-semibold"
+                  className="rounded-xl bg-[#8c0303] px-5 py-3 font-semibold text-white"
                 >
                   Editar venta
                 </button>
