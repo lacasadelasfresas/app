@@ -118,26 +118,73 @@ export default function BibliotecaContenidoPage() {
   const [filterFormato, setFilterFormato] = useState('Todos')
 
   const [form, setForm] = useState(createEmptyForm())
+  const [ideaOrigenId, setIdeaOrigenId] = useState(null)
 
   const [archivos, setArchivos] = useState([])
   const [archivosPendientes, setArchivosPendientes] = useState([])
   const [uploadingMedia, setUploadingMedia] = useState(false)
 
-  useEffect(() => {
-    fetchContenido()
+useEffect(() => {
+  async function iniciarBiblioteca() {
+    await fetchContenido()
 
     const params = new URLSearchParams(window.location.search)
+    const nuevaIdea = params.get('nuevo') === '1'
+    const ideaId = params.get('idea')
 
-    if (params.get('nuevo') === '1') {
-      abrirNuevoContenido()
+    if (nuevaIdea) {
+      setEditingId(null)
+      setForm(createEmptyForm())
+      setArchivos([])
+      setArchivosPendientes([])
+      setFormOpen(true)
+    }
 
+    if (ideaId) {
+      const { data: idea, error } = await supabase
+        .from('banco_ideas')
+        .select('*')
+        .eq('id', ideaId)
+        .single()
+
+      if (error || !idea) {
+        console.error('Error cargando idea para convertir:', error)
+        return
+      }
+
+      setEditingId(null)
+      setIdeaOrigenId(idea.id)
+      setArchivos([])
+      setArchivosPendientes([])
+
+      setForm({
+        titulo: idea.titulo || '',
+        plataformas: idea.plataformas || [],
+        formato: idea.formato || '',
+        pilar: idea.pilar || '',
+        estado: 'Idea',
+        fecha_programada: '',
+        copy: idea.descripcion || '',
+        cta: '',
+        enlace_canva: '',
+        enlace_drive: '',
+        enlace_publicado: '',
+      })
+
+      setFormOpen(true)
+    }
+
+    if (nuevaIdea || ideaId) {
       window.history.replaceState(
         {},
         '',
         '/centro-de-contenido/biblioteca'
       )
     }
-  }, [])
+  }
+
+  iniciarBiblioteca()
+}, [])
 
   async function fetchContenido() {
     setLoading(true)
@@ -164,7 +211,7 @@ export default function BibliotecaContenidoPage() {
         URL.revokeObjectURL(archivo.signedUrl)
       }
     })
-
+setIdeaOrigenId(null)
     setEditingId(null)
     setForm(createEmptyForm())
     setArchivos([])
@@ -454,6 +501,7 @@ export default function BibliotecaContenidoPage() {
   }
 
   async function editarContenido(item) {
+    setIdeaOrigenId(null)
     setEditingId(item.id)
     setArchivosPendientes([])
 
@@ -537,14 +585,29 @@ export default function BibliotecaContenidoPage() {
       contenidoId = data.id
     }
 
-    const uploadSuccess = await subirArchivosPendientes(contenidoId)
+const uploadSuccess = await subirArchivosPendientes(contenidoId)
 
-    if (!uploadSuccess) {
-      setSaving(false)
-      return
-    }
+if (!uploadSuccess) {
+  setSaving(false)
+  return
+}
 
-    await fetchContenido()
+if (ideaOrigenId && !editingId) {
+  const { error: ideaError } = await supabase
+    .from('banco_ideas')
+    .update({
+      estado: 'Convertida',
+      contenido_id: contenidoId,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', ideaOrigenId)
+
+  if (ideaError) {
+    console.error('Error vinculando idea convertida:', ideaError)
+  }
+}
+
+await fetchContenido()
 
     const wasEditing = Boolean(editingId)
 
