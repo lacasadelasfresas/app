@@ -927,13 +927,12 @@ export default function FinanzasPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
             <Field label="Fecha">
-              <input
-                type="date"
-                name="fecha"
-                value={form.fecha}
-                onChange={handleChange}
-                className={inputClass}
-              />
+<input
+  type="date"
+  value={form.fecha}
+  onChange={handleChange}
+  className="w-full min-w-0 max-w-full rounded-xl border border-[#efcaca] bg-white px-4 py-3 text-sm text-[#2e2e2e] outline-none"
+/>
             </Field>
 
             <Field label="Categoría">

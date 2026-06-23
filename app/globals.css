@@ -100,3 +100,29 @@ body{
     max-width: 100%;
   }
 }
+/* Evita que elementos internos empujen la página fuera de la pantalla */
+html,
+body {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* Safari/iPhone puede asignar un ancho mínimo excesivo a estos campos */
+input[type='date'],
+input[type='datetime-local'],
+input[type='time'] {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* Evita que grids y flex items crezcan más que su contenedor */
+.min-w-0 {
+  min-width: 0;
+}
