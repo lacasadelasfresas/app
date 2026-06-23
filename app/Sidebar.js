@@ -18,6 +18,8 @@ import {
   BarChart3,
   ShieldCheck,
   Repeat,
+  ChevronRight,
+  Lightbulb,
 } from 'lucide-react'
 
 import { supabase } from '@/lib/supabaseClient'
@@ -35,6 +37,8 @@ export default function Sidebar({
     email: '',
     rol: '',
   })
+
+  const [contenidoOpen, setContenidoOpen] = useState(false)
 
   useEffect(() => {
     async function cargarUsuario() {
@@ -60,6 +64,12 @@ export default function Sidebar({
 
     cargarUsuario()
   }, [])
+
+  useEffect(() => {
+    if (pathname.startsWith('/centro-de-contenido')) {
+      setContenidoOpen(true)
+    }
+  }, [pathname])
 
   async function cerrarSesion() {
     await supabase.auth.signOut()
@@ -98,21 +108,23 @@ export default function Sidebar({
     )
   }
 
+  const contenidoActivo = pathname.startsWith('/centro-de-contenido')
+
   return (
- <aside
-  className={`relative z-[100] h-full md:h-screen bg-white text-[#2e2e2e] border-r border-[#f1dede] flex flex-col transition-all duration-300 overflow-hidden md:overflow-visible w-[250px] ${
+    <aside
+      className={`relative z-[100] h-full md:h-screen bg-white text-[#2e2e2e] border-r border-[#f1dede] flex flex-col transition-all duration-300 overflow-hidden md:overflow-visible w-[250px] ${
         collapsed ? 'md:w-[82px]' : 'md:w-[250px]'
       }`}
     >
-      {/* Logo: visible únicamente en desktop */}
-<div className="hidden md:flex relative h-[82px] px-5 items-center justify-center border-b border-[#f1dede] shrink-0 bg-white">        {!collapsed && (
+      <div className="hidden md:flex relative h-[82px] px-5 items-center justify-center border-b border-[#f1dede] shrink-0 bg-white">
+        {!collapsed && (
           <Image
             src="/logo.png"
             alt="La Casa de las Fresas"
             width={180}
             height={50}
             priority
- className="object-contain w-[220px] h-auto scale-[1.10]"
+            className="object-contain w-[220px] h-auto scale-[1.10]"
           />
         )}
 
@@ -125,33 +137,34 @@ export default function Sidebar({
           {collapsed ? '›' : '‹'}
         </button>
       </div>
-      
-<nav className="flex-1 min-h-0 overflow-y-auto overscroll-contain md:overflow-hidden px-4 py-2 space-y-[1px]">        {sectionTitle('Principal')}
 
-<button
-  type="button"
-  onClick={() => {
-    handleNavigate()
-    router.push('/app/cuadro-de-mandos')
-  }}
-  className={`${linkClass(
-    '/app/cuadro-de-mandos'
-  )} relative z-[200] cursor-pointer`}
->
-  <LayoutDashboard size={18} />
-  {!collapsed && 'Dashboard General'}
-</button>
+      <nav className="flex-1 min-h-0 overflow-y-auto overscroll-contain md:overflow-hidden px-4 py-2 space-y-[1px]">
+        {sectionTitle('Principal')}
+
+        <button
+          type="button"
+          onClick={() => {
+            handleNavigate()
+            router.push('/app/cuadro-de-mandos')
+          }}
+          className={`${linkClass(
+            '/app/cuadro-de-mandos'
+          )} relative z-[200] cursor-pointer`}
+        >
+          <LayoutDashboard size={18} />
+          {!collapsed && 'Dashboard General'}
+        </button>
 
         {sectionTitle('Operación')}
 
-<Link
-  href="/pedidos"
-  onClick={handleNavigate}
-  className={linkClass('/pedidos')}
->
-  <ShoppingBag size={18} />
-  {!collapsed && 'Registro de Ventas'}
-</Link>
+        <Link
+          href="/pedidos"
+          onClick={handleNavigate}
+          className={linkClass('/pedidos')}
+        >
+          <ShoppingBag size={18} />
+          {!collapsed && 'Registro de Ventas'}
+        </Link>
 
         <Link
           href="/cotizaciones"
@@ -193,14 +206,106 @@ export default function Sidebar({
 
         {sectionTitle('Contenido')}
 
-        <Link
-          href="/centro-de-contenido"
-          onClick={handleNavigate}
-          className={linkClass('/centro-de-contenido')}
+        <div
+          className="relative"
+          onMouseEnter={() => setContenidoOpen(true)}
+          onMouseLeave={() => {
+            if (!contenidoActivo) {
+              setContenidoOpen(false)
+            }
+          }}
         >
-          <FileText size={18} />
-          {!collapsed && 'Centro de Contenido'}
-        </Link>
+          <div
+            className={`flex items-center rounded-xl transition ${
+              contenidoActivo
+                ? 'bg-[#8c0303] text-white font-semibold shadow-sm'
+                : 'text-[#2e2e2e] hover:bg-[#fff1f1]'
+            }`}
+          >
+            <Link
+              href="/centro-de-contenido"
+              onClick={handleNavigate}
+              className={`flex flex-1 items-center gap-3 px-3 py-[7px] text-[14px] ${
+                collapsed ? 'justify-center px-2' : ''
+              }`}
+            >
+              <FileText size={18} />
+              {!collapsed && 'Centro de Contenido'}
+            </Link>
+
+            {!collapsed && (
+              <button
+                type="button"
+                onClick={() => setContenidoOpen((actual) => !actual)}
+                className={`flex h-8 w-8 items-center justify-center rounded-lg transition ${
+                  contenidoActivo
+                    ? 'text-white hover:bg-white/15'
+                    : 'text-[#8c0303] hover:bg-[#ffeaea]'
+                }`}
+                aria-label="Mostrar subpáginas de Centro de Contenido"
+                aria-expanded={contenidoOpen}
+              >
+                <ChevronRight
+                  size={16}
+                  className={`transition-transform ${
+                    contenidoOpen ? 'rotate-90' : ''
+                  }`}
+                />
+              </button>
+            )}
+          </div>
+
+          {contenidoOpen && !collapsed && (
+            <div className="ml-5 mt-1 border-l border-[#f1dede] pl-3">
+              <Link
+                href="/centro-de-contenido/banco-de-ideas"
+                onClick={handleNavigate}
+                className={`flex items-center gap-2 rounded-xl px-3 py-2 text-[13px] transition ${
+                  isActive('/centro-de-contenido/banco-de-ideas')
+                    ? 'bg-[#fff1f1] text-[#8c0303] font-semibold'
+                    : 'text-[#755c5c] hover:bg-[#fff8f8] hover:text-[#8c0303]'
+                }`}
+              >
+                <Lightbulb size={15} />
+                Banco de Ideas
+              </Link>
+            </div>
+          )}
+
+          {contenidoOpen && collapsed && (
+            <div className="absolute left-[62px] top-0 z-[250] hidden min-w-[210px] rounded-2xl border border-[#f3dede] bg-white p-2 shadow-[0_12px_35px_rgba(122,0,0,0.16)] md:block">
+              <p className="px-3 pt-2 text-[10px] uppercase tracking-[0.16em] text-[#b9a0a0]">
+                Contenido
+              </p>
+
+              <Link
+                href="/centro-de-contenido"
+                onClick={handleNavigate}
+                className={`mt-2 flex items-center gap-2 rounded-xl px-3 py-2 text-[13px] transition ${
+                  isActive('/centro-de-contenido')
+                    ? 'bg-[#fff1f1] text-[#8c0303] font-semibold'
+                    : 'text-[#755c5c] hover:bg-[#fff8f8] hover:text-[#8c0303]'
+                }`}
+              >
+                <FileText size={15} />
+                Centro de Contenido
+              </Link>
+
+              <Link
+                href="/centro-de-contenido/banco-de-ideas"
+                onClick={handleNavigate}
+                className={`mt-1 flex items-center gap-2 rounded-xl px-3 py-2 text-[13px] transition ${
+                  isActive('/centro-de-contenido/banco-de-ideas')
+                    ? 'bg-[#fff1f1] text-[#8c0303] font-semibold'
+                    : 'text-[#755c5c] hover:bg-[#fff8f8] hover:text-[#8c0303]'
+                }`}
+              >
+                <Lightbulb size={15} />
+                Banco de Ideas
+              </Link>
+            </div>
+          )}
+        </div>
 
         <Link
           href="/calendario-editorial"
