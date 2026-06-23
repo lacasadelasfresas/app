@@ -12,6 +12,7 @@ import {
   FileText,
   FolderKanban,
   FolderOpen,
+  Image as ImageIcon,
   Lightbulb,
   LayoutList,
   MessageCircle,
@@ -20,6 +21,7 @@ import {
   Send,
   Sparkles,
   Trophy,
+  Video,
   WandSparkles,
 } from 'lucide-react'
 
@@ -80,7 +82,10 @@ export default function CentroDeContenidoPage() {
     const { data, error } = await supabase
       .from('contenido')
       .select('*')
-      .order('fecha_programada', { ascending: true, nullsFirst: false })
+      .order('fecha_programada', {
+        ascending: true,
+        nullsFirst: false,
+      })
 
     if (error) {
       console.error('Error cargando contenido:', error)
@@ -89,7 +94,63 @@ export default function CentroDeContenidoPage() {
       return
     }
 
-    setContenido(data || [])
+    const contenidoBase = data || []
+    const contenidoIds = contenidoBase.map((item) => item.id)
+
+    if (contenidoIds.length === 0) {
+      setContenido([])
+      setLoading(false)
+      return
+    }
+
+    const { data: archivosData, error: archivosError } = await supabase
+      .from('contenido_archivos')
+      .select('*')
+      .in('contenido_id', contenidoIds)
+      .eq('es_principal', true)
+
+    if (archivosError) {
+      console.error('Error cargando diseños principales:', archivosError)
+      setContenido(contenidoBase)
+      setLoading(false)
+      return
+    }
+
+    const archivosConUrl = await Promise.all(
+      (archivosData || []).map(async (archivo) => {
+        const { data: signedData, error: signedError } =
+          await supabase.storage
+            .from('contenido-media')
+            .createSignedUrl(archivo.storage_path, 60 * 60)
+
+        if (signedError) {
+          console.error(
+            `Error creando URL firmada para ${archivo.nombre_archivo}:`,
+            signedError
+          )
+        }
+
+        return {
+          ...archivo,
+          signedUrl: signedData?.signedUrl || '',
+        }
+      })
+    )
+
+    const archivoPorContenido = archivosConUrl.reduce(
+      (accumulator, archivo) => {
+        accumulator[archivo.contenido_id] = archivo
+        return accumulator
+      },
+      {}
+    )
+
+    const contenidoConDiseño = contenidoBase.map((item) => ({
+      ...item,
+      archivo_principal: archivoPorContenido[item.id] || null,
+    }))
+
+    setContenido(contenidoConDiseño)
     setLoading(false)
   }
 
@@ -205,7 +266,7 @@ export default function CentroDeContenidoPage() {
 
   return (
     <main className="min-h-screen bg-[#fcf8f8]">
-      <header className="bg-white border-b border-[#f1dede] px-5 md:px-8 py-3 md:h-[82px] md:py-0 md:flex md:items-center">
+      <header className="bg-white border-b border-[#f1dede] px-5 py-3 md:flex md:h-[82px] md:items-center md:px-8 md:py-0">
         <div className="w-full max-w-none">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
@@ -213,135 +274,136 @@ export default function CentroDeContenidoPage() {
                 Marketing y contenido
               </p>
 
-              <h1 className="mt-1 text-[21px] md:text-[23px] font-bold text-[#7a0000] leading-tight">
+              <h1 className="mt-1 text-[21px] font-bold leading-tight text-[#7a0000] md:text-[23px]">
                 Centro de Contenido
               </h1>
 
-              <p className="mt-1 text-xs md:text-sm text-[#b07a7a]">
+              <p className="mt-1 text-xs text-[#b07a7a] md:text-sm">
                 Controla ideas, publicaciones, campañas y rendimiento comercial.
               </p>
             </div>
 
-<div className="flex flex-col xl:flex-row xl:items-center xl:justify-end gap-2 w-full lg:w-auto">
-  <div className="grid grid-cols-3 gap-2 w-full sm:flex sm:w-auto">
-    <Link
-      href="/centro-de-contenido/kanban"
-      className="w-full sm:w-auto h-10 px-4 rounded-xl border border-[#efcccc] bg-white text-[#8c0303] font-semibold text-sm flex items-center justify-center gap-2 hover:bg-[#fff5f5]"
-    >
-      <FolderKanban size={16} />
-      Kanban
-    </Link>
+            <div className="flex w-full flex-col gap-2 lg:w-auto xl:flex-row xl:items-center xl:justify-end">
+              <div className="grid w-full grid-cols-3 gap-2 sm:flex sm:w-auto">
+                <Link
+                  href="/centro-de-contenido/kanban"
+                  className="flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-[#efcccc] bg-white px-4 text-sm font-semibold text-[#8c0303] hover:bg-[#fff5f5] sm:w-auto"
+                >
+                  <FolderKanban size={16} />
+                  Kanban
+                </Link>
 
-    <Link
-      href="/centro-de-contenido/calendario"
-      className="w-full sm:w-auto h-10 px-4 rounded-xl border border-[#efcccc] bg-white text-[#8c0303] font-semibold text-sm flex items-center justify-center gap-2 hover:bg-[#fff5f5]"
-    >
-      <CalendarDays size={16} />
-      Calendario
-    </Link>
+                <Link
+                  href="/centro-de-contenido/calendario"
+                  className="flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-[#efcccc] bg-white px-4 text-sm font-semibold text-[#8c0303] hover:bg-[#fff5f5] sm:w-auto"
+                >
+                  <CalendarDays size={16} />
+                  Calendario
+                </Link>
 
-    <Link
-      href="/centro-de-contenido/lista"
-      className="w-full sm:w-auto h-10 px-4 rounded-xl border border-[#efcccc] bg-white text-[#8c0303] font-semibold text-sm flex items-center justify-center gap-2 hover:bg-[#fff5f5]"
-    >
-      <LayoutList size={16} />
-      Lista
-    </Link>
-  </div>
+                <Link
+                  href="/centro-de-contenido/lista"
+                  className="flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-[#efcccc] bg-white px-4 text-sm font-semibold text-[#8c0303] hover:bg-[#fff5f5] sm:w-auto"
+                >
+                  <LayoutList size={16} />
+                  Lista
+                </Link>
+              </div>
 
-  <div className="hidden xl:block w-px h-7 bg-[#f1dede] mx-1" />
+              <div className="mx-1 hidden h-7 w-px bg-[#f1dede] xl:block" />
 
-  <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-    <Link
-      href="/centro-de-contenido/biblioteca"
-      className="w-full sm:w-auto h-10 px-4 rounded-xl bg-[#8c0303] text-white font-semibold text-sm flex items-center justify-center gap-2 hover:bg-[#720000]"
-    >
-      <FolderOpen size={16} />
-      Biblioteca
-    </Link>
+              <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+                <Link
+                  href="/centro-de-contenido/biblioteca"
+                  className="flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-[#8c0303] px-4 text-sm font-semibold text-white hover:bg-[#720000] sm:w-auto"
+                >
+                  <FolderOpen size={16} />
+                  Biblioteca
+                </Link>
 
-    <button
-      type="button"
-      onClick={fetchContenido}
-      disabled={loading}
-      className="w-full sm:w-auto h-10 px-4 rounded-xl border border-[#efcccc] bg-white text-[#8c0303] font-semibold text-sm flex items-center justify-center gap-2 hover:bg-[#fff5f5] disabled:opacity-60"
-    >
-      <RefreshCw
-        size={16}
-        className={loading ? 'animate-spin' : ''}
-      />
-      Actualizar
-    </button>
-  </div>
-</div>
+                <button
+                  type="button"
+                  onClick={fetchContenido}
+                  disabled={loading}
+                  className="flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-[#efcccc] bg-white px-4 text-sm font-semibold text-[#8c0303] hover:bg-[#fff5f5] disabled:opacity-60 sm:w-auto"
+                >
+                  <RefreshCw
+                    size={16}
+                    className={loading ? 'animate-spin' : ''}
+                  />
+                  Actualizar
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </header>
 
-      <section className="max-w-[1500px] mx-auto px-4 md:px-8 py-5 md:py-7 space-y-5">
-<section className="bg-white border border-[#f3dede] rounded-[26px] p-5 md:p-6 overflow-hidden relative">
-  <div className="absolute -right-12 -top-12 w-44 h-44 rounded-full border border-[#f3dede] opacity-70" />
-  <div className="absolute right-8 top-8 w-20 h-20 rounded-full border border-[#f7e5e5] opacity-70" />
+      <section className="mx-auto max-w-[1500px] space-y-5 px-4 py-5 md:px-8 md:py-7">
+        <section className="relative overflow-hidden rounded-[26px] border border-[#f3dede] bg-white p-5 md:p-6">
+          <div className="absolute -right-12 -top-12 h-44 w-44 rounded-full border border-[#f3dede] opacity-70" />
+          <div className="absolute right-8 top-8 h-20 w-20 rounded-full border border-[#f7e5e5] opacity-70" />
 
-  <div className="relative flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
-    <div className="max-w-2xl">
-      <div className="flex items-center gap-3">
-        <div className="w-11 h-11 rounded-2xl bg-[#fff1f1] text-[#8c0303] flex items-center justify-center">
-          <Sparkles size={20} />
-        </div>
+          <div className="relative flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+            <div className="max-w-2xl">
+              <div className="flex items-center gap-3">
+                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#fff1f1] text-[#8c0303]">
+                  <Sparkles size={20} />
+                </div>
 
-        <p className="text-[10px] uppercase tracking-[0.16em] text-[#b9a0a0]">
-          Vista general
-        </p>
-      </div>
+                <p className="text-[10px] uppercase tracking-[0.16em] text-[#b9a0a0]">
+                  Vista general
+                </p>
+              </div>
 
-      <h2 className="mt-4 text-[22px] md:text-[27px] font-bold text-[#7a0000]">
-        Convierte tu contenido en una herramienta de ventas.
-      </h2>
+              <h2 className="mt-4 text-[22px] font-bold text-[#7a0000] md:text-[27px]">
+                Convierte tu contenido en una herramienta de ventas.
+              </h2>
 
-      <p className="mt-2 text-sm md:text-base text-[#b07a7a]">
-        Aquí podrás ver qué está pendiente, qué requiere aprobación y qué
-        publicaciones están generando resultados para La Casa de las Fresas.
-      </p>
-    </div>
+              <p className="mt-2 text-sm text-[#b07a7a] md:text-base">
+                Aquí podrás ver qué está pendiente, qué requiere aprobación y
+                qué publicaciones están generando resultados para La Casa de las
+                Fresas.
+              </p>
+            </div>
 
-    <div className="w-full lg:w-[370px] shrink-0">
-      <div className="grid grid-cols-2 gap-3">
-        <div className="rounded-2xl border border-[#f3dede] bg-[#fffafa] p-4">
-          <p className="text-[10px] uppercase tracking-[0.14em] text-[#b9a0a0]">
-            Total registrado
-          </p>
+            <div className="w-full shrink-0 lg:w-[370px]">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="rounded-2xl border border-[#f3dede] bg-[#fffafa] p-4">
+                  <p className="text-[10px] uppercase tracking-[0.14em] text-[#b9a0a0]">
+                    Total registrado
+                  </p>
 
-          <p className="mt-2 text-[28px] font-bold text-[#7a0000]">
-            {contenido.length}
-          </p>
-        </div>
+                  <p className="mt-2 text-[28px] font-bold text-[#7a0000]">
+                    {contenido.length}
+                  </p>
+                </div>
 
-        <div className="rounded-2xl border border-[#f3dede] bg-[#fffafa] p-4">
-          <p className="text-[10px] uppercase tracking-[0.14em] text-[#b9a0a0]">
-            Publicados este mes
-          </p>
+                <div className="rounded-2xl border border-[#f3dede] bg-[#fffafa] p-4">
+                  <p className="text-[10px] uppercase tracking-[0.14em] text-[#b9a0a0]">
+                    Publicados este mes
+                  </p>
 
-          <p className="mt-2 text-[28px] font-bold text-[#7a0000]">
-            {resumen.publicadosMes}
-          </p>
-        </div>
-      </div>
+                  <p className="mt-2 text-[28px] font-bold text-[#7a0000]">
+                    {resumen.publicadosMes}
+                  </p>
+                </div>
+              </div>
 
-      <div className="flex justify-center mt-3">
-        <Link
-          href="/centro-de-contenido/biblioteca?nuevo=1"
-          className="inline-flex h-11 px-5 rounded-xl bg-[#8c0303] text-white font-semibold text-sm items-center justify-center gap-2 hover:bg-[#720000] transition"
-        >
-          <Plus size={17} />
-          Programar contenido
-        </Link>
-      </div>
-    </div>
-  </div>
-</section>
+              <div className="mt-3 flex justify-center">
+                <Link
+                  href="/centro-de-contenido/biblioteca?nuevo=1"
+                  className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-[#8c0303] px-5 text-sm font-semibold text-white transition hover:bg-[#720000]"
+                >
+                  <Plus size={17} />
+                  Programar contenido
+                </Link>
+              </div>
+            </div>
+          </div>
+        </section>
 
-        <section className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4">
+        <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
           <KpiCard
             label="Ideas pendientes"
             value={resumen.ideas}
@@ -373,68 +435,81 @@ export default function CentroDeContenidoPage() {
           />
         </section>
 
-        <section className="grid grid-cols-1 xl:grid-cols-[1.2fr_0.8fr] gap-5">
-          <article className="bg-white border border-[#f3dede] rounded-[26px] p-5 md:p-6">
+        <section className="grid grid-cols-1 gap-5 xl:grid-cols-[1.2fr_0.8fr]">
+          <article className="rounded-[26px] border border-[#f3dede] bg-white p-5 md:p-6">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <p className="text-[10px] uppercase tracking-[0.16em] text-[#b9a0a0]">
                   Próxima publicación
                 </p>
 
-                <h2 className="mt-2 text-[20px] md:text-[23px] font-bold text-[#7a0000]">
+                <h2 className="mt-2 text-[20px] font-bold text-[#7a0000] md:text-[23px]">
                   {proximaPublicacion
                     ? proximaPublicacion.titulo
                     : 'No tienes contenido programado'}
                 </h2>
               </div>
 
-              <div className="w-11 h-11 rounded-2xl bg-[#fff1f1] text-[#8c0303] flex items-center justify-center shrink-0">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#fff1f1] text-[#8c0303]">
                 <Send size={19} />
               </div>
             </div>
 
             {proximaPublicacion ? (
               <>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-5">
-                  <InfoBox
-                    label="Fecha"
-                    value={formatDate(proximaPublicacion.fecha_programada)}
+                <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-[150px_1fr]">
+                  <ContentThumbnail
+                    item={proximaPublicacion}
+                    className="aspect-square w-full max-w-[180px] md:max-w-none"
+                    iconSize={20}
                   />
 
-                  <InfoBox
-                    label="Plataforma"
-                    value={getPlatformLabel(
-                      proximaPublicacion.plataformas
-                    )}
-                  />
+                  <div className="min-w-0">
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                      <InfoBox
+                        label="Fecha"
+                        value={formatDate(
+                          proximaPublicacion.fecha_programada
+                        )}
+                      />
 
-                  <InfoBox
-                    label="Formato"
-                    value={
-                      proximaPublicacion.formato || 'Sin formato definido'
-                    }
-                  />
-                </div>
+                      <InfoBox
+                        label="Plataforma"
+                        value={getPlatformLabel(
+                          proximaPublicacion.plataformas
+                        )}
+                      />
 
-                <div className="mt-5 rounded-2xl bg-[#fffafa] border border-[#f3dede] p-4">
-                  <p className="text-[10px] uppercase tracking-[0.14em] text-[#b9a0a0]">
-                    Estado actual
-                  </p>
+                      <InfoBox
+                        label="Formato"
+                        value={
+                          proximaPublicacion.formato ||
+                          'Sin formato definido'
+                        }
+                      />
+                    </div>
 
-                  <div className="flex flex-wrap items-center gap-3 mt-2">
-                    <span
-                      className={`${getStatusStyle(
-                        proximaPublicacion.estado
-                      )} px-3 py-1 rounded-full text-xs font-semibold`}
-                    >
-                      {proximaPublicacion.estado}
-                    </span>
+                    <div className="mt-3 rounded-2xl border border-[#f3dede] bg-[#fffafa] p-4">
+                      <p className="text-[10px] uppercase tracking-[0.14em] text-[#b9a0a0]">
+                        Estado actual
+                      </p>
 
-                    {proximaPublicacion.producto_relacionado && (
-                      <span className="text-sm text-[#b07a7a]">
-                        Producto: {proximaPublicacion.producto_relacionado}
-                      </span>
-                    )}
+                      <div className="mt-2 flex flex-wrap items-center gap-3">
+                        <span
+                          className={`${getStatusStyle(
+                            proximaPublicacion.estado
+                          )} rounded-full px-3 py-1 text-xs font-semibold`}
+                        >
+                          {proximaPublicacion.estado}
+                        </span>
+
+                        {proximaPublicacion.producto_relacionado && (
+                          <span className="text-sm text-[#b07a7a]">
+                            Producto: {proximaPublicacion.producto_relacionado}
+                          </span>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
               </>
@@ -456,35 +531,53 @@ export default function CentroDeContenidoPage() {
             )}
           </article>
 
-          <article className="bg-white border border-[#f3dede] rounded-[26px] p-5 md:p-6">
+          <article className="rounded-[26px] border border-[#f3dede] bg-white p-5 md:p-6">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <p className="text-[10px] uppercase tracking-[0.16em] text-[#b9a0a0]">
                   Mejor contenido
                 </p>
 
-                <h2 className="mt-2 text-[20px] md:text-[23px] font-bold text-[#7a0000]">
+                <h2 className="mt-2 text-[20px] font-bold text-[#7a0000] md:text-[23px]">
                   {contenidoDestacado
                     ? contenidoDestacado.titulo
                     : 'Sin métricas todavía'}
                 </h2>
               </div>
 
-              <div className="w-11 h-11 rounded-2xl bg-[#fff1f1] text-[#8c0303] flex items-center justify-center shrink-0">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#fff1f1] text-[#8c0303]">
                 <Trophy size={19} />
               </div>
             </div>
 
             {contenidoDestacado ? (
               <>
-                <p className="mt-3 text-sm text-[#b07a7a]">
-                  {getPlatformLabel(contenidoDestacado.plataformas)}
-                  {contenidoDestacado.formato
-                    ? ` · ${contenidoDestacado.formato}`
-                    : ''}
-                </p>
+                <div className="mt-5 flex gap-4">
+                  <ContentThumbnail
+                    item={contenidoDestacado}
+                    className="h-[98px] w-[98px] shrink-0"
+                    iconSize={18}
+                  />
 
-                <div className="grid grid-cols-2 gap-3 mt-5">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm text-[#b07a7a]">
+                      {getPlatformLabel(contenidoDestacado.plataformas)}
+                      {contenidoDestacado.formato
+                        ? ` · ${contenidoDestacado.formato}`
+                        : ''}
+                    </p>
+
+                    <span
+                      className={`${getStatusStyle(
+                        contenidoDestacado.estado
+                      )} mt-3 inline-flex rounded-full px-3 py-1 text-xs font-semibold`}
+                    >
+                      {contenidoDestacado.estado}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="mt-5 grid grid-cols-2 gap-3">
                   <MetricBox
                     label="Alcance"
                     value={contenidoDestacado.alcance || 0}
@@ -527,15 +620,15 @@ export default function CentroDeContenidoPage() {
           </article>
         </section>
 
-        <section className="bg-white border border-[#f3dede] rounded-[26px] overflow-hidden">
-          <div className="p-5 md:p-6 border-b border-[#f3dede]">
+        <section className="overflow-hidden rounded-[26px] border border-[#f3dede] bg-white">
+          <div className="border-b border-[#f3dede] p-5 md:p-6">
             <div className="flex items-center justify-between gap-4">
               <div>
                 <p className="text-[10px] uppercase tracking-[0.16em] text-[#b9a0a0]">
                   Organización semanal
                 </p>
 
-                <h2 className="mt-1 text-[20px] md:text-[23px] font-bold text-[#7a0000]">
+                <h2 className="mt-1 text-[20px] font-bold text-[#7a0000] md:text-[23px]">
                   Próximos contenidos
                 </h2>
 
@@ -544,7 +637,7 @@ export default function CentroDeContenidoPage() {
                 </p>
               </div>
 
-              <div className="w-10 h-10 rounded-2xl bg-[#fff1f1] text-[#8c0303] flex items-center justify-center shrink-0">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[#fff1f1] text-[#8c0303]">
                 <CalendarDays size={18} />
               </div>
             </div>
@@ -555,7 +648,7 @@ export default function CentroDeContenidoPage() {
               Cargando contenido...
             </div>
           ) : proximosContenidos.length === 0 ? (
-            <div className="py-12 px-5 text-center">
+            <div className="px-5 py-12 text-center">
               <CalendarDays
                 size={30}
                 className="mx-auto text-[#b07a7a]"
@@ -575,19 +668,21 @@ export default function CentroDeContenidoPage() {
               {proximosContenidos.map((item) => (
                 <article
                   key={item.id}
-                  className="p-5 md:px-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 hover:bg-[#fffafa]"
+                  className="flex flex-col gap-4 p-5 hover:bg-[#fffafa] sm:flex-row sm:items-center sm:justify-between md:px-6"
                 >
-                  <div className="flex items-start gap-3 min-w-0">
-                    <div className="w-11 h-11 rounded-2xl bg-[#fff1f1] text-[#8c0303] flex items-center justify-center shrink-0">
-                      <CalendarDays size={18} />
-                    </div>
+                  <div className="flex min-w-0 items-start gap-3">
+                    <ContentThumbnail
+                      item={item}
+                      className="h-14 w-14 shrink-0"
+                      iconSize={14}
+                    />
 
                     <div className="min-w-0">
-                      <p className="font-bold text-[#7a0000] break-words">
+                      <p className="break-words font-bold text-[#7a0000]">
                         {item.titulo}
                       </p>
 
-                      <p className="text-sm text-[#b07a7a] mt-1 break-words">
+                      <p className="mt-1 break-words text-sm text-[#b07a7a]">
                         {formatShortDate(item.fecha_programada)}
                         {' · '}
                         {getPlatformLabel(item.plataformas)}
@@ -596,11 +691,11 @@ export default function CentroDeContenidoPage() {
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between sm:justify-end gap-3">
+                  <div className="flex items-center justify-between gap-3 sm:justify-end">
                     <span
                       className={`${getStatusStyle(
                         item.estado
-                      )} px-3 py-1 rounded-full text-xs font-semibold`}
+                      )} rounded-full px-3 py-1 text-xs font-semibold`}
                     >
                       {item.estado}
                     </span>
@@ -617,21 +712,65 @@ export default function CentroDeContenidoPage() {
   )
 }
 
+function ContentThumbnail({ item, className = '', iconSize = 16 }) {
+  const archivoPrincipal = item.archivo_principal
+  const esVideo = archivoPrincipal?.tipo_archivo === 'video'
+
+  return (
+    <div
+      className={`relative overflow-hidden rounded-2xl border border-[#f3dede] bg-[#fffafa] ${className}`}
+    >
+      {archivoPrincipal?.signedUrl ? (
+        esVideo ? (
+          <>
+            <video
+              src={archivoPrincipal.signedUrl}
+              muted
+              preload="metadata"
+              className="h-full w-full object-cover"
+            />
+
+            <div className="absolute inset-0 flex items-center justify-center bg-black/10">
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-[#8c0303] shadow-sm">
+                <Video size={iconSize} />
+              </div>
+            </div>
+          </>
+        ) : (
+          <img
+            src={archivoPrincipal.signedUrl}
+            alt={item.titulo}
+            className="h-full w-full object-cover"
+          />
+        )
+      ) : (
+        <div className="flex h-full w-full flex-col items-center justify-center gap-2 px-2 text-center text-[#b07a7a]">
+          <ImageIcon size={iconSize} />
+
+          <span className="text-[9px] font-semibold">
+            Sin diseño
+          </span>
+        </div>
+      )}
+    </div>
+  )
+}
+
 function KpiCard({ label, value, icon }) {
   return (
-    <article className="bg-white border border-[#f3dede] rounded-[24px] p-5">
+    <article className="rounded-[24px] border border-[#f3dede] bg-white p-5">
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-[10px] uppercase tracking-[0.14em] text-[#b9a0a0]">
             {label}
           </p>
 
-          <p className="mt-3 text-[30px] font-bold text-[#7a0000] leading-none">
+          <p className="mt-3 text-[30px] font-bold leading-none text-[#7a0000]">
             {value}
           </p>
         </div>
 
-        <div className="w-10 h-10 rounded-2xl bg-[#fff1f1] text-[#8c0303] flex items-center justify-center shrink-0">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[#fff1f1] text-[#8c0303]">
           {icon}
         </div>
       </div>
@@ -641,12 +780,12 @@ function KpiCard({ label, value, icon }) {
 
 function InfoBox({ label, value }) {
   return (
-    <div className="rounded-2xl border border-[#f3dede] bg-[#fffafa] p-4">
+    <div className="min-w-0 rounded-2xl border border-[#f3dede] bg-[#fffafa] p-4">
       <p className="text-[10px] uppercase tracking-[0.13em] text-[#b9a0a0]">
         {label}
       </p>
 
-      <p className="mt-2 text-sm font-semibold text-[#7a0000] break-words">
+      <p className="mt-2 break-words text-sm font-semibold text-[#7a0000]">
         {value}
       </p>
     </div>
