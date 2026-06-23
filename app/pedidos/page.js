@@ -107,7 +107,7 @@ function createBulkRow(mode = 'complete') {
 
 function Field({ label, children }) {
   return (
-    <label className="block">
+    <label className="block min-w-0 max-w-full">
       <span className="block text-sm font-medium text-[#2e2e2e]">
         {label}
       </span>
@@ -178,13 +178,34 @@ export default function PedidosPage() {
   const [productoFiltro, setProductoFiltro] = useState('Todos')
   const [metodoPagoFiltro, setMetodoPagoFiltro] = useState('Todos')
 
-  const inputClass =
-    'mt-2 w-full min-w-0 rounded-xl border border-[#efcccc] bg-white px-4 py-3 text-sm text-[#2e2e2e] outline-none focus:border-[#8c0303] focus:ring-2 focus:ring-[#fff1f1]'
+const inputClass =
+  'mt-2 block w-full min-w-0 max-w-full appearance-none rounded-xl border border-[#efcccc] bg-white px-4 py-3 text-sm text-[#2e2e2e] outline-none focus:border-[#8c0303] focus:ring-2 focus:ring-[#fff1f1]'
 
-  useEffect(() => {
-    fetchOrders()
-    fetchProducts()
-  }, [])
+useEffect(() => {
+  fetchOrders()
+  fetchProducts()
+
+  const params = new URLSearchParams(window.location.search)
+
+  if (params.get('new') === '1') {
+    const mode =
+      params.get('mode') === 'quick' ? 'quick' : 'complete'
+
+    const entry =
+      params.get('entry') === 'bulk' ? 'bulk' : 'single'
+
+    setEditingOrder(null)
+    setSaleMode(mode)
+    setEntryMode(entry)
+    setForm(createCompleteForm())
+    setQuickForm(createQuickForm())
+    setBulkCommon(createBulkCommon())
+    setBulkRows([createBulkRow(mode)])
+    setShowModal(true)
+
+    window.history.replaceState({}, '', '/pedidos')
+  }
+}, [])
 
   async function fetchOrders() {
     setLoading(true)
@@ -1667,12 +1688,12 @@ export default function PedidosPage() {
 
               {!editingOrder && entryMode === 'bulk' && (
                 <>
-                  <section className="rounded-2xl border border-[#f3dede] bg-[#fffafa] p-5">
+                  <section className="min-w-0 max-w-full overflow-hidden rounded-2xl border border-[#f3dede] bg-[#fffafa] p-5">
                     <p className="text-sm font-semibold text-[#7a0000]">
-                      Datos comunes para todas las ventas
+                      Información General
                     </p>
 
-                    <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+                   <div className="mt-5 grid min-w-0 grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
                       <Field label="Fecha">
                         <input
                           type="date"

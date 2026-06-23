@@ -126,3 +126,25 @@ input[type='time'] {
 .min-w-0 {
   min-width: 0;
 }
+/* Evita que campos nativos de Safari sobrepasen su contenedor */
+input,
+select,
+textarea {
+  max-width: 100%;
+}
+
+input[type='date'],
+input[type='datetime-local'],
+input[type='time'] {
+  width: 100%;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  box-sizing: border-box;
+}
+
+/* Contención adicional para grids y formularios móviles */
+form,
+section,
+label {
+  min-width: 0;
+}

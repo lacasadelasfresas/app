@@ -623,13 +623,13 @@ export default function DashboardPage() {
           <Bell size={17} />
         </button>
 
-        <Link
-          href="/pedidos?new=1"
-          className="w-full sm:w-auto bg-[#8c0303] text-white px-4 py-2.5 rounded-xl font-semibold flex items-center justify-center gap-2 text-sm whitespace-nowrap shadow-sm"
-        >
-          <DollarSign size={16} />
-          Registrar venta
-        </Link>
+<Link
+  href="/pedidos?new=1&mode=complete&entry=single"
+  className="w-full sm:w-auto bg-[#8c0303] text-white px-4 py-2.5 rounded-xl font-semibold flex items-center justify-center gap-2 text-sm whitespace-nowrap shadow-sm"
+>
+  <DollarSign size={16} />
+  Registrar venta
+</Link>
       </div>
     </div>
   </div>
