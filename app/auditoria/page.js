@@ -189,8 +189,8 @@ function colorAccion(accion = '') {
 
 function CampoCambio({ cambio, tipoCambio }) {
   return (
-    <div className="border-b border-[#f3dede] pb-4 last:border-b-0 last:pb-0">
-      <p className="font-semibold text-[#8c0303] mb-2">
+    <div className="rounded-2xl border border-[#f3dede] bg-[#fffafa] p-3">
+      <p className="mb-2 text-sm font-bold text-[#8c0303]">
         {etiquetaCampo(cambio.campo)}
       </p>
 
@@ -209,16 +209,16 @@ function CampoCambio({ cambio, tipoCambio }) {
       )}
 
       {tipoCambio === 'edicion' && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
           <div className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-800 break-words">
-            <p className="font-semibold text-xs uppercase tracking-[0.12em] mb-1">
+            <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.12em]">
               Antes
             </p>
             {formatearValor(cambio.antes)}
           </div>
 
           <div className="rounded-xl bg-emerald-50 px-3 py-2 text-sm text-emerald-800 break-words">
-            <p className="font-semibold text-xs uppercase tracking-[0.12em] mb-1">
+            <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.12em]">
               Después
             </p>
             {formatearValor(cambio.despues)}
@@ -289,22 +289,15 @@ export default function AuditoriaPage() {
         ${item.descripcion || ''}
       `.toLowerCase()
 
-      const coincideBusqueda =
-        !busqueda || texto.includes(busqueda)
+      const coincideBusqueda = !busqueda || texto.includes(busqueda)
 
       const coincideModulo =
-        moduloFiltro === 'Todos' ||
-        item.modulo === moduloFiltro
+        moduloFiltro === 'Todos' || item.modulo === moduloFiltro
 
       const coincideAccion =
-        accionFiltro === 'Todos' ||
-        item.accion === accionFiltro
+        accionFiltro === 'Todos' || item.accion === accionFiltro
 
-      return (
-        coincideBusqueda &&
-        coincideModulo &&
-        coincideAccion
-      )
+      return coincideBusqueda && coincideModulo && coincideAccion
     })
   }, [registros, search, moduloFiltro, accionFiltro])
 
@@ -323,49 +316,49 @@ export default function AuditoriaPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#fcf8f8] w-full">
-<header className="bg-white border-b border-[#f1dede] px-5 md:px-8 py-3 md:h-[82px] md:py-0 md:flex md:items-center">
-  <div className="w-full max-w-none">
-    <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-      <div className="text-left">
-        <p className="text-[10px] uppercase tracking-[0.16em] text-[#b9a0a0]">
-          Administración
-        </p>
+    <main className="min-h-screen w-full bg-[#fcf8f8]">
+      <header className="bg-white border-b border-[#f1dede] px-5 md:px-8 py-3 md:h-[82px] md:py-0 md:flex md:items-center">
+        <div className="w-full max-w-none">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div className="text-left">
+              <p className="text-[10px] uppercase tracking-[0.16em] text-[#b9a0a0]">
+                Administración
+              </p>
 
-        <h1 className="mt-1 text-[21px] md:text-[23px] font-bold text-[#7a0000] leading-tight">
-          Auditoría
-        </h1>
+              <h1 className="mt-1 text-[21px] md:text-[23px] font-bold text-[#7a0000] leading-tight">
+                Auditoría
+              </h1>
 
-        <p className="mt-1 text-xs md:text-sm text-[#b07a7a]">
-          Registro y trazabilidad de los movimientos realizados en el sistema.
-        </p>
-      </div>
+              <p className="mt-1 text-xs md:text-sm text-[#b07a7a]">
+                Registro y trazabilidad de los movimientos realizados en el sistema.
+              </p>
+            </div>
 
-      <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full lg:w-auto">
-        <div className="hidden xl:flex w-[280px] items-center gap-2 bg-[#fff5f5] px-4 py-2.5 rounded-xl">
-          <Search size={16} className="text-[#b07a7a]" />
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full lg:w-auto">
+              <div className="hidden xl:flex w-[280px] items-center gap-2 bg-[#fff5f5] px-4 py-2.5 rounded-xl">
+                <Search size={16} className="text-[#b07a7a]" />
 
-          <input
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            placeholder="Buscar actividad..."
-            className="w-full bg-transparent outline-none text-sm text-[#2e2e2e]"
-          />
+                <input
+                  value={search}
+                  onChange={(event) => setSearch(event.target.value)}
+                  placeholder="Buscar actividad..."
+                  className="w-full bg-transparent outline-none text-sm text-[#2e2e2e]"
+                />
+              </div>
+
+              <button
+                type="button"
+                onClick={fetchAuditoria}
+                className="w-full sm:w-auto h-10 px-4 rounded-xl border border-[#efcccc] bg-white text-[#8c0303] font-semibold text-sm flex items-center justify-center gap-2 hover:bg-[#fff5f5]"
+                aria-label="Actualizar auditoría"
+              >
+                <RefreshCw size={16} />
+                Actualizar
+              </button>
+            </div>
+          </div>
         </div>
-
-        <button
-          type="button"
-          onClick={fetchAuditoria}
-          className="w-full sm:w-auto h-10 px-4 rounded-xl border border-[#efcccc] bg-white text-[#8c0303] font-semibold text-sm flex items-center justify-center gap-2 hover:bg-[#fff5f5]"
-          aria-label="Actualizar auditoría"
-        >
-          <RefreshCw size={16} />
-          Actualizar
-        </button>
-      </div>
-    </div>
-  </div>
-</header>
+      </header>
 
       <section className="px-4 md:px-8 py-5 md:py-7 max-w-[1600px] mx-auto">
         <div className="bg-white border border-[#f3dede] rounded-[28px] overflow-hidden">
@@ -408,9 +401,7 @@ export default function AuditoriaPage() {
 
                     <input
                       value={search}
-                      onChange={(event) =>
-                        setSearch(event.target.value)
-                      }
+                      onChange={(event) => setSearch(event.target.value)}
                       placeholder="Usuario, acción o descripción..."
                       className="w-full bg-transparent outline-none text-sm"
                     />
@@ -424,9 +415,7 @@ export default function AuditoriaPage() {
 
                   <select
                     value={moduloFiltro}
-                    onChange={(event) =>
-                      setModuloFiltro(event.target.value)
-                    }
+                    onChange={(event) => setModuloFiltro(event.target.value)}
                     className="w-full px-4 py-3 rounded-xl border border-[#efcccc] bg-white outline-none text-sm"
                   >
                     {modulos.map((modulo) => (
@@ -444,9 +433,7 @@ export default function AuditoriaPage() {
 
                   <select
                     value={accionFiltro}
-                    onChange={(event) =>
-                      setAccionFiltro(event.target.value)
-                    }
+                    onChange={(event) => setAccionFiltro(event.target.value)}
                     className="w-full px-4 py-3 rounded-xl border border-[#efcccc] bg-white outline-none text-sm"
                   >
                     {acciones.map((accion) => (
@@ -673,19 +660,19 @@ export default function AuditoriaPage() {
       </section>
 
       {registroSeleccionado && (
-        <div className="fixed inset-0 z-[100] bg-black/40 flex items-end md:items-center justify-center">
-          <div className="bg-white w-full max-w-3xl max-h-[92vh] overflow-y-auto rounded-t-[30px] md:rounded-[30px] shadow-2xl">
-            <div className="sticky top-0 z-10 bg-white border-b border-[#f3dede] px-5 md:px-7 py-5 flex items-start justify-between gap-4">
+        <div className="fixed inset-0 z-[100] flex items-end justify-center bg-black/40 md:items-center md:p-6">
+          <div className="flex w-full max-w-[880px] max-h-[86dvh] flex-col overflow-hidden rounded-t-[28px] bg-white shadow-2xl md:max-h-[84vh] md:rounded-[28px]">
+            <div className="flex shrink-0 items-start justify-between gap-4 border-b border-[#f3dede] bg-white px-5 py-4 md:px-6">
               <div className="min-w-0">
                 <p className="text-[10px] uppercase tracking-[0.18em] text-[#b9a0a0]">
                   Detalle de auditoría
                 </p>
 
-                <h2 className="text-[30px] ivy text-[#7a0000] leading-none mt-2 break-words">
+                <h2 className="mt-2 text-[25px] leading-none ivy text-[#7a0000] break-words md:text-[28px]">
                   {registroSeleccionado.accion || 'Actividad'}
                 </h2>
 
-                <p className="text-sm text-[#b07a7a] mt-2">
+                <p className="mt-2 text-xs md:text-sm text-[#b07a7a]">
                   {registroSeleccionado.modulo || 'Sin módulo'} ·{' '}
                   {formatearFecha(registroSeleccionado.created_at)}
                 </p>
@@ -694,66 +681,72 @@ export default function AuditoriaPage() {
               <button
                 type="button"
                 onClick={() => setRegistroSeleccionado(null)}
-                className="w-11 h-11 rounded-full border border-[#efcccc] text-[#8c0303] flex items-center justify-center shrink-0"
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[#efcccc] text-[#8c0303] hover:bg-[#fff5f5]"
                 aria-label="Cerrar detalle"
               >
-                <X size={20} />
+                <X size={18} />
               </button>
             </div>
 
-            <div className="p-5 md:p-7">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
-                <div className="rounded-2xl border border-[#f3dede] bg-[#fffafa] p-4">
+            <div className="min-h-0 flex-1 overflow-y-auto p-5 md:p-6">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div className="rounded-2xl border border-[#f3dede] bg-[#fffafa] p-3">
                   <p className="text-[10px] uppercase tracking-[0.15em] text-[#b9a0a0]">
                     Usuario
                   </p>
 
-                  <p className="font-semibold text-[#2e2e2e] mt-2">
+                  <p className="mt-2 font-semibold text-[#2e2e2e]">
                     {registroSeleccionado.usuario_nombre || 'Usuario'}
                   </p>
 
-                  <p className="text-xs text-[#b07a7a] mt-1 break-all">
+                  <p className="mt-1 text-xs text-[#b07a7a] break-all">
                     {registroSeleccionado.usuario_email || 'Sin email'}
                   </p>
                 </div>
 
-                <div className="rounded-2xl border border-[#f3dede] bg-[#fffafa] p-4">
+                <div className="rounded-2xl border border-[#f3dede] bg-[#fffafa] p-3">
                   <p className="text-[10px] uppercase tracking-[0.15em] text-[#b9a0a0]">
                     Rol
                   </p>
 
-                  <p className="font-semibold text-[#8c0303] mt-2">
+                  <p className="mt-2 font-semibold text-[#8c0303]">
                     {registroSeleccionado.rol || 'Sin rol'}
                   </p>
                 </div>
               </div>
 
-              <div className="rounded-2xl border border-[#f3dede] bg-[#fffafa] p-4 mb-6">
+              <div className="mt-3 rounded-2xl border border-[#f3dede] bg-[#fffafa] p-3">
                 <p className="text-[10px] uppercase tracking-[0.15em] text-[#b9a0a0]">
                   Descripción
                 </p>
 
-                <p className="text-sm text-[#2e2e2e] leading-relaxed mt-2">
+                <p className="mt-2 text-sm leading-relaxed text-[#2e2e2e]">
                   {registroSeleccionado.descripcion ||
                     'Sin descripción disponible.'}
                 </p>
               </div>
 
               {camposSeleccionados.length === 0 ? (
-                <div className="rounded-2xl border border-[#f3dede] bg-[#fffafa] p-5 text-sm text-[#b07a7a]">
+                <div className="mt-4 rounded-2xl border border-[#f3dede] bg-[#fffafa] p-4 text-sm text-[#b07a7a]">
                   Este movimiento no contiene cambios visibles.
                 </div>
               ) : (
-                <div>
-                  <h3 className="text-[25px] ivy text-[#7a0000] mb-4">
-                    {tipoCambioSeleccionado === 'creacion'
-                      ? 'Registro creado'
-                      : tipoCambioSeleccionado === 'eliminacion'
-                        ? 'Registro eliminado'
-                        : 'Cambios realizados'}
-                  </h3>
+                <div className="mt-5">
+                  <div className="flex items-center justify-between gap-3">
+                    <h3 className="text-[22px] leading-none ivy text-[#7a0000]">
+                      {tipoCambioSeleccionado === 'creacion'
+                        ? 'Registro creado'
+                        : tipoCambioSeleccionado === 'eliminacion'
+                          ? 'Registro eliminado'
+                          : 'Cambios realizados'}
+                    </h3>
 
-                  <div className="rounded-2xl border border-[#f3dede] bg-white p-4 md:p-5 space-y-4">
+                    <span className="rounded-full bg-[#fff1f1] px-3 py-1 text-xs font-semibold text-[#8c0303]">
+                      {camposSeleccionados.length} campo(s)
+                    </span>
+                  </div>
+
+                  <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2">
                     {camposSeleccionados.map((cambio) => (
                       <CampoCambio
                         key={cambio.campo}
