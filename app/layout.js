@@ -2,6 +2,12 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import AuthLayout from './AuthLayout'
 
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
+}
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
