@@ -295,6 +295,26 @@ export default function BancoDeIdeasPage() {
     window.location.href = `/centro-de-contenido/biblioteca?${params.toString()}`
   }
 
+  function convertirEnContenido(idea) {
+  const params = new URLSearchParams({
+    nuevo: '1',
+    idea: idea.id,
+  })
+
+  window.location.href = `/centro-de-contenido/biblioteca?${params.toString()}`
+}
+
+function abrirContenidoCreado(idea) {
+  if (!idea.contenido_id) {
+    alert(
+      'Esta idea figura como convertida, pero no tiene un contenido vinculado todavía.'
+    )
+    return
+  }
+
+  window.location.href = `/centro-de-contenido/biblioteca?editar=${idea.contenido_id}`
+}
+
   const ideasFiltradas = useMemo(() => {
     const normalizedSearch = search.trim().toLowerCase()
 
@@ -697,15 +717,16 @@ export default function BancoDeIdeasPage() {
           ) : (
             <div className="grid grid-cols-1 gap-4 p-5 md:grid-cols-2 xl:grid-cols-3 md:p-6">
               {ideasFiltradas.map((idea) => (
-                <IdeaCard
-                  key={idea.id}
-                  idea={idea}
-                  onEdit={() => editarIdea(idea)}
-                  onArchive={() => archivarIdea(idea)}
-                  onDelete={() => eliminarIdea(idea)}
-                  onConvert={() => convertirEnContenido(idea)}
-                  deleting={deletingId === idea.id}
-                />
+<IdeaCard
+  key={idea.id}
+  idea={idea}
+  onEdit={() => editarIdea(idea)}
+  onArchive={() => archivarIdea(idea)}
+  onDelete={() => eliminarIdea(idea)}
+  onConvert={() => convertirEnContenido(idea)}
+  onOpenContent={() => abrirContenidoCreado(idea)}
+  deleting={deletingId === idea.id}
+/>
               ))}
             </div>
           )}
@@ -755,6 +776,7 @@ function IdeaCard({
   onArchive,
   onDelete,
   onConvert,
+  onOpenContent,
   deleting,
 }) {
   return (
@@ -843,15 +865,16 @@ function IdeaCard({
             <WandSparkles size={16} />
             Convertir en contenido
           </button>
-        ) : (
-          <Link
-            href="/centro-de-contenido/biblioteca"
-            className="col-span-2 flex h-10 items-center justify-center gap-2 rounded-xl border border-[#efcccc] bg-white px-3 text-sm font-semibold text-[#8c0303] hover:bg-[#fff5f5]"
-          >
-            <FolderOpen size={16} />
-            Ver en Biblioteca
-          </Link>
-        )}
+) : (
+  <button
+    type="button"
+    onClick={onOpenContent}
+    className="col-span-2 flex h-10 items-center justify-center gap-2 rounded-xl border border-[#efcccc] bg-white px-3 text-sm font-semibold text-[#8c0303] hover:bg-[#fff5f5]"
+  >
+    <FolderOpen size={16} />
+    Ver contenido creado
+  </button>
+)}
 
         <button
           type="button"
