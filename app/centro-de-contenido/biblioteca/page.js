@@ -129,17 +129,58 @@ useEffect(() => {
     await fetchContenido()
 
     const params = new URLSearchParams(window.location.search)
+
     const nuevaIdea = params.get('nuevo') === '1'
     const ideaId = params.get('idea')
+    const contenidoEditarId = params.get('editar')
 
-    if (nuevaIdea) {
+    // Abrir un contenido existente directamente en edición.
+    if (contenidoEditarId) {
+      const { data: contenidoExistente, error } = await supabase
+        .from('contenido')
+        .select('*')
+        .eq('id', contenidoEditarId)
+        .single()
+
+      if (error || !contenidoExistente) {
+        console.error(
+          'Error cargando contenido para editar:',
+          error
+        )
+
+        alert('No se pudo encontrar el contenido solicitado.')
+      } else {
+        await editarContenido(contenidoExistente)
+      }
+
+      window.history.replaceState(
+        {},
+        '',
+        '/centro-de-contenido/biblioteca'
+      )
+
+      return
+    }
+
+    // Abrir formulario vacío desde un botón de nueva pieza.
+    if (nuevaIdea && !ideaId) {
+      setIdeaOrigenId(null)
       setEditingId(null)
       setForm(createEmptyForm())
       setArchivos([])
       setArchivosPendientes([])
       setFormOpen(true)
+
+      window.history.replaceState(
+        {},
+        '',
+        '/centro-de-contenido/biblioteca'
+      )
+
+      return
     }
 
+    // Crear contenido usando una idea del Banco de Ideas.
     if (ideaId) {
       const { data: idea, error } = await supabase
         .from('banco_ideas')
@@ -149,6 +190,8 @@ useEffect(() => {
 
       if (error || !idea) {
         console.error('Error cargando idea para convertir:', error)
+
+        alert('No se pudo cargar la idea seleccionada.')
         return
       }
 
@@ -172,9 +215,7 @@ useEffect(() => {
       })
 
       setFormOpen(true)
-    }
 
-    if (nuevaIdea || ideaId) {
       window.history.replaceState(
         {},
         '',
@@ -231,8 +272,9 @@ setIdeaOrigenId(null)
       }
     })
 
-    setEditingId(null)
-    setForm(createEmptyForm())
+setIdeaOrigenId(null)
+setEditingId(null)
+setForm(createEmptyForm())
     setArchivos([])
     setArchivosPendientes([])
     setFormOpen(false)

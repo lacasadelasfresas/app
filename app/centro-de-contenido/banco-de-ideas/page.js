@@ -879,7 +879,7 @@ function IdeaCard({
         <button
           type="button"
           onClick={onEdit}
-          className="flex h-10 items-center justify-center gap-2 rounded-xl border border-[#efcccc] bg-white text-sm font-semibold text-[#8c0303] hover:bg-[#fff5f5]"
+          className="flex  h-10 items-center justify-center gap-2 rounded-xl border border-[#efcccc] bg-white text-sm font-semibold text-[#8c0303] hover:bg-[#fff5f5]"
         >
           <Pencil size={15} />
           Editar
