@@ -690,7 +690,15 @@ const [modalRegistros, setModalRegistros] = useState([])
   onClick={() =>
     abrirDetalleFinanzas(
       'Ingresos',
-      ventas
+      ventas.map((venta) => ({
+        fecha: venta.fecha,
+        cliente: venta.cliente,
+        monto: venta.monto_pago,
+        producto: venta.producto,
+        metodoPago: venta.metodo_pago,
+        vendedor: venta.vendedor,
+        estado: venta.status,
+      }))
     )
   }
 />
