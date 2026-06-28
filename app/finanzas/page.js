@@ -1470,6 +1470,100 @@ const [modalRegistros, setModalRegistros] = useState([])
           </section>
         </div>
       </section>
+
+{modalFinanzasOpen && (
+  <div className="fixed inset-0 z-[100] bg-black/40 flex items-center justify-center p-4">
+    <div className="bg-white rounded-[28px] w-full max-w-5xl max-h-[85vh] overflow-hidden shadow-2xl">
+
+      <div className="flex items-center justify-between px-6 py-5 border-b border-[#f3dede]">
+        <div>
+          <p className="text-xs uppercase tracking-[0.15em] text-[#b9a0a0]">
+            Detalle
+          </p>
+
+          <h2 className="text-[30px] ivy text-[#8c0303] mt-2">
+            {modalTitulo}
+          </h2>
+        </div>
+
+        <button
+          onClick={() => setModalFinanzasOpen(false)}
+          className="w-10 h-10 rounded-full border border-[#efcccc] text-[#8c0303] hover:bg-[#fff5f5]"
+        >
+          ✕
+        </button>
+      </div>
+
+      <div className="overflow-auto max-h-[65vh]">
+
+        <table className="w-full">
+
+          <thead className="bg-[#fff7f7]">
+
+            <tr className="text-left text-xs uppercase tracking-[0.15em] text-[#b9a0a0]">
+
+              <th className="px-6 py-4">Fecha</th>
+
+              <th className="px-6 py-4">Cliente</th>
+
+              <th className="px-6 py-4">Monto</th>
+
+            </tr>
+
+          </thead>
+
+          <tbody>
+
+            {modalRegistros.length === 0 ? (
+
+              <tr>
+
+                <td
+                  colSpan={3}
+                  className="text-center py-10 text-[#b07a7a]"
+                >
+                  No hay registros.
+                </td>
+
+              </tr>
+
+            ) : (
+
+              modalRegistros.map((venta) => (
+
+                <tr
+                  key={venta.id}
+                  className="border-t border-[#f3dede]"
+                >
+
+                  <td className="px-6 py-4">
+                    {venta.fecha}
+                  </td>
+
+                  <td className="px-6 py-4">
+                    {venta.cliente}
+                  </td>
+
+                  <td className="px-6 py-4 font-semibold">
+                    {formatCurrency(Number(venta.total || 0))}
+                  </td>
+
+                </tr>
+
+              ))
+
+            )}
+
+          </tbody>
+
+        </table>
+
+      </div>
+
+    </div>
+  </div>
+)}
+
     </main>
   )
 }
