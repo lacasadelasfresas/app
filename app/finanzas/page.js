@@ -1503,40 +1503,25 @@ const [modalRegistros, setModalRegistros] = useState([])
       </div>
 
       <div className="overflow-auto max-h-[65vh]">
-
         <table className="w-full">
-
           <thead className="bg-[#fff7f7]">
-
             <tr className="text-left text-xs uppercase tracking-[0.15em] text-[#b9a0a0]">
-
               <th className="px-6 py-4">Fecha</th>
-
               <th className="px-6 py-4">Cliente</th>
-
               <th className="px-6 py-4">Monto</th>
-
             </tr>
-
           </thead>
-
           <tbody>
-
             {modalRegistros.length === 0 ? (
-
               <tr>
-
                 <td
                   colSpan={3}
                   className="text-center py-10 text-[#b07a7a]"
                 >
                   No hay registros.
                 </td>
-
               </tr>
-
             ) : (
-
               modalRegistros.map((venta) => (
 
                 <tr
@@ -1553,7 +1538,7 @@ const [modalRegistros, setModalRegistros] = useState([])
                   </td>
 
                   <td className="px-6 py-4 font-semibold">
-                    {formatCurrency(Number(venta.total || 0))}
+                    {formatCurrency(Number(venta.monto || 0))}
                   </td>
 
                 </tr>
