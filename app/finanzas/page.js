@@ -340,6 +340,12 @@ const [modalRegistros, setModalRegistros] = useState([])
     if (error) {
       console.error('Error eliminando gasto:', error)
       alert('No se pudo eliminar el gasto.')
+
+      function abrirDetalleFinanzas(titulo, registros) {
+  setModalTitulo(titulo)
+  setModalRegistros(registros)
+  setModalFinanzasOpen(true)
+}
       return
     }
 
@@ -681,7 +687,12 @@ const [modalRegistros, setModalRegistros] = useState([])
   title="Ingresos"
   value={formatCurrency(ingresosMes)}
   icon={<DollarSign size={20} />}
-  onClick={() => console.log("Ingresos")}
+  onClick={() =>
+    abrirDetalleFinanzas(
+      'Ingresos',
+      ventas
+    )
+  }
 />
 
           <KpiCard
