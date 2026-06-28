@@ -112,6 +112,10 @@ export default function FinanzasPage() {
 
   const formGastoRef = useRef(null)
 
+  const [modalFinanzasOpen, setModalFinanzasOpen] = useState(false)
+const [modalTitulo, setModalTitulo] = useState('')
+const [modalRegistros, setModalRegistros] = useState([])
+
   useEffect(() => {
     fetchFinanzas()
     fetchProveedores()
@@ -214,6 +218,12 @@ export default function FinanzasPage() {
       })
     }, 100)
   }
+
+  function abrirDetalleFinanzas(titulo, registros) {
+  setModalTitulo(titulo)
+  setModalRegistros(registros)
+  setModalFinanzasOpen(true)
+}
 
   async function guardarGasto() {
     if (!form.concepto.trim()) {
@@ -667,11 +677,12 @@ export default function FinanzasPage() {
 
         {/* KPIs principales */}
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-          <KpiCard
-            title="Ingresos"
-            value={formatCurrency(ingresosMes)}
-            icon={<DollarSign size={20} />}
-          />
+<KpiCard
+  title="Ingresos"
+  value={formatCurrency(ingresosMes)}
+  icon={<DollarSign size={20} />}
+  onClick={() => console.log("Ingresos")}
+/>
 
           <KpiCard
             title="Gastos"
@@ -1466,9 +1477,21 @@ function Field({ label, children }) {
   )
 }
 
-function KpiCard({ title, value, icon }) {
+function KpiCard({
+  title,
+  value,
+  icon,
+  onClick,
+}) {
   return (
-    <div className="bg-white border border-[#f3dede] rounded-[24px] p-5 md:p-6">
+    <div
+      onClick={onClick}
+      className={`bg-white border border-[#f3dede] rounded-[24px] p-5 md:p-6 transition-all duration-200 ${
+        onClick
+          ? 'cursor-pointer hover:shadow-lg hover:-translate-y-1'
+          : ''
+      }`}
+    >
       <div className="flex items-start justify-between gap-4">
         <div>
           <p className="text-xs uppercase tracking-[0.18em] text-[#b9a0a0] mb-3">
@@ -1488,9 +1511,20 @@ function KpiCard({ title, value, icon }) {
   )
 }
 
-function MiniKpi({ title, value }) {
+function MiniKpi({
+  title,
+  value,
+  onClick,
+}) {
   return (
-    <div className="bg-white border border-[#f3dede] rounded-[24px] p-5">
+    <div
+      onClick={onClick}
+      className={`bg-white border border-[#f3dede] rounded-[24px] p-5 transition-all duration-200 ${
+        onClick
+          ? 'cursor-pointer hover:shadow-lg hover:-translate-y-1'
+          : ''
+      }`}
+    >
       <p className="text-xs uppercase tracking-[0.18em] text-[#b9a0a0] mb-2">
         Gastos {title.toLowerCase()}
       </p>
